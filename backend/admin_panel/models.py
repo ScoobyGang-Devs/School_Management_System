@@ -8,7 +8,7 @@ phone_regex = RegexValidator(
         message="Phone number must be 9–15 digits and may start with +"
     )
 
-class guardian_details(models.Model):
+class GuardianDetail(models.Model):
 
     GUARDIAN = [
         ('M',"Mother"),
@@ -17,20 +17,20 @@ class guardian_details(models.Model):
     ]
 
 
-    guardian_id = models.IntegerField(primary_key=True, unique=True)
-    guardian_name = models.CharField(max_length=100000)
-    guardian_type = models.CharField(max_length=1,choices=GUARDIAN,blank=True)
-    guardian_email = models.EmailField(unique=True)
-    permanent_address = models.TextField()
-    current_address = models.TextField()
-    guar_con_number = models.CharField(validators=[phone_regex],max_length=16)
-    alternative_con_number = models.CharField(validators=[phone_regex],max_length=16)
-    job_title = models.CharField(max_length=100000)
+    guardianId = models.IntegerField(primary_key=True, unique=True)
+    guardianName = models.CharField(max_length=100000)
+    guardianType = models.CharField(max_length=1,choices=GUARDIAN,blank=True)
+    guardianEmail = models.EmailField(unique=True)
+    permanentAddress = models.TextField()
+    currentAddress = models.TextField()
+    guardianContactNumber = models.CharField(validators=[phone_regex],max_length=16)
+    alternativeContactNumber = models.CharField(validators=[phone_regex],max_length=16)
+    jobTitle = models.CharField(max_length=100000)
 
     def __str__(self):
         return self.guardian_name
 
-class StudentDetails(models.Model):
+class StudentDetail(models.Model):
 
     GENDER = {
         'M':'Male',
@@ -53,7 +53,7 @@ class StudentDetails(models.Model):
         return f"{self.firstName} {self.lastName}"
     
 
-class TeacherDetails(models.Model):
+class TeacherDetail(models.Model):
 
     GENDER = {
         'M':'Male',
