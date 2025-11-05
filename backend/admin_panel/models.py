@@ -9,6 +9,10 @@ class StudentDetails(models.Model):
         regex=r'^\+?\d{9,15}$',
         message="Phone number must be 9–15 digits and may start with +"
     )
+    GENDER = {
+        'M':'Male',
+        'F':'Female'
+    }
 
     indexNumber = models.IntegerField(primary_key=True,unique=True)
     firstName = models.CharField(max_length=100)
@@ -16,7 +20,7 @@ class StudentDetails(models.Model):
     surName = models.CharField(max_length=100)
     fullName = models.CharField(max_length=300)
     dateOfBirth = models.DateField()
-    gender = models.CharField(max_length=20)
+    gender = models.CharField(max_length=1, choices=GENDER, blank=False)
     email = models.EmailField(max_length=254)
     address = models.TextField()
     enrollmentDate = models.DateField()
