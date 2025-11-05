@@ -1,3 +1,30 @@
 from django.db import models
+from django.core.validators import RegexValidator
 
 # Create your models here.
+
+class guardian_details(models.Model):
+
+    GUARDIAN = [
+        ('M',"Mother"),
+        ('F',"Father"),
+        ('G',"Guardian")
+    ]
+
+    phone_regex = RegexValidator(regex=r'^\+?\d{9,15}$',
+    message="Phone number must be 9–15 digits and may start with +")
+
+    guardian_id = models.IntegerField(primary_key=True, unique=True)
+    guardian_name = models.CharField(max_length=100000)
+    guardian_type = models.CharField(max_length=1,choices=GUARDIAN,blank=True)
+    guardian_email = models.EmailField(unique=True)
+    permanent_address = models.TextField()
+    current_address = models.TextField()
+    guar_con_number = models.CharField(validators=[phone_regex],max_length=16)
+    alternative_con_number = models.CharField(validators=[phone_regex],max_length=16)
+    job_title = models.CharField(max_length=100000)
+
+    def __str__(self):
+        return self.guardian_name
+
+
