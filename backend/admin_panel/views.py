@@ -1,10 +1,7 @@
-from django.shortcuts import render
 from rest_framework import generics
-from .models import guardian_details
-from .serializers import guardianSerializer
-from .serializers import StudentDetailsSerializer
-from rest_framework import generics
-from .models import StudentDetails
+from .models import *
+from .serializers import *
+
 
 # Create your views here.
 class guardianListCreateView(generics.ListCreateAPIView):
@@ -22,3 +19,12 @@ class StudentDetailsListCreateView(generics.ListCreateAPIView):
 class StudentDetailsDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = StudentDetails.objects.all()
     serializer_class = StudentDetailsSerializer
+
+
+class TeacherDetailsListCreateView(generics.ListCreateAPIView):
+    queryset = TeacherDetails.objects.all()
+    serializer_class = TeacherDetailsSerializer
+
+class TeacherDetailsDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = TeacherDetails.objects.all()
+    serializer_class = TeacherDetailsSerializer

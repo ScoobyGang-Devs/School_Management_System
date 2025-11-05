@@ -1,14 +1,17 @@
 from rest_framework import serializers
-from .models import guardian_details
+from .models import *
 
 class guardianSerializer(serializers.ModelSerializer):
     class Meta:
         model = guardian_details
         fields = '__all__'
-from .models import StudentDetails
 
 class StudentDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentDetails
         fields = '__all__'
 
+class TeacherDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeacherDetails
+        fields = '__all__'
