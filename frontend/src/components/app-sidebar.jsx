@@ -1,5 +1,6 @@
 import * as React from "react"
 import { GalleryVerticalEnd } from "lucide-react"
+import { Link } from "react-router-dom"
 
 import {
   Sidebar,
@@ -19,68 +20,65 @@ const data = {
   navMain: [
     {
       title: "NAVIGATION",
-      url: "#",
+      // Removed top-level URL since these are groups
       items: [
         {
           title: "Dashboard",
-          url: "#",
+          url: "/", // 👈 Home path
         },
         {
           title: "Settings",
-          url: "#",
+          url: "/settings", // 👈 Route from App.jsx
         },
         {
           title: "Internal Messaging",
-          url: "#",
+          url: "/messaging", // 👈 Route from App.jsx
         }
       ],
     },
     {
       title: "ADMINISTRATION",
-      url: "#",
       items: [
         {
-          title: "Student Database",
-          url: "#",
+          title: "School-Wide Attendance",
+          url: "/admin/attendance", // 👈 Route from App.jsx
         },
         {
           title: "School-Wide Results",
-          url: "#",
+          url: "/admin/results", // 👈 Route from App.jsx (Note: Changed from Results/Attendance to match your component name)
           isActive: true,
         },
         {
-          title: "School-Wide Attendance",
-          url: "#",
-        },
-        {
           title: "User Management",
-          url: "#",
+          url: "/admin/users", // 👈 Route from App.jsx
+        },
+                {
+          title: "Student Database",
+          url: "/admin/students", // 👈 Route from App.jsx
         },
         
       ],
     },
     {
       title: "TEACHER TOOLS",
-      url: "#",
       items: [
         {
           title: "My Classes",
-          url: "#",
+          url: "/teacher/classes", // 👈 Route from App.jsx
         },
         {
           title: "Take Attendance",
-          url: "#",
+          url: "/teacher/attendance", // 👈 Route from App.jsx
         },
         {
           title: "Grade Assignments",
-          url: "#",
+          url: "/teacher/grades", // 👈 Route from App.jsx
         },
         
       ],
     },
   ],
 }
-
 export function AppSidebar({
   ...props
 }) {
@@ -119,7 +117,7 @@ export function AppSidebar({
                     {item.items.map((item) => (
                       <SidebarMenuSubItem key={item.title}>
                         <SidebarMenuSubButton asChild isActive={item.isActive}>
-                          <a href={item.url}>{item.title}</a>
+                          <Link to={item.url}>{item.title}</Link> 
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     ))}
