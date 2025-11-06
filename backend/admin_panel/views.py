@@ -1,5 +1,6 @@
-from django.shortcuts import render
-from rest_framework import generics
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import generics,status
 from .serializers import *
 from .models import *
 
@@ -27,3 +28,20 @@ class TeacherDetailsListCreateView(generics.ListCreateAPIView):
 class TeacherDetailsDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = TeacherDetail.objects.all()
     serializer_class = TeacherDetailsSerializer
+
+class ClassroomDetailView(APIView):
+    def get(self, request, teacherId):
+        try:
+            teacher = TeacherDetail.objects.select_related('assignedClass').get(teacherId=teacherId)
+        except TeacherDetail.DoesNotExist:
+            return Response({'error':'Teacher not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        students = teacher.assignedClass.students.all()
+
+        teacherSerializer = TeacherDetailsSerializer(teacher)
+        studentsSerializer = StudentDetailsSerializer(students, many=True)
+
+        return Response({
+            "teacher": teacherSerializer.data,
+            "students": studentsSerializer.data
+        })

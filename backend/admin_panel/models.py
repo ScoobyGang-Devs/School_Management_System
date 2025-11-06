@@ -8,6 +8,12 @@ phone_regex = RegexValidator(
         message="Phone number must be 9–15 digits and may start with +"
     )
 
+class Classroom(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
 class GuardianDetail(models.Model):
 
     GUARDIAN = [
@@ -15,7 +21,6 @@ class GuardianDetail(models.Model):
         ('F',"Father"),
         ('G',"Guardian")
     ]
-
 
     guardianId = models.IntegerField(primary_key=True, unique=True)
     guardianName = models.CharField(max_length=100000)
@@ -28,7 +33,7 @@ class GuardianDetail(models.Model):
     jobTitle = models.CharField(max_length=100000)
 
     def __str__(self):
-        return self.guardian_name
+        return self.guardianName
 
 class StudentDetail(models.Model):
 
@@ -38,6 +43,7 @@ class StudentDetail(models.Model):
     }
 
     indexNumber = models.IntegerField(primary_key=True,unique=True)
+    guardian = models.ForeignKey(GuardianDetail, on_delete=models.CASCADE, related_name='students')
     firstName = models.CharField(max_length=100)
     lastName = models.CharField(max_length=100)
     surName = models.CharField(max_length=100)
@@ -48,6 +54,7 @@ class StudentDetail(models.Model):
     address = models.TextField()
     enrollmentDate = models.DateField()
     mobileNumber = models.CharField(validators=[phone_regex], max_length=16)
+    enrolledClass = models.ForeignKey(Classroom, on_delete=models.SET_NULL, null=True, related_name='students')
 
     def __str__(self):
         return f"{self.firstName} {self.lastName}"
@@ -60,6 +67,7 @@ class TeacherDetail(models.Model):
         'F':'Female'
     }
 
+    teacherId = models.AutoField(primary_key=True, blank=False, unique=True)
     nic_number = models.IntegerField(unique=True)
     firstName = models.CharField(max_length=100)
     lastName = models.CharField(max_length=100)
@@ -72,12 +80,8 @@ class TeacherDetail(models.Model):
     enrollmentDate = models.DateField()
     mobileNumber = models.CharField(validators=[phone_regex], max_length=16)
     section = models.CharField(max_length=300)
-    assignedClass = models.CharField(max_length=300)
+    assignedClass = models.OneToOneField(Classroom, on_delete=models.SET_NULL, null=True, related_name='teachers')
 
     def __str__(self):
         return f"{self.firstName} {self.lastName}"
-
-
-
-
 
