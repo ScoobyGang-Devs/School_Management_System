@@ -51,10 +51,17 @@ export function AppSidebar({ ...props }) {
   const location = useLocation()
 
   return (
-    <div className={`transition-all duration-300 ease-in-out 
-      ${collapsed ? "w-14" : "w-64"} 
-      bg-white border-r border-gray-200 overflow-hidden h-screen`}
-    >
+      <div
+        className={`transition-all duration-300 ease-in-out 
+          ${collapsed ? "w-14" : "w-64"} 
+          border-r overflow-hidden h-screen`}
+        style={{
+          backgroundColor: "var(--sidebar)",
+          borderColor: "var(--sidebar-border)",
+          color: "var(--sidebar-foreground)",
+        }}
+      >
+
       <SidebarHeader
         className={`flex items-center ${
           collapsed ? "justify-center" : "justify-between"
