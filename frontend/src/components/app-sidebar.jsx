@@ -24,6 +24,7 @@ const data = {
         { title: "Dashboard", url: "/" },
         { title: "Settings", url: "/settings" },
         { title: "Internal Messaging", url: "/messaging" },
+        { title: "Edit Profile", url: "/edit-profile" },
       ],
     },
     {

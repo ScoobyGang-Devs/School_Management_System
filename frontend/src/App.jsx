@@ -17,6 +17,7 @@ import SchoolWideAttendance from './pages/administration/SchoolWideAttendance'
 import SchoolWideResults from './pages/administration/SchoolWideResults'
 import StudentDatabase from './pages/administration/StudentDatabase'
 import UserManagement from './pages/administration/UserManagement'
+import EditProfile from './pages/administration/EditProfile'
 import MyClasses from './pages/teacher_tools/MyClasses'
 import TakeAttendance from './pages/teacher_tools/TakeAttendance'
 import GradeAssignments from './pages/teacher_tools/GradeAssignments'
@@ -24,8 +25,7 @@ import { ModeToggle } from './components/mode-toggle.jsx'
 
 
 function App() {
-
-
+  
 
 
 return (
@@ -58,6 +58,7 @@ return (
               <Route path="/" element={<Dashboard />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/messaging" element={<InternalMessaging />} />
+              <Route path="/edit-profile" element={<EditProfile />} />  // meka edit krndooo
 
               {/* ADMINISTRATION */}
               <Route path="/admin/attendance" element={<SchoolWideAttendance />} />

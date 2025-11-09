@@ -1,11 +1,14 @@
-import React, { useContext } from "react"
+import React, { useState, useContext } from "react"
 import { Sun, Bell, Mail } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import { ThemeContext } from "../App"
 import { ModeToggle } from "./mode-toggle"
+import ProfileCard from "./ui/ProfileCard.jsx"
 
 export default function TopBar() {
 
+  const location = useLocation(); // ✅ useLocation hook
+  const [showProfile, setShowProfile] = useState(false); // ✅ define state
 
   // ✅ Current page name based on route
   const pageTitles = {
@@ -63,9 +66,27 @@ return (
           src="/images/profile.jpg"
           alt="Profile"
           className="w-8 h-8 rounded-full object-cover"
+          onClick={() => setShowProfile(true)}
         />
       </button>
     </div>
+    
+    {/* ✅ Show profile card with overlay when clicked */}
+    {showProfile && (
+    <>
+    {/* BACKDROP — click anywhere outside to close */}
+    <div
+      className="fixed inset-0 bg-black/30 z-40"
+      onClick={() => setShowProfile(false)}
+    ></div>
+
+    {/* PROFILE CARD — stays on top */}
+    <div className="fixed top-14 right-6 z-50">
+      <ProfileCard onClose={() => setShowProfile(false)} />
+    </div>
+    </>
+    )}
+  
   </div>
 )
 
