@@ -40,11 +40,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'admin_panel',
     'attendence',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -133,8 +135,28 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication'
     ],
-    'DEFAULT_RENDERER_CLASSES': [
+    'DEFAULT_RENDERER_CLASSES':[
         'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer'
+        'rest_framework.renderers.BrowsableAPIRenderer',
     ]
 }
+
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
+
+CORS_ALLOWED_CREDENTIALS = True
+
+CORS_ALLOWED_METHODS = [
+    'DELETE',
+    'GET',
+    'POST',
+    'OPTIONS',
+    'PUT',
+    'PATCH'
+]
+
+CORS_ALLOWED_HEADERS = [
+    'accept', 'user-agent', 'x-csrftoken', 'content-type'
+]

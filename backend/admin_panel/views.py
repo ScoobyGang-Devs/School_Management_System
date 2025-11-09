@@ -32,15 +32,19 @@ class TeacherDetailsListCreateView(generics.ListCreateAPIView):
     serializer_class = TeacherDetailsSerializer
 
 class TeacherDetailsDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = TeacherDetail.objects.all()
+    queryset = TeacherDetail.objects.defer('assignedClass')
     serializer_class = TeacherDetailsSerializer
+
+class ClassroomListCreateView(generics.ListCreateAPIView):
+    queryset = Classroom.objects.all()
+    serializer_class = ClassroomSerializer
 
 class ClassroomDetailView(APIView):
     def get(self, request, teacherId):
         try:
             teacher = TeacherDetail.objects.select_related('assignedClass').get(teacherId=teacherId)
         except TeacherDetail.DoesNotExist:
-            return Response({'error':'Teacher not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         students = teacher.assignedClass.students.all()
 
@@ -70,29 +74,3 @@ class LoginView(APIView):
             return Response({"message": "Logged in successfully."})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
-
-@api_view(['POST'])
-def signup_api(request):
-    serializer = SignupSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-        token, created = Token.objects.get_or_create(user=user)
-        return Response(
-            {"message": "User created successfully", "token": token.key},
-            status=status.HTTP_201_CREATED
-        )
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['POST'])
-def login_api(request):
-    username = request.data.get("username")
-    password = request.data.get("password")
-
-    user = authenticate(username=username, password=password)
-
-    if user:
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({"message": "Login successful", "token": token.key})
-
-    return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
