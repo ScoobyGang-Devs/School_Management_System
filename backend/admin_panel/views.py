@@ -26,15 +26,19 @@ class TeacherDetailsListCreateView(generics.ListCreateAPIView):
     serializer_class = TeacherDetailsSerializer
 
 class TeacherDetailsDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = TeacherDetail.objects.all()
+    queryset = TeacherDetail.objects.defer('assignedClass')
     serializer_class = TeacherDetailsSerializer
+
+class ClassroomListCreateView(generics.ListCreateAPIView):
+    queryset = Classroom.objects.all()
+    serializer_class = ClassroomSerializer
 
 class ClassroomDetailView(APIView):
     def get(self, request, teacherId):
         try:
             teacher = TeacherDetail.objects.select_related('assignedClass').get(teacherId=teacherId)
         except TeacherDetail.DoesNotExist:
-            return Response({'error':'Teacher not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         students = teacher.assignedClass.students.all()
 

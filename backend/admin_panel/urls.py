@@ -9,4 +9,5 @@ urlpatterns = [
     path('teacherdetails/',TeacherDetailsListCreateView.as_view(), name='teacherdetails-list-create'),
     path('teacherdetails/<int:pk>/', TeacherDetailsDetailView.as_view(), name='teacherdetails-details'),
     path('classroom/<int:teacherId>/', ClassroomDetailView.as_view(), name='classroomDetail'),
+    path('classroom/', ClassroomListCreateView.as_view(), name='classroomListCreate'),
 ]
