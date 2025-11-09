@@ -34,7 +34,7 @@ export default function EditProfile() {
     
     try {
     const result = await request.POST(
-      "http://localhost:8000/api/update_profile/", formData   // me link eka wens krnna mthk krpaaaan&&&&&&&&&&&&&&&&&
+      "http://localhost:8000/teacherdetails/", formData   // wenas karaa
     );
 
     console.log("Server Response:", result);

@@ -138,9 +138,7 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5473",
-    "http://localhost:5474",
-    "http://localhost:5475",
+    "http://localhost:5173",
 ]
 
 CORS_ALLOWED_CREDENTIALS = True
