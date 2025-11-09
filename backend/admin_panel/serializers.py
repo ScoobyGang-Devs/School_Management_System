@@ -14,4 +14,9 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
 class TeacherDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherDetail
+        exclude = ['assignedClass', 'teacherId']
+
+class ClassroomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Classroom
         fields = '__all__'
