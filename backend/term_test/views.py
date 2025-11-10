@@ -13,3 +13,11 @@ class TermTestListCreateView(generics.ListCreateAPIView):
 class TermTestDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = TermTest.objects.all()
     serializer_class = TermTestSerializer
+
+class SubjectListCreateView(generics.ListCreateAPIView):
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
+
+class SubjectDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer

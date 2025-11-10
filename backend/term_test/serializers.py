@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import TermTest
+from .models import TermTest, Subject
 from admin_panel.models import StudentDetail
 
 class StudentDetailsSerializer(serializers.ModelSerializer):
@@ -12,4 +12,9 @@ class TermTestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TermTest
+        fields = '__all__'
+
+class SubjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subject
         fields = '__all__'

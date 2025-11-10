@@ -27,3 +27,10 @@ class TermTest(models.Model):
 
     def __str__(self):
         return f"{self.student.firstName} {self.student.lastName} - {self.term}"
+    
+class Subject(models.Model):
+    Subject_ID = models.AutoField(primary_key=True)
+    Subject = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.Subject
