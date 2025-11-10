@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'admin_panel',
     'attendence',
     'corsheaders',
+    'term_test',
 ]
 
 MIDDLEWARE = [
