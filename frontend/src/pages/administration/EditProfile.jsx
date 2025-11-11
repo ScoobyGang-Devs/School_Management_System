@@ -4,11 +4,8 @@ import request from "../../reqMethods.jsx"
 export default function EditProfile() {
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const [formData, setFormData] = useState({
-    teacherId: "",
     nic_number: "",
-    firstName: "",
-    lastName: "",
-    surName: "",
+    nameWithInitials: "",
     fullName: "",
     dateOfBirth: "",
     gender: "",
@@ -16,34 +13,37 @@ export default function EditProfile() {
     address: "",
     enrollmentDate: "",
     mobileNumber: "",
-    section: "",
+    subClass: "",
     assignedClass: "",
+    assignToClass: false, // Add checkbox state
   });
 
   const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Profile Updated:", formData);
-    alert("Profile saved successfully!");
     
     try {
-    const result = await request.POST(
-      "http://localhost:8000/teacherdetails/", formData   // wenas karaa
-    );
+      const result = await request.POST(
+        "http://localhost:8000/teacherdetails/", formData
+      );
 
-    console.log("Server Response:", result);
-    alert("Profile saved successfully!");
-  } catch (error) {
-    console.error("Error:", error);
-    alert("Failed to save profile.");
-  }
-};
+      console.log("Server Response:", result);
+      if (result){
+        console.log("Profile Updated:", formData);
+        alert("Profile saved successfully!");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Failed to save profile.");
+    }
+  };
 
   const handleCancel = () => {
     // ✅ Reset all fields back to original stored data
@@ -55,18 +55,6 @@ export default function EditProfile() {
       <h2 className="text-2xl font-semibold mb-6 text-center">Edit Teacher Profile</h2>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Teacher ID */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Teacher ID</label>
-          <input
-            type="text"
-            name="teacherId"
-            value={formData.teacherId}
-            onChange={handleChange}
-            className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-            placeholder="Auto-generated or enter manually"
-          />
-        </div>
 
         {/* NIC Number */}
         <div>
@@ -81,42 +69,33 @@ export default function EditProfile() {
           />
         </div>
 
-        {/* First Name */}
+        {/* Title */}
         <div>
-          <label className="block text-sm font-medium mb-1">First Name</label>
-          <input
-            type="text"
-            name="firstName"
-            value={formData.firstName}
+          <label className="block text-sm font-medium mb-1">Title</label>
+          <select
+            name="title"
+            value={formData.title}
             onChange={handleChange}
             className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-            placeholder="Enter first name"
-          />
+          >
+            <option value="">Select title</option>
+            <option value="Ven.">Ven</option>
+            <option value="Mr.">Mr</option>
+            <option value="Mrs.">Mrs</option>
+            <option value="Miss.">Miss</option>
+          </select>
         </div>
 
-        {/* Last Name */}
+        {/* Name With Initials*/}
         <div>
-          <label className="block text-sm font-medium mb-1">Last Name</label>
+          <label className="block text-sm font-medium mb-1">Name with initials</label>
           <input
             type="text"
-            name="lastName"
-            value={formData.lastName}
+            name="nameWithInitials"
+            value={formData.nameWithInitials}
             onChange={handleChange}
             className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-            placeholder="Enter last name"
-          />
-        </div>
-
-        {/* Surname */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Surname</label>
-          <input
-            type="text"
-            name="surName"
-            value={formData.surName}
-            onChange={handleChange}
-            className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-            placeholder="Enter surname"
+            placeholder="Ex: J.Sinc"
           />
         </div>
 
@@ -129,7 +108,7 @@ export default function EditProfile() {
             value={formData.fullName}
             onChange={handleChange}
             className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-            placeholder="Enter full name"
+            placeholder="Ex: Jonny sinc"
           />
         </div>
 
@@ -211,31 +190,63 @@ export default function EditProfile() {
           />
         </div>
 
-        {/* Section */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Section</label>
-          <input
-            type="text"
-            name="section"
-            value={formData.section}
-            onChange={handleChange}
-            className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-            placeholder="Enter section"
-          />
+        {/* Checkbox for Class Assignment */}
+        <div className="md:col-span-2">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              name="assignToClass"
+              checked={formData.assignToClass}
+              onChange={handleChange}
+              className="mr-2"
+            />
+            <span className="text-sm font-medium">Assigned to a class?</span>
+          </label>
         </div>
 
-        {/* Assigned Class */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Assigned Class</label>
-          <input
-            type="text"
-            name="assignedClass"
-            value={formData.assignedClass}
-            onChange={handleChange}
-            className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-            placeholder="Enter assigned class ID or name"
-          />
-        </div>
+        {/* Conditionally render Section and Assigned Class based on checkbox */}
+        {formData.assignToClass && (
+          <>
+            {/* Grade */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Grade</label>
+              <select
+        name="assignedClass"
+        value={formData.assignedClass}
+        onChange={handleChange}
+        className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
+      >
+        <option value="">Select Grade</option>
+        <option value="Grade 1">Grade 1</option>
+        <option value="Grade 2">Grade 2</option>
+        <option value="Grade 3">Grade 3</option>
+        <option value="Grade 4">Grade 4</option>
+        <option value="Grade 5">Grade 5</option>
+        <option value="Grade 6">Grade 6</option>
+        <option value="Grade 7">Grade 7</option>
+        <option value="Grade 8">Grade 8</option>
+        <option value="Grade 9">Grade 9</option>
+        <option value="Grade 10">Grade 10</option>
+        <option value="Grade 11">Grade 11</option>
+        <option value="Grade 12">Grade 12</option>
+        <option value="Grade 13">Grade 13</option>
+      </select>
+            </div>
+
+            {/* SubClass */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Sub Class</label>
+              <input
+                type="text"
+                name="subClass"
+                value={formData.subClass}
+                onChange={handleChange}
+                className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
+                placeholder="Ex: A"
+              />
+            </div>
+          </>
+        )}
 
         {/* Buttons */}
         <div className="md:col-span-2 flex justify-end gap-4 mt-4">
