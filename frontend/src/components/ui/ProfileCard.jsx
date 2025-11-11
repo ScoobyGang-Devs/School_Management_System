@@ -5,9 +5,8 @@ export default function ProfileCard({ onClose }) {
     JSON.parse(localStorage.getItem("user")) || {
       teacherId: "",
       nic_number: "",
-      firstName: "",
-      lastName: "",
-      surName: "",
+      title: "Mr.",
+      nameWithInitials: "test",
       fullName: "",
       dateOfBirth: "",
       gender: "",
@@ -15,22 +14,42 @@ export default function ProfileCard({ onClose }) {
       address: "",
       enrollmentDate: "",
       mobileNumber: "",
-      section: "",
-      assignedClass: "",
+      grade: "7",
+      subClass: "",
+      assignedToClass: "",
     };
 
-  // Convert key-value pairs to show only filled fields
+  // Create combined fields
+  const combinedName = user.title && user.nameWithInitials 
+    ? `${user.title} ${user.nameWithInitials}`
+    : null;
+
+  const combinedClass = user.grade && user.subClass 
+    ? `${user.grade} ${user.subClass}`
+    : user.grade || user.subClass || null;
+
+  // Convert key-value pairs to show only filled fields, excluding combined ones
   const visibleFields = Object.entries(user).filter(
-    ([, value]) => value && value.trim() !== ""
+    ([key, value]) => 
+      value && 
+      value.trim() !== "" && 
+      !['title', 'nameWithInitials', 'grade', 'subClass','fullName'].includes(key)
   );
+
+  // Add combined fields if they exist
+  if (combinedClass) {
+    visibleFields.unshift(['combinedClass', combinedClass]);
+  }
+  if (combinedName) {
+    visibleFields.unshift(['combinedName', combinedName]);
+  }
 
   // Pretty labels for each key
   const fieldLabels = {
+    combinedName: "Name",
+    combinedClass: "Class",
     teacherId: "Teacher ID",
     nic_number: "NIC Number",
-    firstName: "First Name",
-    lastName: "Last Name",
-    surName: "Surname",
     fullName: "Full Name",
     dateOfBirth: "Date of Birth",
     gender: "Gender",
@@ -38,8 +57,7 @@ export default function ProfileCard({ onClose }) {
     address: "Address",
     enrollmentDate: "Enrollment Date",
     mobileNumber: "Mobile Number",
-    section: "Section",
-    assignedClass: "Assigned Class",
+    assignedToClass: "Assigned To A Class?",
   };
 
   return (

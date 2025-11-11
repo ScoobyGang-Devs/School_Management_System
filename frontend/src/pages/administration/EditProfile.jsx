@@ -5,6 +5,7 @@ export default function EditProfile() {
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const [formData, setFormData] = useState({
     nic_number: "",
+    title: "",
     nameWithInitials: "",
     fullName: "",
     dateOfBirth: "",
@@ -14,9 +15,11 @@ export default function EditProfile() {
     enrollmentDate: "",
     mobileNumber: "",
     subClass: "",
-    assignedClass: "",
-    assignToClass: false, // Add checkbox state
+    grade: "",
+    assignToClass: false,
   });
+
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -24,10 +27,33 @@ export default function EditProfile() {
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     });
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // If checkbox is checked, Grade is required
+    if (formData.assignToClass && !formData.Grade) {
+      newErrors.Grade = "Grade is required when assigned to a class";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      alert("Please fill in all required fields");
+      return;
+    }
     
     try {
       const result = await request.POST(
@@ -36,6 +62,7 @@ export default function EditProfile() {
 
       console.log("Server Response:", result);
       if (result){
+        localStorage.setItem("user", JSON.stringify(formData));
         console.log("Profile Updated:", formData);
         alert("Profile saved successfully!");
       }
@@ -46,8 +73,8 @@ export default function EditProfile() {
   };
 
   const handleCancel = () => {
-    // ✅ Reset all fields back to original stored data
     setFormData(storedUser);
+    setErrors({}); // Clear errors on cancel
   }
 
   return (
@@ -207,35 +234,43 @@ export default function EditProfile() {
         {/* Conditionally render Section and Assigned Class based on checkbox */}
         {formData.assignToClass && (
           <>
-            {/* Grade */}
+            {/* Grade - Required */}
             <div>
-              <label className="block text-sm font-medium mb-1">Grade</label>
+              <label className="block text-sm font-medium mb-1">
+                Grade <span className="text-red-500">*</span>
+              </label>
               <select
-        name="assignedClass"
-        value={formData.assignedClass}
-        onChange={handleChange}
-        className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-      >
-        <option value="">Select Grade</option>
-        <option value="Grade 1">Grade 1</option>
-        <option value="Grade 2">Grade 2</option>
-        <option value="Grade 3">Grade 3</option>
-        <option value="Grade 4">Grade 4</option>
-        <option value="Grade 5">Grade 5</option>
-        <option value="Grade 6">Grade 6</option>
-        <option value="Grade 7">Grade 7</option>
-        <option value="Grade 8">Grade 8</option>
-        <option value="Grade 9">Grade 9</option>
-        <option value="Grade 10">Grade 10</option>
-        <option value="Grade 11">Grade 11</option>
-        <option value="Grade 12">Grade 12</option>
-        <option value="Grade 13">Grade 13</option>
-      </select>
+                name="grade"
+                value={formData.grade}
+                onChange={handleChange}
+                className={`w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring ${
+                  errors.grade ? 'border-red-500' : ''
+                }`}
+                required
+              >
+                <option value="">Select Grade</option>
+                <option value="Grade 1">Grade 1</option>
+                <option value="Grade 2">Grade 2</option>
+                <option value="Grade 3">Grade 3</option>
+                <option value="Grade 4">Grade 4</option>
+                <option value="Grade 5">Grade 5</option>
+                <option value="Grade 6">Grade 6</option>
+                <option value="Grade 7">Grade 7</option>
+                <option value="Grade 8">Grade 8</option>
+                <option value="Grade 9">Grade 9</option>
+                <option value="Grade 10">Grade 10</option>
+                <option value="Grade 11">Grade 11</option>
+                <option value="Grade 12">Grade 12</option>
+                <option value="Grade 13">Grade 13</option>
+              </select>
+              {errors.grade && (
+                <p className="text-red-500 text-xs mt-1">{errors.grade}</p>
+              )}
             </div>
 
-            {/* SubClass */}
+            {/* SubClass - Optional */}
             <div>
-              <label className="block text-sm font-medium mb-1">Sub Class</label>
+              <label className="block text-sm font-medium mb-1">Sub Class (Optional)</label>
               <input
                 type="text"
                 name="subClass"
