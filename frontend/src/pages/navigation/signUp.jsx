@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import request from "../../reqMethods.jsx";
 import { useNavigate } from "react-router-dom";
 
-const LoginForm = () => {
+const SignupForm = () => {
   const [formData, setFormData] = useState({
     username: "",
-    password: "",
-    userType: "",
+    nic_number: "",
+    password1: "",
+    password2: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -20,9 +21,15 @@ const LoginForm = () => {
 
   const validateForm = () => {
     const newErrors = {};
+    
     if (!formData.username.trim()) newErrors.username = "Username is required";
-    if (!formData.password) newErrors.password = "Password is required";
-    if (!formData.userType) newErrors.userType = "Please select the user type";
+    if (!formData.nic_number.trim()) newErrors.nic_number = "NIC number is required";
+    if (!formData.password1) newErrors.password1 = "Password is required";
+    if (!formData.password2) newErrors.password2 = "Please re-enter password";
+    if (formData.password1 && formData.password2 && formData.password1 !== formData.password2) {
+      newErrors.password2 = "Passwords do not match";
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -31,38 +38,28 @@ const LoginForm = () => {
     e.preventDefault();
 
     if (validateForm()) {
-      const path =
-        formData.userType === "teacher" ? "teacherdetails" : "admindetails";
 
       try {
         const response = await request.POST(
-          `http://localhost:8000/login/${path}`,
+          `http://localhost:8000/signup/teacherprofiles`,  // link eka wens krpn
           {
             username: formData.username,
-            password: formData.password,
+            nic_number: formData.nic_number,
+            password: formData.password1,
           }
         );
 
-        if (response) {
-          alert(`✅ Login successful!`);
-          localStorage.setItem("user", JSON.stringify(response));
-          // to create token headers
-          // Headers = localStorage
-          const data = request.GET('http://localhost:8000/teacherprofiles',)
-          localStorage.setItem("user",JSON.stringify(data));
-          navigate("/"); // ✅ navigate to Dashboard
+        if (response.ok) {
+          alert(`✅ Signup successful!`);
+          navigate("/Dashboard");
         } else {
-          alert("❌ Username or password is wrong!");
+          alert("❌ Signup failed. Please try again!");
         }
       } catch (error) {
-        console.error("Error during login:", error);
+        console.error("Error during signup:", error);
         alert("⚠️ Network or server error. Please try again later.");
       }
     }
-  };
-
-  const handleSignupClick = () => {
-    navigate("/signup"); // Navigate to signup page
   };
 
   const styles = {
@@ -117,17 +114,6 @@ const LoginForm = () => {
       transition: "transform 0.2s, box-shadow 0.2s",
       boxShadow: "0 4px 14px rgba(37, 99, 235, 0.4)",
     },
-    signupButton: {
-      width: "100%",
-      padding: "12px 0",
-      borderRadius: "10px",
-      border: "1px solid rgba(255,255,255,0.2)",
-      background: "transparent",
-      color: "white",
-      fontSize: "1rem",
-      cursor: "pointer",
-      transition: "all 0.2s ease",
-    },
     error: {
       color: "#f87171",
       fontSize: "0.8rem",
@@ -140,7 +126,7 @@ const LoginForm = () => {
         style={styles.formWrapper}
         className="hover:[transform:perspective(1000px)_rotateY(4deg)] hover:shadow-2xl"
       >
-        <h2 className="text-center text-2xl font-semibold mb-6">Login</h2>
+        <h2 className="text-center text-2xl font-semibold mb-6">Sign Up</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {/* Username */}
           <div>
@@ -161,56 +147,64 @@ const LoginForm = () => {
             )}
           </div>
 
+          {/* NIC Number */}
+          <div>
+            <label htmlFor="nic_number" className="block mb-1 text-sm font-medium">
+              NIC Number
+            </label>
+            <input
+              type="text"
+              id="nic_number"
+              name="nic_number"
+              placeholder="Enter your NIC number"
+              value={formData.nic_number}
+              onChange={handleInputChange}
+              style={styles.input}
+            />
+            {errors.nic_number && (
+              <span style={styles.error}>{errors.nic_number}</span>
+            )}
+          </div>
+
           {/* Password */}
           <div>
-            <label htmlFor="password" className="block mb-1 text-sm font-medium">
+            <label htmlFor="password1" className="block mb-1 text-sm font-medium">
               Password
             </label>
             <input
               type="password"
-              id="password"
-              name="password"
+              id="password1"
+              name="password1"
               placeholder="Enter your password"
-              value={formData.password}
+              value={formData.password1}
               onChange={handleInputChange}
               style={styles.input}
             />
-            {errors.password && (
-              <span style={styles.error}>{errors.password}</span>
+            {errors.password1 && (
+              <span style={styles.error}>{errors.password1}</span>
             )}
           </div>
 
-          {/* Role */}
+          {/* Confirm Password */}
           <div>
-            <label className="block mb-1 text-sm font-medium">Login As</label>
-            <div style={{ display: "flex", justifyContent: "space-around" }}>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  name="userType"
-                  value="teacher"
-                  checked={formData.userType === "teacher"}
-                  onChange={handleInputChange}
-                />
-                Teacher
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  name="userType"
-                  value="admin"
-                  checked={formData.userType === "admin"}
-                  onChange={handleInputChange}
-                />
-                Admin
-              </label>
-            </div>
-            {errors.userType && (
-              <span style={styles.error}>{errors.userType}</span>
+            <label htmlFor="password2" className="block mb-1 text-sm font-medium">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              id="password2"
+              name="password2"
+              placeholder="Re-enter your password"
+              value={formData.password2}
+              onChange={handleInputChange}
+              style={styles.input}
+            />
+            {errors.password2 && (
+              <span style={styles.error}>{errors.password2}</span>
             )}
           </div>
 
-          {/* Login Button */}
+          {/* Submit */}
           <button
             type="submit"
             style={styles.button}
@@ -221,39 +215,26 @@ const LoginForm = () => {
               (e.target.style.transform = "scale(1) translateY(0)")
             }
           >
-            Login
+            Sign Up
           </button>
 
-          {/* Divider */}
-          <div className="relative my-2">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-600"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-800 text-gray-400">Or</span>
-            </div>
+          {/* Login Link */}
+          <div className="text-center mt-4">
+            <p className="text-sm text-gray-300">
+              Already have an account?{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="text-blue-400 hover:text-blue-300 underline cursor-pointer bg-transparent border-none"
+              >
+                Login here
+              </button>
+            </p>
           </div>
-
-          {/* Signup Button */}
-          <button
-            type="button"
-            onClick={handleSignupClick}
-            style={styles.signupButton}
-            onMouseEnter={(e) => {
-              e.target.style.background = "rgba(255,255,255,0.1)";
-              e.target.style.transform = "scale(1.03) translateY(-2px)";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = "transparent";
-              e.target.style.transform = "scale(1) translateY(0)";
-            }}
-          >
-            Create New Account
-          </button>
         </form>
       </div>
     </div>
   );
 };
 
-export default LoginForm;
+export default SignupForm;

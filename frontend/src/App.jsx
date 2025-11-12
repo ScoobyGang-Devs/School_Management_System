@@ -11,6 +11,7 @@ export const ThemeContext = createContext()
 
 // --- Pages ---
 import LoginForm from './pages/navigation/loginForm'
+import SignupForm from './pages/navigation/signUp'
 import Dashboard from './pages/navigation/Dashboard'
 import Settings from './pages/navigation/Settings'
 import InternalMessaging from './pages/navigation/InternalMessaging'
@@ -26,18 +27,19 @@ import GradeAssignments from './pages/teacher_tools/GradeAssignments'
 function App() {
   const location = useLocation()
 
-  // ✅ Check if we are on the login page
-  const isLoginPage = location.pathname === "/login"
+  // ✅ Check if we are on the login or signup page
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/signup"
 
   return (
     <ThemeProvider defaultTheme="root" storageKey="vite-ui-theme">
       <SidebarProvider>
         {/* ✅ Conditional Layout */}
-        {isLoginPage ? (
-          // --- LOGIN PAGE (No sidebar, no top bar) ---
+        {isAuthPage ? (
+          // --- AUTH PAGES (No sidebar, no top bar) ---
           <div className="min-h-screen w-full flex items-center justify-center bg-background text-foreground">
             <Routes>
               <Route path="/login" element={<LoginForm />} />
+              <Route path="/signup" element={<SignupForm />} />
             </Routes>
           </div>
         ) : (
