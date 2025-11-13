@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react"; // Assuming you use lucide-react for icons
+import { Link } from 'react-router-dom';
 
 // You might want to pass these as props later, but for now, hardcoded:
 const gradeLevel = 6;
@@ -33,9 +34,11 @@ function GradeCard({gradeLevel,studentCount}) { // Changed to a functional compo
       </CardContent>
       <CardFooter>
         {/* The Button acts as the primary "action" for this card */}
+        <Link to={`/admin/students/classes/${gradeLevel}`} className="w-full">
         <Button className="w-full">
           View Classes
         </Button>
+        </Link>
       </CardFooter>
     </Card>
   );

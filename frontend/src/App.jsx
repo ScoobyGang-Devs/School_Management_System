@@ -2,7 +2,7 @@ import './App.css'
 import { AppSidebar } from '@/components/app-sidebar.jsx'
 import TopBar from './components/TopBar'
 import { SidebarProvider } from './components/ui/sidebar'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route,useLocation} from 'react-router-dom'
 import { ThemeProvider } from "@/components/theme-provider"
 import { createContext } from 'react'
 
@@ -23,6 +23,8 @@ import EditProfile from './pages/administration/EditProfile'
 import MyClasses from './pages/teacher_tools/MyClasses'
 import TakeAttendance from './pages/teacher_tools/TakeAttendance'
 import GradeAssignments from './pages/teacher_tools/GradeAssignments'
+import RelaventClassesForGrade from './pages/studentDatabase/RelaventClassesForGrade.jsx'
+import GradesPage from './pages/studentDatabase/GradesPage.jsx'
 
 function App() {
   const location = useLocation()
@@ -72,7 +74,10 @@ function App() {
                   {/* ADMIN */}
                   <Route path="/admin/attendance" element={<SchoolWideAttendance />} />
                   <Route path="/admin/results" element={<SchoolWideResults />} />
-                  <Route path="/admin/students" element={<StudentDatabase />} />
+                  <Route path="/admin/students/*" element={<StudentDatabase />} >
+                          <Route index element={<GradesPage />} /> 
+                          <Route path="classes/:gradeLevel" element={<RelaventClassesForGrade />} />
+                  </Route>
                   <Route path="/admin/users" element={<UserManagement />} />
 
                   {/* TEACHER */}
