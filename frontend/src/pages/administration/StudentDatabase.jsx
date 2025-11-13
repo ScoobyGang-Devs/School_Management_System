@@ -8,24 +8,25 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import GradeCard from '@/components/grade-card.jsx'
 
 const StudentDatabase = () => {
+  const grades = [6, 7, 8, 9, 10, 11];
+
   return (
     <>
-    <div>StudentDatabase</div>
-    <Card className="w-[350px]">
-  <CardHeader>
-    <CardTitle>Card Title</CardTitle>
-    <CardDescription>Card Description</CardDescription>
-    <CardAction>Card Action</CardAction>
-  </CardHeader>
-  <CardContent>
-    <p>Card Content</p>
-  </CardContent>
-  <CardFooter>
-    <p>Card Footer</p>
-  </CardFooter>
-</Card>
+
+
+      <h1 className="text-4xl font-bold mb-8">Student Database</h1>
+      
+      <div className="flex flex-wrap justify-start gap-8">
+        {grades.map((grade) => (
+          <GradeCard key={grade} gradeLevel={grade} studentCount={Math.floor(Math.random() * 100) + 50} /> 
+          // You'd pass real student counts from your data
+        ))}
+      </div>
+
+
 </>
   )
 }
