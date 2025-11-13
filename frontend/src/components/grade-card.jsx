@@ -10,9 +10,7 @@ import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react"; // Assuming you use lucide-react for icons
 import { Link } from 'react-router-dom';
 
-// You might want to pass these as props later, but for now, hardcoded:
-const gradeLevel = 6;
-const studentCount = 125; // Example student count
+
 
 function GradeCard({gradeLevel,studentCount}) { // Changed to a functional component
   return (
