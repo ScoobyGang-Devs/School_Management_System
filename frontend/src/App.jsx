@@ -1,6 +1,6 @@
 import './App.css'
 import { AppSidebar } from '@/components/app-sidebar.jsx'
-import TopBar from '@/components/TopBar.jsx'
+import TopBar from './components/TopBar'
 import { SidebarProvider } from './components/ui/sidebar'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { ThemeProvider } from "@/components/theme-provider"
