@@ -26,14 +26,15 @@ function ResultClassCard({ gradeLevel, className, studentCount }) {
       </CardHeader>
       <CardContent>
         <CardDescription className="text-sm text-muted-foreground">
-          View all student records and details.
+            {studentCount} Students
         </CardDescription>
         <div className="text-2xl font-bold mt-4">
-          {studentCount} Students
+          <p>Avg. Mark: <span>67.5%</span></p>
+          
         </div>
-        <p className="text-xs text-muted-foreground">
-          Current enrollment for this class.
-        </p>
+        <div className="text-xs text-muted-foreground">
+          Avg. of all students
+        </div>
       </CardContent>
       <CardFooter>
         <Link to={linkPath} className="w-full">

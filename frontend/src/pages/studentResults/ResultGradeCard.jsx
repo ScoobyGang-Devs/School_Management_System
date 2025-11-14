@@ -19,22 +19,34 @@ function ResultGradeCard({gradeLevel,studentCount}) { // Changed to a functional
         <CardTitle className="text-3xl font-bold">Grade {gradeLevel}</CardTitle>
         <BookOpen className="h-6 w-6 text-muted-foreground" /> {/* Icon */}
       </CardHeader>
-      <CardContent>
-        <CardDescription className="text-sm text-muted-foreground">
-          View all students and classes for Grade {gradeLevel}.
-        </CardDescription>
-        <div className="text-2xl font-bold mt-4">
-          {studentCount} Students
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Currently enrolled in this grade.
-        </p>
-      </CardContent>
+        <CardContent>
+            {/* REVISED CardDescription with Mock Data */}
+            <CardDescription className="text-sm text-muted-foreground space-y-1">
+
+              <p>
+                  {studentCount} Students
+              </p>
+              <p>
+                <span className="font-semibold text-primary">Avg. Pass Rate:</span> 76%
+              </p>
+              <p>
+                <span className="font-semibold text-primary">Avg. Mark:</span> 76.8%
+              </p>
+            </CardDescription>
+
+            {/* Original Student Count Display */}
+            <div className="text-1xl font-bold mt-4">
+              <p>
+                <span className="font-semibold text-primary">Last Exam:</span> Final Term 2025
+              </p>
+
+            </div>
+          </CardContent>
       <CardFooter>
         {/* The Button acts as the primary "action" for this card */}
         <Link to={`/admin/results/classes/${gradeLevel}`} className="w-full">
         <Button className="w-full">
-          View Classes
+          View Results
         </Button>
         </Link>
       </CardFooter>

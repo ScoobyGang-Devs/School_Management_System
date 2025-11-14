@@ -37,7 +37,7 @@ const RelaventClassResultsForGrade = () => {
             
             <div className="flex flex-wrap justify-start gap-8">
                 {classes.map((classData) => (
-                    <ClassCard 
+                    <ResultClassCard 
                         key={classData.name}
                         gradeLevel={gradeLevel}
                         className={classData.name}
