@@ -27,6 +27,11 @@ import RelaventClassesForGrade from './pages/studentDatabase/RelaventClassesForG
 import GradesPage from './pages/studentDatabase/GradesPage.jsx'
 import ClassPage from './pages/studentDatabase/ClassPage.jsx'
 
+import RelaventClassResultsForGrade from './pages/studentResults/RelaventClassResultsForGrade.jsx'
+import ResultGradePage from './pages/studentResults/ResultGradePage.jsx'
+import ResultClassPage from './pages/studentResults/ResultClassPage.jsx'
+
+
 function App() {
   const location = useLocation()
 
@@ -74,7 +79,15 @@ function App() {
 
                   {/* ADMIN */}
                   <Route path="/admin/attendance" element={<SchoolWideAttendance />} />
-                  <Route path="/admin/results" element={<SchoolWideResults />} />
+                  <Route path="/admin/results/*" element={<SchoolWideResults />} >
+
+                    <Route index element={<ResultGradePage />} />
+                    <Route path="classes/:gradeLevel" element={<RelaventClassResultsForGrade />} >
+                      <Route path=":classId" element={<ResultClassPage />} />
+                    </Route>
+                  </Route>
+                  
+
                   <Route path="/admin/students/*" element={<StudentDatabase />} >
                           <Route index element={<GradesPage />} /> 
                           <Route path="classes/:gradeLevel" element={<RelaventClassesForGrade />} >
