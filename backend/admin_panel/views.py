@@ -34,6 +34,7 @@ class TeacherDetailsListCreateView(generics.ListCreateAPIView):
 class TeacherDetailsDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = TeacherDetail.objects.defer('assignedClass')
     serializer_class = TeacherDetailsSerializer
+    permission_classes = [IsAuthenticated]
 
 class ClassroomListCreateView(generics.ListCreateAPIView):
     queryset = Classroom.objects.all()
@@ -65,12 +66,12 @@ class SignupView(APIView):
             return Response({"message": "User created successfully."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class LoginView(APIView):
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data
-            login(request, user)
-            return Response({"message": "Logged in successfully."})
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# class LoginView(APIView):
+#     def post(self, request):
+#         serializer = LoginSerializer(data=request.data)
+#         if serializer.is_valid():
+#             user = serializer.validated_data
+#             login(request, user)
+#             return Response({"message": "Logged in successfully."})
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
