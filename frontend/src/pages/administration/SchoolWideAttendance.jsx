@@ -1,14 +1,19 @@
 import React from 'react'
-import AttendenceCard from '../Attendance/AttendenceCard'
+import { Outlet, useLocation } from 'react-router-dom';
+
+
+
 
 const SchoolWideAttendance = () => {
-  return (
-    <div className="flex flex-col sm:flex-row gap-6 w-full justify-center items-center sm:items-stretch py-4">
 
-      <AttendenceCard catogery="Student"/>
-      <AttendenceCard catogery="Teachers"/>
-    </div>
-    
+
+  return (
+    <>
+
+<h1 className="text-4xl font-bold mb-8">Attendance</h1>
+      
+      <Outlet />
+</>
   )
 }
 
