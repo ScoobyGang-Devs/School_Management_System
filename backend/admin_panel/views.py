@@ -4,6 +4,8 @@ from rest_framework import generics,status
 from rest_framework.permissions import IsAuthenticated
 from .serializers import *
 from .models import *
+from .permissions import IsStaffUser
+
 
 # Create your views here.
 class guardianListCreateView(generics.ListCreateAPIView):
@@ -68,3 +70,21 @@ class SignupView(APIView):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
+class StudentGradeSummary(APIView):
+    permission_classes = [IsStaffUser]
+
+    def get(self, request):
+        summary = {}
+        for grade in range(6, 12):
+            count = StudentDetail.objects.filter(enrolledClass__grade=grade).count()
+            summary[f"Grade {grade}"] = count
+        return Response(summary)
+
+class StudentByGradeList(generics.ListAPIView):
+    serializer_class = StudentDetailSerializer
+    permission_classes = [IsStaffUser]
+
+    def get_queryset(self):
+        grade = self.kwargs['grade']
+        return StudentDetail.objects.filter(enrolledClass__grade=grade)

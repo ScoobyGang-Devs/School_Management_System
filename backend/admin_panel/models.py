@@ -11,6 +11,7 @@ phone_regex = RegexValidator(
 
 class Classroom(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    grade = models.IntegerField()
 
     def __str__(self):
         return self.name
