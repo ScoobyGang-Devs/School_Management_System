@@ -49,7 +49,7 @@ const SignupForm = () => {
 
       try {
         const response = await request.POST(
-          `http://localhost:8000/signup/teacherprofiles`,  // link eka wens krpn
+          `http://localhost:8000/signup/`,  // link eka wens kara
           {
             username: formData.username,
             nic_number: formData.nic_number,

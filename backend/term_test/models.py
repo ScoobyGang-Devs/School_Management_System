@@ -52,10 +52,7 @@ class SubjectwiseMark(models.Model):
     )
 
     # Mark_Type_ID = models.ForeignKey(
-<<<<<<< HEAD
     #     MarkType,
-=======
->>>>>>> b000c3da32f43e3af3b615baac6fa9d6c8c07e76
     #     on_delete=models.CASCADE,
     #     related_name='mark_type_marks'
     # )
