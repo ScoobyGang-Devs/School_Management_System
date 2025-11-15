@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from .models import TermTest, Subject
-from admin_panel.models import StudentDetail
+from .models import *
+from admin_panel.models import *
 
 class StudentDetailsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,4 +17,9 @@ class TermTestSerializer(serializers.ModelSerializer):
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subject
+        fields = '__all__'
+
+class SubjectwiseMarkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubjectwiseMark
         fields = '__all__'

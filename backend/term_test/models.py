@@ -1,5 +1,5 @@
 from django.db import models
-from admin_panel.models import StudentDetail
+from admin_panel.models import *
 
 # Create your models here.
 
@@ -34,3 +34,41 @@ class Subject(models.Model):
 
     def __str__(self):
         return self.Subject
+    
+class SubjectwiseMark(models.Model):
+    subjectwise_Mark_ID=models.BigAutoField(primary_key=True)
+    Student_ID = models.ForeignKey(
+        StudentDetail,
+        on_delete=models.CASCADE,
+        related_name='subject_marks'
+    )
+
+    Subject_ID = models.ForeignKey(
+        Subjects,
+        on_delete=models.CASCADE,
+        related_name='subject_marks'
+    )
+
+    Mark_Type_ID = models.ForeignKey(
+        MarkType,
+        on_delete=models.CASCADE,
+        related_name='mark_type_marks'
+    )
+
+    Term = models.CharField(max_length=10)
+
+    Marks_Obtained = models.DecimalField(max_digits=5, decimal_places=2)
+    Max_Marks = models.DecimalField(max_digits=5, decimal_places=2)
+
+    Teacher_ID = models.ForeignKey(
+        TeacherDetail,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='teacher_marks'
+    )
+
+    Date_Recorded = models.DateField()
+
+    def __str__(self):
+        return f"{self.Student_ID.name} - {self.Subject_ID.subject_name} - {self.Term}"
+

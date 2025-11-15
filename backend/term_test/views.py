@@ -21,3 +21,11 @@ class SubjectListCreateView(generics.ListCreateAPIView):
 class SubjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
+
+class SubjectwiseMarkListCreateView(generics.ListCreateAPIView):
+    queryset = SubjectwiseMark.objects.all()
+    serializer_class = SubjectwiseMarkSerializer
+
+class SubjectwiseMarkListDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = SubjectwiseMark.objects.all()
+    serializer_class = SubjectwiseMarkSerializer
