@@ -23,3 +23,4 @@ class SubjectwiseMarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubjectwiseMark
         fields = '__all__'
+        

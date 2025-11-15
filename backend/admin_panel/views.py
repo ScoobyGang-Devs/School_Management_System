@@ -29,7 +29,8 @@ class StudentDetailsDetailView(generics.RetrieveUpdateDestroyAPIView):
 class TeacherDetailsDetailView(generics.RetrieveUpdateAPIView):
     queryset = TeacherDetail.objects.all()
     serializer_class = TeacherDetailsSerializer
-
+    permission_classes = [IsAuthenticated]
+    
     def get_object(self):
         return self.request.user.teacher_profile
 
