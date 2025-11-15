@@ -30,17 +30,19 @@ class TermTest(models.Model):
     
 class Subject(models.Model):
     Subject_ID = models.AutoField(primary_key=True)
-    Subject = models.CharField(max_length=100)
+    Subject_name = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.Subject
+        return self.Subject_name
+
+
     
 class SubjectwiseMark(models.Model):
     subjectwise_Mark_ID=models.BigAutoField(primary_key=True)
     Student_ID = models.ForeignKey(
         StudentDetail,
         on_delete=models.CASCADE,
-        related_name='subject_marks'
+        related_name='student_mark_id'
     )
 
     Subject_ID = models.ForeignKey(
@@ -63,11 +65,10 @@ class SubjectwiseMark(models.Model):
         TeacherDetail,
         on_delete=models.SET_NULL,
         null=True,
-        related_name='teacher_marks'
+        related_name='teacher_marking'
     )
 
-    Date_Recorded = models.DateField()
+    Date_Recorded = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.Student_ID.name} - {self.Subject_ID.subject_name} - {self.Term}"
-
+        return f"{self.Student_ID.firstName} - {self.Subject_ID.Subject_name} - {self.Term}"

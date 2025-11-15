@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import request from "../../reqMethods.jsx";
 import { useNavigate } from "react-router-dom";
+import { passiveEventSupported } from "@tanstack/react-table";
 
 const SignupForm = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +9,7 @@ const SignupForm = () => {
     nic_number: "",
     password1: "",
     password2: "",
+    email:""
   });
 
   const [errors, setErrors] = useState({});
@@ -26,6 +28,12 @@ const SignupForm = () => {
     if (!formData.nic_number.trim()) newErrors.nic_number = "NIC number is required";
     if (!formData.password1) newErrors.password1 = "Password is required";
     if (!formData.password2) newErrors.password2 = "Please re-enter password";
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    //checking validity of the email with REGEX
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = "Please enter a valid email address.";
+    }
+
     if (formData.password1 && formData.password2 && formData.password1 !== formData.password2) {
       newErrors.password2 = "Passwords do not match";
     }
@@ -45,7 +53,9 @@ const SignupForm = () => {
           {
             username: formData.username,
             nic_number: formData.nic_number,
-            password: formData.password1,
+            password1: formData.password1,
+            password2: formData.password2,
+            email:formData.email
           }
         );
 
@@ -165,6 +175,22 @@ const SignupForm = () => {
               <span style={styles.error}>{errors.nic_number}</span>
             )}
           </div>
+          {/* Email */}
+          <div>
+            <label htmlFor="email" className="block mb-1 text-sm font-medium">
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleInputChange}
+              style={styles.input}
+            />
+            {errors.email && <span style={styles.error}>{errors.email}</span>}
+          </div>
 
           {/* Password */}
           <div>
@@ -203,6 +229,7 @@ const SignupForm = () => {
               <span style={styles.error}>{errors.password2}</span>
             )}
           </div>
+
 
           {/* Submit */}
           <button
