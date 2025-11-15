@@ -44,16 +44,16 @@ class SubjectwiseMark(models.Model):
     )
 
     Subject_ID = models.ForeignKey(
-        Subjects,
+        Subject,
         on_delete=models.CASCADE,
         related_name='subject_marks'
     )
 
-    Mark_Type_ID = models.ForeignKey(
-        MarkType,
-        on_delete=models.CASCADE,
-        related_name='mark_type_marks'
-    )
+    # Mark_Type_ID = models.ForeignKey(
+    #     MarkType,
+    #     on_delete=models.CASCADE,
+    #     related_name='mark_type_marks'
+    # )
 
     Term = models.CharField(max_length=10)
 

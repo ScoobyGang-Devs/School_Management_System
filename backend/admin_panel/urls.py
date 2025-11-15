@@ -6,10 +6,9 @@ urlpatterns = [
     path('guardiandetails/<int:pk>/',guardianDetailView.as_view(),name ='guardianListDetail'),
     path('studentdetails/', StudentDetailsListCreateView.as_view(), name='studentdetails-list-create'),
     path('studentdetails/<int:pk>/', StudentDetailsDetailView.as_view(), name='studentdetails-details'),
-    path('teacherdetails/',TeacherDetailsListCreateView.as_view(), name='teacherdetails-list-create'),
+    # path('teacherdetails/',TeacherDetailsListCreateView.as_view(), name='teacherdetails-list-create'),
     path('teacherdetails/<int:pk>/', TeacherDetailsDetailView.as_view(), name='teacherdetails-details'),
     path('classroom/<int:teacherId>/', ClassroomDetailView.as_view(), name='classroomDetail'),
     path('signup/', SignupView.as_view(), name='signup'),
-    path('login/', LoginView.as_view(), name='login'),
     path('classroom/', ClassroomListCreateView.as_view(), name='classroomListCreate'),
 ]

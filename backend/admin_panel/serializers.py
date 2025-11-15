@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import *
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+from django.db import transaction
 
 class guardianSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,33 +27,40 @@ class ClassroomSerializer(serializers.ModelSerializer):
 class SignupSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(write_only=True, style={'input_type': 'password'})
     password2 = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    nic_number = serializers.CharField()
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password1', 'password2')
+        fields = ('username', 'email','nic_number', 'password1', 'password2')
 
     def validate(self, data):
+        nic_number = data['nic_number']
+
+        if not TeacherNIC.objects.filter(nic_number=nic_number, is_used=False).exists():
+            raise serializers.ValidationError("You are not a Teacher or NIC already used.")
+        
         if data['password1'] != data['password2']:
             raise serializers.ValidationError("Passwords do not match.")
+        
         return data
 
+    @transaction.atomic
     def create(self, validated_data):
+
+        nic_entry = TeacherNIC.objects.get(nic_number=validated_data['nic_number'])
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
             password=validated_data['password1']
         )
+        TeacherDetail.objects.create(
+            owner = user,
+            nic_number=nic_entry
+        )
+        nic_entry.is_used = True
+        nic_entry.save()
+        
         return user
-    
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
 
-    def validate(self, data):
-        from django.contrib.auth import authenticate
-        user = authenticate(username=data['username'], password=data['password'])
-        if user and user.is_active:
-            return user
-        raise serializers.ValidationError("Invalid credentials.")
     
         

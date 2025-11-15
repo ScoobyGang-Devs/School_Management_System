@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import RegexValidator
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -14,6 +15,13 @@ class Classroom(models.Model):
     def __str__(self):
         return self.name
 
+class TeacherNIC(models.Model):
+    nic_number = models.CharField(max_length=25, unique=True, blank=False, null=False)
+    is_used = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.nic_number
+    
 class GuardianDetail(models.Model):
 
     GUARDIAN = [
@@ -67,8 +75,14 @@ class TeacherDetail(models.Model):
         'F':'Female'
     }
 
+    owner = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='teacher_profile'
+    )
+
     teacherId = models.AutoField(primary_key=True, blank=False, unique=True)
-    nic_number = models.IntegerField(unique=True)
+    nic_number = models.OneToOneField(TeacherNIC, on_delete=models.PROTECT)
     firstName = models.CharField(max_length=100)
     lastName = models.CharField(max_length=100)
     surName = models.CharField(max_length=100)
