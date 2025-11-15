@@ -10,14 +10,15 @@ export const Payment = {
 // These are the column definitions for the table.
 // The array is defined directly without the TypeScript generic type annotation.
 export const columns = [
+    {
+    accessorKey: "id",
+    header: "Id",
+  },
   {
     accessorKey: "name",
     header: "Name",
   },
-  {
-    accessorKey: "exam",
-    header: "Exam",
-  },
+
   {
     accessorKey: "result",
     header: "Result",
