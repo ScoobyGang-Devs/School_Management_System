@@ -1,15 +1,24 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { LayoutList, UserPlus, FileText } from 'lucide-react'; 
+import { LayoutList, UserPlus, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+// Import all necessary Shadcn Table components
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table'; 
 
 const MOCK_STUDENTS = [
-    { id: 1001, name: "Emily Johnson", attendance_status: "Present", score_avg: 92, last_active: "Today" },
-    { id: 1002, name: "Liam Chen", attendance_status: "Absent", score_avg: 78, last_active: "2 days ago" },
-    { id: 1003, name: "Sofia Rodriguez", attendance_status: "Present", score_avg: 95, last_active: "Today" },
-    { id: 1004, name: "Noah Williams", attendance_status: "Late", score_avg: 85, last_active: "Yesterday" },
-    { id: 1005, name: "Aisha Khan", attendance_status: "Present", score_avg: 88, last_active: "Today" },
-    { id: 1006, name: "Jacob Brown", attendance_status: "Absent", score_avg: 65, last_active: "1 week ago" },
+    { id: 1001, name: "Emily Johnson", attendance_status: "Present", score_avg: 92,  },
+    { id: 1002, name: "Liam Chen", attendance_status: "Absent", score_avg: 78,  },
+    { id: 1003, name: "Sofia Rodriguez", attendance_status: "Present", score_avg: 95,  },
+    { id: 1004, name: "Noah Williams", attendance_status: "Late", score_avg: 85, },
+    { id: 1005, name: "Aisha Khan", attendance_status: "Present", score_avg: 88,  },
+    { id: 1006, name: "Jacob Brown", attendance_status: "Absent", score_avg: 65, }
 ];
 
 const ClassDataPage = () => {
@@ -19,7 +28,7 @@ const ClassDataPage = () => {
     // Determine the title based on the URL
     const pageTitle = `Roster: Grade ${gradeLevel}${classId}`;
 
-    // Helper function for styling attendance status
+    // Helper function for styling attendance status (Kept the same)
     const getStatusStyle = (status) => {
         switch (status) {
             case 'Present': return 'bg-green-100 text-green-800';
@@ -30,8 +39,8 @@ const ClassDataPage = () => {
     };
 
     return (
-        <div className="p-4 bg-card rounded-xl shadow-lg">
-            
+        <div >
+
             {/* Header and Actions */}
             <div className="flex justify-between items-center mb-6 border-b pb-4">
                 <h1 className="text-3xl font-extrabold text-foreground flex items-center gap-2">
@@ -47,43 +56,42 @@ const ClassDataPage = () => {
                 </div>
             </div>
 
-            {/* Student Data Table */}
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-border">
-                    <thead>
-                        <tr className="text-left text-sm font-semibold text-muted-foreground">
-                            <th className="py-3 px-4">Student ID</th>
-                            <th className="py-3 px-4">Full Name</th>
-                            <th className="py-3 px-4">Attendance Today</th>
-                            <th className="py-3 px-4">Score Avg.</th>
-                            <th className="py-3 px-4">Last Activity</th>
-                            <th className="py-3 px-4 text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/50">
+            {/* Student Data Table using Shadcn components */}
+            <div className="rounded-md border">
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-muted/30 hover:bg-muted/30">
+                            <TableHead className="w-[100px]">Student ID</TableHead>
+                            <TableHead>Full Name</TableHead>
+                            <TableHead>Attendance Today</TableHead>
+                            <TableHead>Score Avg.</TableHead>
+                            <TableHead>Last Activity</TableHead>
+                            <TableHead className="text-center">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
                         {MOCK_STUDENTS.map((student) => (
-                            <tr key={student.id} className="hover:bg-muted/50 transition-colors">
-                                <td className="py-3 px-4 text-sm text-muted-foreground">{student.id}</td>
-                                <td className="py-3 px-4 text-base font-medium text-primary cursor-pointer hover:underline">
-                                    {/* In a real app, this would link to /profile/1001 */}
+                            <TableRow key={student.id}>
+                                <TableCell className="font-mono text-xs text-muted-foreground">{student.id}</TableCell>
+                                <TableCell className="font-medium cursor-pointer hover:underline">
                                     {student.name}
-                                </td>
-                                <td className="py-3 px-4">
-                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusStyle(student.attendance_status)}`}>
+                                </TableCell>
+                                <TableCell>
+                                    {/* Applying the status style here */}
+                                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusStyle(student.attendance_status)}`}>
                                         {student.attendance_status}
                                     </span>
-                                </td>
-                                <td className="py-3 px-4 text-sm font-semibold">{student.score_avg}%</td>
-                                <td className="py-3 px-4 text-sm text-muted-foreground">{student.last_active}</td>
-                                <td className="py-3 px-4 text-center">
+                                </TableCell>
+                                <TableCell className="font-semibold">{student.score_avg}%</TableCell>
+                                <TableCell className="text-center">
                                     <Button variant="ghost" size="sm">Details</Button>
-                                </td>
-                            </tr>
+                                </TableCell>
+                            </TableRow>
                         ))}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
             </div>
-            
+
             <div className="mt-6 text-sm text-muted-foreground">
                 Displaying {MOCK_STUDENTS.length} students in class {gradeLevel}{classId}.
             </div>

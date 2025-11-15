@@ -78,7 +78,11 @@ function App() {
                   <Route path="/edit-profile" element={<EditProfile />} />
 
                   {/* ADMIN */}
-                  <Route path="/admin/attendance" element={<SchoolWideAttendance />} />
+                  <Route path="/admin/attendance/*" element={<SchoolWideAttendance />}>
+                    {/* <Route index element={<MainAttendancePage />} />
+                    <Route path="students/:studentId" element={<StudentAttendancePage />} />
+                    <Route path="teachers/:teacherId" element={<TeacherAttendancePage />} /> */}
+                  </Route>
                   <Route path="/admin/results/*" element={<SchoolWideResults />} >
 
                     <Route index element={<ResultGradePage />} />
@@ -91,9 +95,9 @@ function App() {
                   <Route path="/admin/students/*" element={<StudentDatabase />} >
                           <Route index element={<GradesPage />} /> 
                           <Route path="classes/:gradeLevel" element={<RelaventClassesForGrade />} >
-                              <Route path=":classId" element={<ClassPage />} />
+                              <Route path=":classId" element={<ClassPage />} /> 
 
-                          </Route>
+                           </Route>
                   </Route>
                   <Route path="/admin/users" element={<UserManagement />} />
 
