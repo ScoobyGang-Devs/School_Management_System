@@ -77,6 +77,21 @@ class StudentGradeSummary(APIView):
             summary[f"Grade {grade}"] = count
         return Response(summary)
 
+class StudentGradeClassSummary(APIView):
+    
+    permission_classes = [IsStaffUser]
+
+    def get(self, request, grade):
+        summary = {}
+
+        classes = Classroom.objects.filter(grade=grade)
+
+        for classroom in classes:
+            count = StudentDetail.objects.filter(enrolledClass=classroom).count()
+            summary[str(classroom)] = count
+        
+        return Response(summary)
+    
 class StudentByGradeList(generics.ListAPIView):
     serializer_class = StudentDetailSerializer
     permission_classes = [IsStaffUser]

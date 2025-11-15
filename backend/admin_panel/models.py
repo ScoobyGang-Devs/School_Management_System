@@ -10,11 +10,11 @@ phone_regex = RegexValidator(
     )
 
 class Classroom(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    className = models.CharField(max_length=1)
     grade = models.IntegerField()
 
     def __str__(self):
-        return self.name
+        return f"{self.grade} {self.className}"
 
 class TeacherNIC(models.Model):
     nic_number = models.CharField(max_length=25, unique=True, blank=False, null=False)
