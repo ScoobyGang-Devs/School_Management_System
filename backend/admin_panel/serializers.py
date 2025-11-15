@@ -85,4 +85,9 @@ class SignupSerializer(serializers.ModelSerializer):
         
         return user
     
-        
+
+
+class StudentDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentDetail
+        fields = '__all__'
