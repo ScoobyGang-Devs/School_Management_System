@@ -21,11 +21,11 @@ function AttendenceCard({catogery}) {
     <Card className="w-[300px] hover:shadow-lg hover:border-primary transition-all duration-200">
        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         {/* Combines grade and class name */}
-        <CardTitle className="text-3xl font-bold">{catogery}</CardTitle>
+        <CardTitle className="text-3xl font-bold">{catogery.charAt(0).toUpperCase()+catogery.slice(1)}</CardTitle>
         <LayoutList className="h-6 w-6 text-muted-foreground" /> 
       </CardHeader>
         <CardFooter>
-        <Link className="w-full">
+        <Link  to={`/admin/attendance/${catogery}/`} className="w-full">
           <Button className="w-full" variant="secondary">
             View Attendence
           </Button>

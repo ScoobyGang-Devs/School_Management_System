@@ -31,6 +31,10 @@ import RelaventClassResultsForGrade from './pages/studentResults/RelaventClassRe
 import ResultGradePage from './pages/studentResults/ResultGradePage.jsx'
 import ResultClassPage from './pages/studentResults/ResultClassPage.jsx'
 
+import AttendanceMainPage from './pages/Attendance/AttendanceMainPage.jsx'
+import StudentAttendancePage from './pages/Attendance/StudentAttendancePage.jsx'
+import TeacherAttendancePage from './pages/Attendance/TeacherAttendancePage.jsx'
+
 
 function App() {
   const location = useLocation()
@@ -79,9 +83,9 @@ function App() {
 
                   {/* ADMIN */}
                   <Route path="/admin/attendance/*" element={<SchoolWideAttendance />}>
-                    {/* <Route index element={<MainAttendancePage />} />
-                    <Route path="students/:studentId" element={<StudentAttendancePage />} />
-                    <Route path="teachers/:teacherId" element={<TeacherAttendancePage />} /> */}
+                    <Route index element={<AttendanceMainPage />} />
+                    <Route path="students/" element={<StudentAttendancePage />} />
+                    <Route path="teachers/" element={<TeacherAttendancePage />} />
                   </Route>
                   <Route path="/admin/results/*" element={<SchoolWideResults />} >
 
