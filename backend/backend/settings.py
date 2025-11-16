@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'attendence',
     'corsheaders',
     'term_test',
-    'rest_framework_simplejwt'
+    'rest_framework_simplejwt',
+    'chat'
 ]
 
 MIDDLEWARE = [

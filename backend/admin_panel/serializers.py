@@ -3,6 +3,8 @@ from .models import *
 from django.contrib.auth.models import User
 from django.db import transaction
 
+from .models import TeacherNIC
+
 class guardianSerializer(serializers.ModelSerializer):
     class Meta:
         model = GuardianDetail
@@ -14,7 +16,11 @@ class guardianSerializer(serializers.ModelSerializer):
         
 class StudentDetailsSerializer(serializers.ModelSerializer):
     
+<<<<<<< HEAD
     guardian = guardianSerializer()
+=======
+    guardian = guardianSerializer()   
+>>>>>>> 466f5b178d3fdb3c03f8b551059ee78d289c3b7e
 
     class Meta:
         model = StudentDetail
@@ -23,6 +29,7 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         guardian_data = validated_data.pop('guardian')
 
+<<<<<<< HEAD
         guardian, created = GuardianDetail.objects.get_or_create(
             guardianNIC=guardian_data['guardianNIC'],
             defaults=guardian_data
@@ -39,12 +46,29 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
             **validated_data
         )
 
+=======
+        guardian_email = guardian_data.get('guardianEmail')
+        guardian_id = guardian_data.get('guardianId')
+
+        guardian = None
+
+        if guardian_id and GuardianDetail.objects.filter(guardianId=guardian_id).exists():
+            guardian = GuardianDetail.objects.get(guardianId=guardian_id)
+
+        elif guardian_email and GuardianDetail.objects.filter(guardianEmail=guardian_email).exists():
+            guardian = GuardianDetail.objects.get(guardianEmail=guardian_email)
+
+        else:
+            guardian = GuardianDetail.objects.create(**guardian_data)
+
+        student = StudentDetail.objects.create(guardian=guardian, **validated_data)
+>>>>>>> 466f5b178d3fdb3c03f8b551059ee78d289c3b7e
         return student
 
 class TeacherDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherDetail
-        exclude = ['assignedClass', 'teacherId']
+        exclude = ['assignedClass']
 
 class ClassroomSerializer(serializers.ModelSerializer):
     class Meta:
@@ -80,7 +104,7 @@ class SignupSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             password=validated_data['password1']
         )
-        TeacherDetail.objects.create(
+        teacher = TeacherDetail.objects.create(
             owner = user,
             nic_number=nic_entry
         )
@@ -89,4 +113,9 @@ class SignupSerializer(serializers.ModelSerializer):
         
         return user
     
-        
+
+
+class StudentDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentDetail
+        fields = '__all__'
