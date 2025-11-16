@@ -54,6 +54,7 @@ const SignupForm = () => {
             username: formData.username,
             password1: formData.password1,
             password2: formData.password2,
+            nic_number:formData.nic_number,
             email:formData.email
           }
         );
