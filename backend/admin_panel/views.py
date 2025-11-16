@@ -4,11 +4,8 @@ from rest_framework import generics,status
 from rest_framework.permissions import IsAuthenticated
 from .serializers import *
 from .models import *
-from django.contrib.auth import login
-from rest_framework.authtoken.models import Token
+from .permissions import IsStaffUser
 
-from django.contrib.auth import authenticate
-from rest_framework.decorators import api_view
 
 # Create your views here.
 class guardianListCreateView(generics.ListCreateAPIView):
@@ -27,13 +24,17 @@ class StudentDetailsDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = StudentDetail.objects.all()
     serializer_class = StudentDetailsSerializer
 
-class TeacherDetailsListCreateView(generics.ListCreateAPIView):
+# class TeacherDetailsListCreateView(generics.ListCreateAPIView):
+#     queryset = TeacherDetail.objects.all()
+#     serializer_class = TeacherDetailsSerializer
+
+class TeacherDetailsDetailView(generics.RetrieveUpdateAPIView):
     queryset = TeacherDetail.objects.all()
     serializer_class = TeacherDetailsSerializer
-
-class TeacherDetailsDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = TeacherDetail.objects.defer('assignedClass')
-    serializer_class = TeacherDetailsSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_object(self):
+        return self.request.user.teacher_profile
 
 class ClassroomListCreateView(generics.ListCreateAPIView):
     queryset = Classroom.objects.all()
@@ -61,16 +62,40 @@ class SignupView(APIView):
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "User created successfully."}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class LoginView(APIView):
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data
-            login(request, user)
-            return Response({"message": "Logged in successfully."})
+            user = serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
+class StudentGradeSummary(APIView):
+    permission_classes = [IsStaffUser]
+
+    def get(self, request):
+        summary = {}
+        for grade in range(6, 12):
+            count = StudentDetail.objects.filter(enrolledClass__grade=grade).count()
+            summary[f"Grade {grade}"] = count
+        return Response(summary)
+
+class StudentGradeClassSummary(APIView):
+    
+    permission_classes = [IsStaffUser]
+
+    def get(self, request, grade):
+        summary = {}
+
+        classes = Classroom.objects.filter(grade=grade)
+
+        for classroom in classes:
+            count = StudentDetail.objects.filter(enrolledClass=classroom).count()
+            summary[str(classroom)] = count
+        
+        return Response(summary)
+    
+class StudentByGradeList(generics.ListAPIView):
+    serializer_class = StudentDetailSerializer
+    permission_classes = [IsStaffUser]
+
+    def get_queryset(self):
+        grade = self.kwargs['grade']
+        return StudentDetail.objects.filter(enrolledClass__grade=grade)

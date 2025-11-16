@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from  datetime import timedelta
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,6 +44,7 @@ INSTALLED_APPS = [
     'attendence',
     'corsheaders',
     'term_test',
+    'rest_framework_simplejwt'
 ]
 
 MIDDLEWARE = [
@@ -133,8 +136,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES':[
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication'
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication'
+        
     ],
     'DEFAULT_RENDERER_CLASSES':[
         'rest_framework.renderers.JSONRenderer',
@@ -161,3 +165,8 @@ CORS_ALLOWED_METHODS = [
 CORS_ALLOWED_HEADERS = [
     'accept', 'user-agent', 'x-csrftoken', 'content-type'
 ]
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),   # 10 minutes
+    "REFRESH_TOKEN_LIFETIME": timedelta(hours=7),      # 7 hours
+}

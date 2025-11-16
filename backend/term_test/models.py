@@ -51,6 +51,12 @@ class SubjectwiseMark(models.Model):
         related_name='subject_marks'
     )
 
+    # Mark_Type_ID = models.ForeignKey(
+    #     MarkType,
+    #     on_delete=models.CASCADE,
+    #     related_name='mark_type_marks'
+    # )
+
     Term = models.CharField(max_length=10)
 
     Marks_Obtained = models.DecimalField(max_digits=5, decimal_places=2)
