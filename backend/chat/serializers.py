@@ -1,23 +1,15 @@
 from rest_framework import serializers
-from .models import ChatRoom, Message
-from django.contrib.auth.models import User
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email']
+from .models import Message
 
 class MessageSerializer(serializers.ModelSerializer):
-    sender = UserSerializer(read_only=True)
+    receivers = serializers.ListField(child=serializers.EmailField(), read_only=True)
+    read_status = serializers.DictField(child=serializers.BooleanField(), read_only=True)
 
     class Meta:
         model = Message
-        fields = ['id', 'room', 'sender', 'content', 'timestamp', 'read']
+        fields = [
+            'id', 'sender', 'sender_email', 'receivers',
+            'subject', 'content', 'category', 'urgent',
+            'timestamp', 'read_status'
+        ]
 
-class ChatRoomSerializer(serializers.ModelSerializer):
-    teachers = UserSerializer(many=True, read_only=True)
-    messages = MessageSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = ChatRoom
-        fields = ['id', 'teachers', 'messages', 'created_at']
