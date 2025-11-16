@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics,status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated , AllowAny
 from .serializers import *
 from .models import *
 from .permissions import IsStaffUser
@@ -94,7 +94,9 @@ class StudentGradeClassSummary(APIView):
     
 class StudentByGradeList(generics.ListAPIView):
     serializer_class = StudentDetailSerializer
-    permission_classes = [IsStaffUser]
+    # permission_classes = [IsStaffUser]
+    permission_classes = [AllowAny]
+    #for TEMPORARY testing purposes I changed the permission classes -selith
 
     def get_queryset(self):
         grade = self.kwargs['grade']
