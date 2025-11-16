@@ -63,11 +63,7 @@ class SignupView(APIView):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            return Response({
-                'message': 'User created successfully.',
-                'username': user.username,
-                'email': user.email,
-            }, status=status.HTTP_201_CREATED)
+            return Response(status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
@@ -81,6 +77,21 @@ class StudentGradeSummary(APIView):
             summary[f"Grade {grade}"] = count
         return Response(summary)
 
+class StudentGradeClassSummary(APIView):
+    
+    permission_classes = [IsStaffUser]
+
+    def get(self, request, grade):
+        summary = {}
+
+        classes = Classroom.objects.filter(grade=grade)
+
+        for classroom in classes:
+            count = StudentDetail.objects.filter(enrolledClass=classroom).count()
+            summary[str(classroom)] = count
+        
+        return Response(summary)
+    
 class StudentByGradeList(generics.ListAPIView):
     serializer_class = StudentDetailSerializer
     permission_classes = [IsStaffUser]

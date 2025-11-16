@@ -48,22 +48,23 @@ const SignupForm = () => {
     if (validateForm()) {
 
       try {
-        const response = await request.POST(
-          `http://localhost:8000/signup/teacherprofiles`,  // link eka wens krpn
+        const responseData = await request.POST(
+          `http://127.0.0.1:8000/signup/`,  // link eka wens krpn
           {
             username: formData.username,
-            nic_number: formData.nic_number,
             password1: formData.password1,
             password2: formData.password2,
+            nic_number:formData.nic_number,
             email:formData.email
           }
         );
 
-        if (response.ok) {
+        if (responseData && responseData.message === "User created successfully.") {
           alert(`✅ Signup successful!`);
           navigate("/Dashboard");
         } else {
           alert("❌ Signup failed. Please try again!");
+          console.log("Signup failed:", responseData);
         }
       } catch (error) {
         console.error("Error during signup:", error);
