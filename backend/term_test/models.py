@@ -6,9 +6,9 @@ from admin_panel.models import *
 class TermTest(models.Model):
 
     TERM_CHOICES = [
-        ('Term 1', 'Term 1'),
-        ('Term 2', 'Term 2'),
-        ('Term 3', 'Term 3'),
+        ('1', 'Term 1'),
+        ('2', 'Term 2'),
+        ('3', 'Term 3')
     ]
 
     PASS_FAIL_CHOICES = [
@@ -16,7 +16,7 @@ class TermTest(models.Model):
         ('Fail', 'Fail'),
     ]
 
-    term_summary_id = models.BigAutoField(primary_key=True)
+    term_summary_id = models.AutoField(primary_key=True)
     student = models.ForeignKey(StudentDetail, on_delete=models.CASCADE)
     term = models.CharField(max_length=10, choices=TERM_CHOICES)
     total_marks = models.DecimalField(max_digits=6, decimal_places=2)
@@ -51,13 +51,11 @@ class SubjectwiseMark(models.Model):
         related_name='subject_marks'
     )
 
-    # Mark_Type_ID = models.ForeignKey(
-    #     MarkType,
-    #     on_delete=models.CASCADE,
-    #     related_name='mark_type_marks'
-    # )
-
-    Term = models.CharField(max_length=10)
+    Term = models.ForeignKey(
+        TermTest,
+        on_delete=models.CASCADE,
+        related_name='mark_term'
+    )
 
     Marks_Obtained = models.DecimalField(max_digits=5, decimal_places=2)
     Max_Marks = models.DecimalField(max_digits=5, decimal_places=2)

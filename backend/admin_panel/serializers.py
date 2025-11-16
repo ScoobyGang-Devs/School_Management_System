@@ -12,7 +12,6 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
     
     guardian = guardianSerializer()   
 
-
     class Meta:
         model = StudentDetail
         fields = '__all__'
@@ -40,7 +39,7 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
 class TeacherDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherDetail
-        exclude = ['assignedClass', 'teacherId']
+        exclude = ['assignedClass']
 
 class ClassroomSerializer(serializers.ModelSerializer):
     class Meta:
@@ -76,7 +75,7 @@ class SignupSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             password=validated_data['password1']
         )
-        TeacherDetail.objects.create(
+        teacher = TeacherDetail.objects.create(
             owner = user,
             nic_number=nic_entry
         )

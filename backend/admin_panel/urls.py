@@ -12,6 +12,6 @@ urlpatterns = [
     path('signup/', SignupView.as_view(), name='signup'),
     path('classroom/', ClassroomListCreateView.as_view(), name='classroomListCreate'),
     path('api/student-summary/', StudentGradeSummary.as_view(), name='student_summary'),
-    path('api/students/grade/<int:grade>/', StudentByGradeList.as_view(), name='students_by_grade'),
+    path('api/students/grade/', StudentByGradeList.as_view(), name='students_by_grade'),
     path('student-summary-by-class-name/<int:grade>', StudentGradeClassSummary.as_view(), name='student_by_class_name')
 ]

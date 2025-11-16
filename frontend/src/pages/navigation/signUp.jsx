@@ -58,8 +58,8 @@ const SignupForm = () => {
             email:formData.email
           }
         );
-
-        if (responseData && responseData.message === "User created successfully.") {
+        pk = responseData.teacherID
+        if (responseData.message == "User created successfully.") {
           alert(`✅ Signup successful!`);
           navigate("/Dashboard");
         } else {
