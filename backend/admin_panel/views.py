@@ -22,9 +22,16 @@ class StudentDetailsDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = StudentDetail.objects.all()
     serializer_class = StudentDetailsSerializer
 
-# class TeacherDetailsListCreateView(generics.ListCreateAPIView):
-#     queryset = TeacherDetail.objects.all()
-#     serializer_class = TeacherDetailsSerializer
+class StudentsCreateView(generics.CreateAPIView):
+        
+        def post(self, request, *args, **kwargs):
+            serializer = StudentDetailsSerializer(data=request.data)
+        
+            if serializer.is_valid():
+                student = serializer.save()
+                return Response(StudentDetailsSerializer(student).data, status=status.HTTP_201_CREATED)
+            
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class TeacherDetailsDetailView(generics.RetrieveUpdateAPIView):
     queryset = TeacherDetail.objects.all()
