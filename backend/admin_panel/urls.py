@@ -11,12 +11,9 @@ urlpatterns = [
     path('classroom/<int:teacherId>/', ClassroomDetailView.as_view(), name='classroomDetail'),
     path('signup/', SignupView.as_view(), name='signup'),
     path('classroom/', ClassroomListCreateView.as_view(), name='classroomListCreate'),
-<<<<<<< HEAD
-    path('add/students/', StudentsCreateView.as_view(), name='ad')
-=======
+    path('add/students/', StudentsCreateView.as_view(), name='ad'),
     path('api/student-summary/', StudentGradeSummary.as_view(), name='student_summary'),
     path('api/students/grade/<int:grade>/', StudentByGradeList.as_view(), name='students_by_grade'),
     path('student-summary-by-class-name/<int:grade>/', StudentGradeClassSummary.as_view(), name='student_by_class_name'),
     path('roster/<int:grade>/<str:classname>/', GradeRosterAPIView.as_view(), name='grade-roster'),
->>>>>>> 466f5b178d3fdb3c03f8b551059ee78d289c3b7e
 ]
