@@ -3,6 +3,8 @@ from .models import *
 from django.contrib.auth.models import User
 from django.db import transaction
 
+from .models import TeacherNIC
+
 class guardianSerializer(serializers.ModelSerializer):
     class Meta:
         model = GuardianDetail
