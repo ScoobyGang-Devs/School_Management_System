@@ -15,7 +15,7 @@ export default function InternalMessaging() {
       content: "Hi team, please review the meeting agenda attached for our Friday session.",
       timestamp: "2024-01-15 10:30 AM",
       isRead: true,
-      category: "work",
+      category: "personal",
     },
     {
       id: 2,
@@ -46,6 +46,8 @@ export default function InternalMessaging() {
     subject: "",
     content: "",
   });
+  const [messageCategory, setMessageCategory] = useState("personal");
+
 
   const handleSelectMessage = (message) => {
     setSelectedMessage(message);
@@ -58,28 +60,41 @@ export default function InternalMessaging() {
     e.preventDefault();
     const id = Math.max(0, ...messages.map((m) => m.id)) + 1;
 
+    // ---- NEW: handle MULTIPLE recipients or ALL ----
+    let recipients;
+
+    if (messageCategory === "announcement") {
+      recipients = "ALL"; // backend will treat this as full broadcast
+    } else {
+      recipients = newMessage.to
+        .split(",")               // split comma separated list
+        .map((x) => x.trim())     // trim spaces
+        .filter((x) => x.length); // remove empty entries
+    }
+
     const sent = {
       id,
       sender: "You",
       senderEmail: "you@school.edu",
       subject: newMessage.subject,
       content: newMessage.content,
+      to: recipients,              // <-- NEW FIELD
       timestamp: new Date().toLocaleString(),
       isRead: true,
-      category: "personal",
+      category: messageCategory,
     };
 
     setMessages((prev) => [sent, ...prev]);
     setNewMessage({ to: "", subject: "", content: "" });
     setActiveTab("inbox");
+    setMessageCategory("personal");
   };
+
 
   const getCategoryColor = (c) => {
     switch (c) {
       case "urgent":
         return "bg-red-500";
-      case "work":
-        return "bg-blue-500";
       case "announcement":
         return "bg-purple-500";
       default:
@@ -208,20 +223,73 @@ export default function InternalMessaging() {
                 <h2 className="text-lg font-medium mb-4">Compose New Message</h2>
 
                 <form onSubmit={handleSendMessage} className="space-y-4">
+
+                  {/* --- CATEGORY RADIO BUTTONS --- */}
                   <div>
-                    <label className="text-sm block mb-1">To</label>
-                    <Input
-                      value={newMessage.to}
-                      onChange={(e) => setNewMessage({ ...newMessage, to: e.target.value })}
-                      required
-                    />
+                    <label className="text-sm block mb-1 font-medium">Message Type</label>
+                    <div className="flex gap-4 items-center text-sm">
+
+                      {/* PERSONAL */}
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="msgType"
+                          value="personal"
+                          checked={messageCategory === "personal"}
+                          onChange={() => setMessageCategory("personal")}
+                        />
+                        Personal
+                      </label>
+
+                      {/* URGENT */}
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="msgType"
+                          value="urgent"
+                          checked={messageCategory === "urgent"}
+                          onChange={() => setMessageCategory("urgent")}
+                        />
+                        Urgent
+                      </label>
+
+                      {/* ANNOUNCEMENT */}
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="msgType"
+                          value="announcement"
+                          checked={messageCategory === "announcement"}
+                          onChange={() => setMessageCategory("announcement")}
+                        />
+                        Announcement
+                      </label>
+                    </div>
                   </div>
+
+                  {/* HIDE "TO" WHEN ANNOUNCEMENT */}
+                  {messageCategory !== "announcement" && (
+                    <div>
+                      <label className="text-sm block mb-1">To (comma separated emails)</label>
+                      <Input
+                        placeholder="john@school.edu, sara@school.edu"
+                        value={newMessage.to}
+                        onChange={(e) =>
+                          setNewMessage({ ...newMessage, to: e.target.value })
+                        }
+                        required
+                      />
+                    </div>
+                  )}
+
 
                   <div>
                     <label className="text-sm block mb-1">Subject</label>
                     <Input
                       value={newMessage.subject}
-                      onChange={(e) => setNewMessage({ ...newMessage, subject: e.target.value })}
+                      onChange={(e) =>
+                        setNewMessage({ ...newMessage, subject: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -231,7 +299,9 @@ export default function InternalMessaging() {
                     <Textarea
                       rows={8}
                       value={newMessage.content}
-                      onChange={(e) => setNewMessage({ ...newMessage, content: e.target.value })}
+                      onChange={(e) =>
+                        setNewMessage({ ...newMessage, content: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -245,6 +315,7 @@ export default function InternalMessaging() {
                 </form>
               </div>
             )}
+
 
             {/* ---------- Sent ---------- */}
             {activeTab === "sent" && (
