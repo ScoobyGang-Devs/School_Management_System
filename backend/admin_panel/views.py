@@ -1,10 +1,14 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics,status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated , AllowAny
 from .serializers import *
 from .models import *
 from .permissions import IsStaffUser
+from attendence.models import studentAttendence
+from term_test.models import TermTest
+from datetime import date
+
 
 
 # Create your views here.
@@ -96,8 +100,57 @@ class StudentGradeClassSummary(APIView):
     
 class StudentByGradeList(generics.ListAPIView):
     serializer_class = StudentDetailSerializer
-    permission_classes = [IsStaffUser]
+    # permission_classes = [IsStaffUser]
+    permission_classes = [AllowAny]
+    #for TEMPORARY testing purposes I changed the permission classes -selith
 
     def get_queryset(self):
         grade = self.kwargs['grade']
         return StudentDetail.objects.filter(enrolledClass__grade=grade)
+    
+
+
+class GradeRosterAPIView(APIView):
+    """
+    Returns a list of students in a given grade with:
+    - Name
+    - Attendance status for today
+    - Average score across all term tests
+    """
+
+class GradeRosterAPIView(APIView):
+    def get(self, request, grade, classname):
+        today = date.today()
+
+        # Correct filtering
+        students = StudentDetail.objects.filter(
+            enrolledClass__grade=grade,
+            enrolledClass__className=classname
+        )
+
+        roster = []
+
+        for student in students:
+            # Attendance status for today
+            attendance_record = studentAttendence.objects.filter(
+                studentId=student, date=today
+            ).first()
+            attendance_status = attendance_record.status if attendance_record else "Not Marked"
+
+            # Average score across all term tests
+            term_tests = TermTest.objects.filter(student=student)
+            if term_tests.exists():
+                avg_score = round(sum(test.average_mark for test in term_tests) / term_tests.count(), 2)
+            else:
+                avg_score = None
+
+
+
+            roster.append({
+                "name": student.fullName,
+                "attendance_today": attendance_status,
+                "score_avg": avg_score
+            })
+
+        return Response(roster, status=status.HTTP_200_OK)
+    

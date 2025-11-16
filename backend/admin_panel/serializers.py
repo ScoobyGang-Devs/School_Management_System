@@ -3,6 +3,8 @@ from .models import *
 from django.contrib.auth.models import User
 from django.db import transaction
 
+from .models import TeacherNIC
+
 class guardianSerializer(serializers.ModelSerializer):
     class Meta:
         model = GuardianDetail
@@ -16,25 +18,25 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
         model = StudentDetail
         fields = '__all__'
 
-        def create(self, validated_data):
-            guardian_data = validated_data.pop('guardian')
+    def create(self, validated_data):
+        guardian_data = validated_data.pop('guardian')
 
-            guardian_email = guardian_data.get('guardianEmail')
-            guardian_id = guardian_data.get('guardianId')
+        guardian_email = guardian_data.get('guardianEmail')
+        guardian_id = guardian_data.get('guardianId')
 
-            guardian = None
+        guardian = None
 
-            if guardian_id and GuardianDetail.objects.filter(guardianId=guardian_id).exists():
-                guardian = GuardianDetail.objects.get(guardianId=guardian_id)
+        if guardian_id and GuardianDetail.objects.filter(guardianId=guardian_id).exists():
+            guardian = GuardianDetail.objects.get(guardianId=guardian_id)
 
-            elif guardian_email and GuardianDetail.objects.filter(guardianEmail=guardian_email).exists():
-                guardian = GuardianDetail.objects.get(guardianEmail=guardian_email)
+        elif guardian_email and GuardianDetail.objects.filter(guardianEmail=guardian_email).exists():
+            guardian = GuardianDetail.objects.get(guardianEmail=guardian_email)
 
-            else:
-                guardian = GuardianDetail.objects.create(**guardian_data)
+        else:
+            guardian = GuardianDetail.objects.create(**guardian_data)
 
-            student = StudentDetail.objects.create(guardian=guardian, **validated_data)
-            return student
+        student = StudentDetail.objects.create(guardian=guardian, **validated_data)
+        return student
 
 class TeacherDetailsSerializer(serializers.ModelSerializer):
     class Meta:

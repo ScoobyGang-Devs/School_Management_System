@@ -12,8 +12,8 @@ class TermTest(models.Model):
     ]
 
     PASS_FAIL_CHOICES = [
-        ('Pass', 'Pass'),
-        ('Fail', 'Fail'),
+        ('P', 'Pass'),
+        ('F', 'Fail')
     ]
 
     term_summary_id = models.AutoField(primary_key=True)

@@ -9,10 +9,34 @@ import {
 import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react"; // Assuming you use lucide-react for icons
 import { Link } from 'react-router-dom';
+import {useState,useEffect} from 'react';
+import api from '../api.js'
 
 
 
-function GradeCard({gradeLevel,studentCount}) { // Changed to a functional component
+function GradeCard({gradeLevel,studentCount}) { 
+
+  const [notes, setNotes] = useState([]);
+
+  useEffect(() => {
+    getStudentsByGrade();
+  }, []
+  );
+  
+  
+  // Changed to a functional component
+  const getStudentsByGrade = () => {
+        api
+            .get(`api/students/grade/${gradeLevel}/`)
+            .then((res) => res.data)
+            .then((data) => {
+                setNotes(data);
+                console.log(data);
+            })
+            .catch((err) => alert(err));
+    };
+
+
   return (
     <Card className="w-[300px] hover:shadow-lg hover:border-primary transition-all duration-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
