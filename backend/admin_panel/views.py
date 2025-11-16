@@ -85,7 +85,8 @@ class StudentGradeSummary(APIView):
 
 class StudentGradeClassSummary(APIView):
     
-    permission_classes = [IsStaffUser]
+    # permission_classes = [IsStaffUser]
+    permission_classes = [AllowAny]
 
     def get(self, request, grade):
         summary = {}
