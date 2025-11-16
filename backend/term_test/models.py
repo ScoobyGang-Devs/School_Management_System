@@ -6,9 +6,9 @@ from admin_panel.models import *
 class TermTest(models.Model):
 
     TERM_CHOICES = [
-        ('Term 1', 'Term 1'),
-        ('Term 2', 'Term 2'),
-        ('Term 3', 'Term 3'),
+        ('1', 'Term 1'),
+        ('2', 'Term 2'),
+        ('3', 'Term 3'),
     ]
 
     PASS_FAIL_CHOICES = [
