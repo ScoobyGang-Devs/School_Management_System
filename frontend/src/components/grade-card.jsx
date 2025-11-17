@@ -16,7 +16,7 @@ import api from '../api.js'
 
 function GradeCard({gradeLevel,studentCount}) { 
 
-  const [notes, setNotes] = useState([]);
+  const [length, setLength] = useState(0);
 
   useEffect(() => {
     getStudentsByGrade();
@@ -30,8 +30,8 @@ function GradeCard({gradeLevel,studentCount}) {
             .get(`api/students/grade/${gradeLevel}/`)
             .then((res) => res.data)
             .then((data) => {
-                setNotes(data);
-                console.log(data);
+                console.log(data.length);
+                setLength(data.length);
             })
             .catch((err) => alert(err));
     };
@@ -48,7 +48,7 @@ function GradeCard({gradeLevel,studentCount}) {
           View all students and classes for Grade {gradeLevel}.
         </CardDescription>
         <div className="text-2xl font-bold mt-4">
-          {studentCount} Students
+          {length} Students
         </div>
         <p className="text-xs text-muted-foreground">
           Currently enrolled in this grade.

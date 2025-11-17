@@ -9,6 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Users, LayoutList } from "lucide-react"; // Changed icon for class context
 import { Link } from 'react-router-dom';
+import {useState,useEffect} from 'react';
+import api from '../api.js'
 
 function ClassCard({ gradeLevel, className, studentCount }) {
   
@@ -16,6 +18,9 @@ function ClassCard({ gradeLevel, className, studentCount }) {
   // Parent route path: /admin/students/classes/:gradeLevel
   // Child route path: :classId (which is className here)
   const linkPath = `${className}`; 
+  const [length, setLength] = useState(0);
+
+
 
   return (
     <Card className="w-[300px] hover:shadow-lg hover:border-primary transition-all duration-200">
