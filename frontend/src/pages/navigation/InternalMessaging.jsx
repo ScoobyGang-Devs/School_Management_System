@@ -113,7 +113,7 @@ export default function InternalMessaging() {
     setNewMessage({
       to: message.senderEmail,
       subject: `Re: ${message.subject}`,
-      content: `\n\n--- Original Message ---\nFrom: ${message.sender}\nSubject: ${message.subject}\n\n${message.content}`
+      content: ""
     });
     setMessageCategory("personal");
   };
