@@ -79,4 +79,37 @@ class GradeClassWiseResultsView(APIView):
             # "classname": classname,
             f"{grade} {classname} students' results": response_data
         }, status=status.HTTP_200_OK)
+
+class StudentGradeAverageView(APIView):
+
+    def get(self, request, grade, term):
+
+        students = StudentDetail.objects.filter(enrolledClass__grade = grade)
+        subjects = Subject.objects.all()
+        std_count = students.count()
+        sub_count = subjects.count()
+
+        average = []
+
+        for student in students:
+            student_average = []
+            for subject in subjects:
+                mark_object = SubjectwiseMark.objects.filter(
+                    subject = subject,
+                    StudentID = student,
+                    term__termName=term
+                ).first()
+
+                student_average.append(mark_object.marksObtained if mark_object else 0)
+
+            average.append(round(sum(student_average) / sub_count, 2))
+
+        return Response({f"grade {grade}" : sum(average)/std_count}, status=status.HTTP_200_OK)        
+
+
+
+
+
+
+
         
