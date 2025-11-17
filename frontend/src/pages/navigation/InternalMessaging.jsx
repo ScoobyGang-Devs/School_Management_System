@@ -47,7 +47,20 @@ export default function InternalMessaging() {
     content: "",
   });
   const [messageCategory, setMessageCategory] = useState("personal");
-
+  const [actionType, setActionType] = useState(null); // NEW: 'reply' or 'forward'
+  const [sentMessages, setSentMessages] = useState([
+    {
+      id: 100,
+      sender: "You",
+      senderEmail: "you@school.edu", 
+      subject: "Welcome to the messaging system",
+      content: "This is a sample sent message to show how the Sent tab works.",
+      to: "team@school.edu",
+      timestamp: "2024-01-16 09:00 AM",
+      isRead: true,
+      category: "personal",
+    }
+  ]);
 
   const handleSelectMessage = (message) => {
     setSelectedMessage(message);
@@ -60,16 +73,16 @@ export default function InternalMessaging() {
     e.preventDefault();
     const id = Math.max(0, ...messages.map((m) => m.id)) + 1;
 
-    // ---- NEW: handle MULTIPLE recipients or ALL ----
+    // Handle MULTIPLE recipients or ALL
     let recipients;
 
     if (messageCategory === "announcement") {
-      recipients = "ALL"; // backend will treat this as full broadcast
+      recipients = "ALL";
     } else {
       recipients = newMessage.to
-        .split(",")               // split comma separated list
-        .map((x) => x.trim())     // trim spaces
-        .filter((x) => x.length); // remove empty entries
+        .split(",")
+        .map((x) => x.trim())
+        .filter((x) => x.length);
     }
 
     const sent = {
@@ -78,18 +91,68 @@ export default function InternalMessaging() {
       senderEmail: "you@school.edu",
       subject: newMessage.subject,
       content: newMessage.content,
-      to: recipients,              // <-- NEW FIELD
+      to: recipients,
       timestamp: new Date().toLocaleString(),
       isRead: true,
       category: messageCategory,
     };
 
-    setMessages((prev) => [sent, ...prev]);
+    setSentMessages((prev) => [sent, ...prev]);
     setNewMessage({ to: "", subject: "", content: "" });
     setActiveTab("inbox");
     setMessageCategory("personal");
+    setActionType(null); // NEW: Clear action type after sending
   };
 
+  // NEW: Handle reply click
+  const handleReply = (message) => {
+    setActionType('reply');
+    setActiveTab("compose");
+    
+    // Pre-fill the form for reply
+    setNewMessage({
+      to: message.senderEmail,
+      subject: `Re: ${message.subject}`,
+      content: `\n\n--- Original Message ---\nFrom: ${message.sender}\nSubject: ${message.subject}\n\n${message.content}`
+    });
+    setMessageCategory("personal");
+  };
+
+  // NEW: Handle forward click
+  // NEW: Handle forward click
+const handleForward = (message) => {
+  setActionType('forward');
+  setActiveTab("compose");
+  
+  // Check if it's your own message
+  const currentUserEmail = localStorage.getItem('Email');
+  const isMyOwnMessage = message.senderEmail === currentUserEmail;
+  
+  if (isMyOwnMessage) {
+    // For your own messages - send as new (no forwarding headers)
+    setNewMessage({
+      to: "", // Empty for new recipients
+      subject: message.subject, // Keep original subject (no "Fwd:")
+      content: message.content // Keep original content (no forwarding headers)
+    });
+  } else {
+    // For others' messages - use forwarding format
+    setNewMessage({
+      to: "", // Empty for forward
+      subject: `Fwd: ${message.subject}`,
+      content: `\n\n--- Forwarded Message ---\nFrom: ${message.sender}\nDate: ${message.timestamp}\nSubject: ${message.subject}\n\n${message.content}`
+    });
+  }
+  setMessageCategory("personal");
+};
+
+  // NEW: Handle cancel compose
+  const handleCancelCompose = () => {
+    setActiveTab("inbox");
+    setNewMessage({ to: "", subject: "", content: "" });
+    setMessageCategory("personal");
+    setActionType(null);
+  };
 
   const getCategoryColor = (c) => {
     switch (c) {
@@ -99,6 +162,18 @@ export default function InternalMessaging() {
         return "bg-purple-500";
       default:
         return "bg-green-500";
+    }
+  };
+
+  // NEW: Get compose title based on action type
+  const getComposeTitle = () => {
+    switch (actionType) {
+      case 'reply':
+        return "Reply to Message";
+      case 'forward':
+        return "Forward Message";
+      default:
+        return "Compose New Message";
     }
   };
 
@@ -125,7 +200,11 @@ export default function InternalMessaging() {
 
             <Button
               variant={activeTab === "compose" ? "default" : "secondary"}
-              onClick={() => setActiveTab("compose")}
+              onClick={() => {
+                setActiveTab("compose");
+                setActionType(null); // NEW: Clear action type for new compose
+                setNewMessage({ to: "", subject: "", content: "" });
+              }}
             >
               ✏️ Compose
             </Button>
@@ -205,8 +284,18 @@ export default function InternalMessaging() {
                     </div>
 
                     <div className="flex gap-2">
-                      <Button variant="ghost">Reply</Button>
-                      <Button variant="outline">Forward</Button>
+                      <Button 
+                        variant="ghost"
+                        onClick={() => handleReply(selectedMessage)}
+                      >
+                        Reply
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => handleForward(selectedMessage)} // NEW: Forward handler
+                      >
+                        Forward
+                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -220,7 +309,9 @@ export default function InternalMessaging() {
             {/* ---------- Compose View ---------- */}
             {activeTab === "compose" && (
               <div>
-                <h2 className="text-lg font-medium mb-4">Compose New Message</h2>
+                <h2 className="text-lg font-medium mb-4">
+                  {getComposeTitle()} {/* NEW: Dynamic title */}
+                </h2>
 
                 <form onSubmit={handleSendMessage} className="space-y-4">
 
@@ -282,7 +373,6 @@ export default function InternalMessaging() {
                     </div>
                   )}
 
-
                   <div>
                     <label className="text-sm block mb-1">Subject</label>
                     <Input
@@ -308,7 +398,7 @@ export default function InternalMessaging() {
 
                   <div className="flex gap-2">
                     <Button type="submit">Send Message</Button>
-                    <Button variant="secondary" onClick={() => setActiveTab("inbox")}>
+                    <Button variant="secondary" onClick={handleCancelCompose}>
                       Cancel
                     </Button>
                   </div>
@@ -316,20 +406,48 @@ export default function InternalMessaging() {
               </div>
             )}
 
-
             {/* ---------- Sent ---------- */}
             {activeTab === "sent" && (
               <>
-                <h2 className="text-lg font-medium">Sent Messages</h2>
-                <p className="text-sm text-muted-foreground mt-4">No sent messages yet.</p>
-              </>
-            )}
-
-            {/* ---------- Drafts ---------- */}
-            {activeTab === "drafts" && (
-              <>
-                <h2 className="text-lg font-medium">Drafts</h2>
-                <p className="text-sm text-muted-foreground mt-4">No drafts saved.</p>
+                <h2 className="text-lg font-medium mb-4">Sent Messages</h2>
+                {sentMessages.length > 0 ? (
+                  <div className="space-y-3">
+                    {sentMessages.map((msg) => (
+                      <div key={msg.id} className="border p-4 rounded-lg bg-card">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm">
+                              Y
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium">To: {Array.isArray(msg.to) ? msg.to.join(', ') : msg.to}</div>
+                              <div className="text-xs text-muted-foreground">{msg.senderEmail}</div>
+                            </div>
+                          </div>
+                          <div className="text-xs text-muted-foreground">{msg.timestamp}</div>
+                        </div>
+                        <div className="text-sm font-semibold mb-1">{msg.subject}</div>
+                        <div className="text-sm text-muted-foreground">{msg.content}</div>
+                        <div className="flex justify-between items-center mt-2">
+                          <Badge className={`${getCategoryColor(msg.category)} text-white text-xs`}>
+                            {msg.category}
+                          </Badge>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleForward(msg)}
+                          >
+                            Forward
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    No sent messages yet
+                  </div>
+                )}
               </>
             )}
 
@@ -340,7 +458,11 @@ export default function InternalMessaging() {
       {/* Floating Compose Button */}
       <Button
         className="fixed bottom-6 right-6 z-50 shadow-lg rounded-full px-6 py-6"
-        onClick={() => setActiveTab("compose")}
+        onClick={() => {
+          setActiveTab("compose");
+          setActionType(null);
+          setNewMessage({ to: "", subject: "", content: "" });
+        }}
       >
         + Compose
       </Button>
