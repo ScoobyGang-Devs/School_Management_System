@@ -6,7 +6,7 @@ from .models import *
 from .serializers import *
 from rest_framework.response import Response
 from rest_framework import status
-from django.shortcuts import get_object_or_404
+# from django.shortcuts import get_object_or_404
 
 # Create your views here.
 
@@ -108,5 +108,40 @@ class SubjectWiseMarksBulkCreateView(generics.CreateAPIView):
 
             return Response(results, status=status.HTTP_201_CREATED)
 
-        # Standard single create
+        # single create
         return super().create(request, *args, **kwargs)
+        
+
+class StudentGradeAverageView(APIView):
+
+    def get(self, request, grade, term):
+
+        students = StudentDetail.objects.filter(enrolledClass__grade = grade)
+        subjects = Subject.objects.all()
+        std_count = students.count()
+        sub_count = subjects.count()
+
+        average = []
+
+        for student in students:
+            student_average = []
+            for subject in subjects:
+                mark_object = SubjectwiseMark.objects.filter(
+                    subject = subject,
+                    StudentID = student,
+                    term__termName=term
+                ).first()
+
+                student_average.append(mark_object.marksObtained if mark_object else 0)
+
+            average.append(round(sum(student_average) / sub_count, 2))
+
+        return Response({f"grade {grade}" : sum(average)/std_count}, status=status.HTTP_200_OK)        
+
+
+
+
+
+
+
+        

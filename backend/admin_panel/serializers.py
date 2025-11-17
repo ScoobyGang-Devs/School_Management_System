@@ -46,7 +46,7 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
 class TeacherDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherDetail
-        exclude = ['assignedClass']
+        exclude = ['assignedClass','teachingClasses']
 
 class ClassroomSerializer(serializers.ModelSerializer):
     class Meta:
@@ -91,9 +91,10 @@ class SignupSerializer(serializers.ModelSerializer):
         
         return user
     
-
-
 class StudentDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentDetail
         fields = '__all__'
+
+class teachersClassViewSerializer(serializers.Serializer):
+    teacherId = serializers.IntegerField()

@@ -9,5 +9,7 @@ urlpatterns = [
     # path('subjectwise-marks/', SubjectwiseMarkListCreateView.as_view(), name='subjectwise-mark-list'),
     path('subjectwise-marks/<int:pk>/', SubjectwiseMarkListDetailView.as_view(), name='subjectwise-mark-detail'),
     path('marks/<int:grade>/<str:classname>/<int:term>/', GradeClassWiseResultsView.as_view(), name='subjectwise-marks-filtered-by-class'),
-    path('subject-wise-marks/create/', SubjectWiseMarksBulkCreateView.as_view(), name='subject-wise-marks-bulk-create')
+    path('subject-wise-marks/create/', SubjectWiseMarksBulkCreateView.as_view(), name='subject-wise-marks-bulk-create'),
+    path('average/grade/<int:grade>/term/<int:term>' , StudentGradeAverageView.as_view(), name='average-grade-mark'),
+
 ]
