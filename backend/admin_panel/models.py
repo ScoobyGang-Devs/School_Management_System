@@ -32,7 +32,7 @@ class GuardianDetail(models.Model):
     ]
 
     guardianId = models.AutoField(primary_key=True, unique=True)
-    guardianNic = models.CharField(unique=True)
+    guardianNIC = models.CharField(max_length=20,unique=True)
     guardianName = models.CharField(max_length=100000)
     guardianType = models.CharField(max_length=1,choices=GUARDIAN,blank=True)
     guardianEmail = models.EmailField(unique=True)
