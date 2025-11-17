@@ -1,11 +1,10 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics,status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated , AllowAny
 from .serializers import *
 from .models import *
 from .permissions import IsStaffUser
-
 from attendence.models import studentAttendence
 from term_test.models import TermTest
 from datetime import date
@@ -29,9 +28,16 @@ class StudentDetailsDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = StudentDetail.objects.all()
     serializer_class = StudentDetailsSerializer
 
-# class TeacherDetailsListCreateView(generics.ListCreateAPIView):
-#     queryset = TeacherDetail.objects.all()
-#     serializer_class = TeacherDetailsSerializer
+class StudentsCreateView(generics.CreateAPIView):
+        
+        def post(self, request, *args, **kwargs):
+            serializer = StudentDetailsSerializer(data=request.data)
+        
+            if serializer.is_valid():
+                student = serializer.save()
+                return Response(StudentDetailsSerializer(student).data, status=status.HTTP_201_CREATED)
+            
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class TeacherDetailsDetailView(generics.RetrieveUpdateAPIView):
     queryset = TeacherDetail.objects.all()
@@ -68,7 +74,9 @@ class SignupView(APIView):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            return Response(status=status.HTTP_201_CREATED)
+            return Response(
+                {"message": "User created successfully."},
+                status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
@@ -84,7 +92,8 @@ class StudentGradeSummary(APIView):
 
 class StudentGradeClassSummary(APIView):
     
-    permission_classes = [IsStaffUser]
+    # permission_classes = [IsStaffUser]
+    permission_classes = [AllowAny]
 
     def get(self, request, grade):
         summary = {}
@@ -99,7 +108,9 @@ class StudentGradeClassSummary(APIView):
     
 class StudentByGradeList(generics.ListAPIView):
     serializer_class = StudentDetailSerializer
-    permission_classes = [IsStaffUser]
+    # permission_classes = [IsStaffUser]
+    permission_classes = [AllowAny]
+    #for TEMPORARY testing purposes I changed the permission classes -selith
 
     def get_queryset(self):
         grade = self.kwargs['grade']
@@ -148,3 +159,4 @@ class GradeRosterAPIView(APIView):
             })
 
         return Response(roster, status=status.HTTP_200_OK)
+    

@@ -9,11 +9,14 @@ class guardianSerializer(serializers.ModelSerializer):
     class Meta:
         model = GuardianDetail
         fields = '__all__'
+        extra_kwargs = {
+            'guardianNIC': {'validators': []},
+            'guardianEmail': {'validators': []},
+        }
         
 class StudentDetailsSerializer(serializers.ModelSerializer):
     
-    guardian = guardianSerializer()   
-
+    guardian = guardianSerializer()
 
     class Meta:
         model = StudentDetail
@@ -22,27 +25,28 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         guardian_data = validated_data.pop('guardian')
 
-        guardian_email = guardian_data.get('guardianEmail')
-        guardian_id = guardian_data.get('guardianId')
+        guardian, created = GuardianDetail.objects.get_or_create(
+            guardianNIC=guardian_data['guardianNIC'],
+            defaults=guardian_data
+        )
 
-        guardian = None
+        # If guardian exists and data has updates → update fields
+        if not created:
+            for field, value in guardian_data.items():
+                setattr(guardian, field, value)
+            guardian.save()
 
-        if guardian_id and GuardianDetail.objects.filter(guardianId=guardian_id).exists():
-            guardian = GuardianDetail.objects.get(guardianId=guardian_id)
+        student = StudentDetail.objects.create(
+            guardian=guardian,
+            **validated_data
+        )
 
-        elif guardian_email and GuardianDetail.objects.filter(guardianEmail=guardian_email).exists():
-            guardian = GuardianDetail.objects.get(guardianEmail=guardian_email)
-
-        else:
-            guardian = GuardianDetail.objects.create(**guardian_data)
-
-        student = StudentDetail.objects.create(guardian=guardian, **validated_data)
         return student
 
 class TeacherDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherDetail
-        exclude = ['assignedClass', 'teacherId']
+        exclude = ['assignedClass']
 
 class ClassroomSerializer(serializers.ModelSerializer):
     class Meta:
@@ -78,7 +82,7 @@ class SignupSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             password=validated_data['password1']
         )
-        TeacherDetail.objects.create(
+        teacher = TeacherDetail.objects.create(
             owner = user,
             nic_number=nic_entry
         )

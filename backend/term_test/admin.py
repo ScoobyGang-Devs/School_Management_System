@@ -1,8 +1,7 @@
 from django.contrib import admin
-from .models import TermTest, Subject, SubjectwiseMark
-
+from term_test.models import Subject, SubjectwiseMark, TermTest
 # Register your models here.
 
-admin.site.register(TermTest)
 admin.site.register(Subject)
 admin.site.register(SubjectwiseMark)
+admin.site.register(TermTest)

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import *
 from admin_panel.models import *
 
+#DRY
 class StudentDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentDetail
