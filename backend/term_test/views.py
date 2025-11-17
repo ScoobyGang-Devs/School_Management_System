@@ -37,7 +37,7 @@ class SubjectwiseMarkListDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class GradeClassWiseResultsView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get(self, request, grade, classname, term):
         
@@ -54,15 +54,15 @@ class GradeClassWiseResultsView(APIView):
             subject_list = []
             for subject in subjects:
                 mark_obj = SubjectwiseMark.objects.filter(
-                    Student_ID=student,
-                    Subject_ID=subject,
-                    Term_id=term
+                    studentID=student,
+                    subject=subject,
+                    term__termName=term
                 ).first()
 
                 subject_list.append({
-                    "subject_id": subject.Subject_ID,
-                    "subject_name": subject.Subject_name,
-                    "mark": mark_obj.Marks_Obtained if mark_obj else None
+                    "subject_id": subject.subjectID,
+                    "subject_name": subject.subjectName,
+                    "mark": mark_obj.marksObtained if mark_obj else None
                 })
 
             response_data.append({
@@ -74,9 +74,9 @@ class GradeClassWiseResultsView(APIView):
             })
 
         return Response({
-            # "term": term,
+            # "term": term, 
             # "grade": grade,
             # "classname": classname,
-            "students": response_data
+            f"{grade} {classname} students' results": response_data
         }, status=status.HTTP_200_OK)
         

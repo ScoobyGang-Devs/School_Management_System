@@ -140,7 +140,7 @@ class GradeRosterAPIView(APIView):
             # Average score across all term tests
             term_tests = TermTest.objects.filter(student=student)
             if term_tests.exists():
-                avg_score = round(sum(test.average_mark for test in term_tests) / term_tests.count(), 2)
+                avg_score = round(sum(test.average for test in term_tests) / term_tests.count(), 2)
             else:
                 avg_score = None
 
