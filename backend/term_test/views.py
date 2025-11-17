@@ -27,14 +27,18 @@ class SubjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
 
-class SubjectwiseMarkListCreateView(generics.ListCreateAPIView):
-    queryset = SubjectwiseMark.objects.all()
-    serializer_class = SubjectwiseMarkSerializer
+# REMOVED cuz we created views to handle GET/POST separately 
+# class SubjectwiseMarkListCreateView(generics.ListCreateAPIView):
+#     queryset = SubjectwiseMark.objects.all()
+#     serializer_class = SubjectwiseMarkSerializer
 
+# use this for handle [PUT/PATCH/DELETE] requests
 class SubjectwiseMarkListDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SubjectwiseMark.objects.all()
     serializer_class = SubjectwiseMarkSerializer
+    lookup_field = "subjectWiseMarkID"               # The model field that should be used for performing object lookup of individual model instances. Defaults to 'pk'
 
+# view subject wise results of students using class and term [GET]
 class GradeClassWiseResultsView(APIView):
 
     # permission_classes = [IsAuthenticated]
@@ -68,15 +72,41 @@ class GradeClassWiseResultsView(APIView):
             response_data.append({
                 "student_id": student.indexNumber,
                 "student_name": student.fullName,
-                # "grade": student.,
-                # "class_room": student.class_room,
                 "subjects": subject_list
             })
 
-        return Response({
-            # "term": term, 
-            # "grade": grade,
-            # "classname": classname,
-            f"{grade} {classname} students' results": response_data
-        }, status=status.HTTP_200_OK)
-        
+        return Response(
+            {f"{grade} {classname} students' results": response_data}, 
+            status=status.HTTP_200_OK
+            )
+    
+# this view is for bluk create subjectwise marks [POST]
+class SubjectWiseMarksBulkCreateView(generics.CreateAPIView):
+    queryset = SubjectwiseMark.objects.all()
+    serializer_class = SubjectwiseMarkSerializer
+
+    def create(self, request, *args, **kwargs):
+
+        # If request data is a LIST → Bulk create
+        if isinstance(request.data, list):
+            results = []
+            errors = []
+            
+            for index, item in enumerate(request.data):
+                serializer = self.get_serializer(data=item)
+                if serializer.is_valid():
+                    serializer.save()
+                    results.append(serializer.data)
+                else:
+                    errors.append({"row": index, "errors": serializer.errors})
+
+            if errors:
+                return Response(
+                    {"created": results, "errors": errors},
+                    status=status.HTTP_207_MULTI_STATUS
+                )
+
+            return Response(results, status=status.HTTP_201_CREATED)
+
+        # Standard single create
+        return super().create(request, *args, **kwargs)
