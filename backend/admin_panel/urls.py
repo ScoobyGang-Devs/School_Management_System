@@ -9,6 +9,14 @@ urlpatterns = [
     # path('teacherdetails/',TeacherDetailsListCreateView.as_view(), name='teacherdetails-list-create'),
     path('teacherdetails/<int:pk>/', TeacherDetailsDetailView.as_view(), name='teacherdetails-details'),
     path('classroom/<int:teacherId>/', ClassroomDetailView.as_view(), name='classroomDetail'),
+
+
+
+
+
+
+
+    
     path('signup/', SignupView.as_view(), name='signup'),
     path('classroom/', ClassroomListCreateView.as_view(), name='classroomListCreate'),
     path('api/student-summary/', StudentGradeSummary.as_view(), name='student_summary'),

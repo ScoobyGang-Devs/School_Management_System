@@ -114,8 +114,6 @@ class GradeRosterAPIView(APIView):
     - Attendance status for today
     - Average score across all term tests
     """
-
-class GradeRosterAPIView(APIView):
     def get(self, request, grade, classname):
         today = date.today()
 
