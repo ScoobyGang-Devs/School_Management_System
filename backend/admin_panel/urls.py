@@ -16,7 +16,7 @@ urlpatterns = [
 
 
 
-    
+
     path('signup/', SignupView.as_view(), name='signup'),
     path('classroom/', ClassroomListCreateView.as_view(), name='classroomListCreate'),
     path('add/students/', StudentsCreateView.as_view(), name='ad'),
