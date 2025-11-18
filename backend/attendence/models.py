@@ -21,6 +21,6 @@ class studentAttendence(models.Model):
     studentId = models.ForeignKey(StudentDetail,on_delete=models.CASCADE)
     date = models.DateField()
     status = models.CharField(max_length=1,choices=attendence_choice,)
-    k = str(attendenceId)
+
     def __str__(self):
-        return self.k
+        return f"{self.studentId} : {self.date} : {self.status}"
