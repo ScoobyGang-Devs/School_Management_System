@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import request from "@/reqMethods";
 
 export default function InternalMessaging() {
   const [messages, setMessages] = useState([
@@ -62,6 +63,26 @@ export default function InternalMessaging() {
     }
   ]);
 
+  useEffect(() => {
+    const fetchInbox = async () => {
+      try {
+        const userID = localStorage.getItem("id");  // or userID (you choose)
+
+        const response = await request.GET(`http://127.0.0.1:8000/chat/inbox/${userID}`);
+
+        if (response) {
+          setMessages(response);  // Load actual inbox messages
+        }
+      } catch (error) {
+        console.error("Failed to load inbox", error);
+        alert("Failed to load!");
+      }
+    };
+
+    fetchInbox();
+  }, []);
+
+
   const handleSelectMessage = (message) => {
     setSelectedMessage(message);
     setMessages((prev) =>
@@ -69,13 +90,11 @@ export default function InternalMessaging() {
     );
   };
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    const id = Math.max(0, ...messages.map((m) => m.id)) + 1;
 
-    // Handle MULTIPLE recipients or ALL
+    // Handle recipients
     let recipients;
-
     if (messageCategory === "announcement") {
       recipients = "ALL";
     } else {
@@ -85,8 +104,7 @@ export default function InternalMessaging() {
         .filter((x) => x.length);
     }
 
-    const sent = {
-      id,
+    const body = {
       sender: "You",
       senderEmail: "you@school.edu",
       subject: newMessage.subject,
@@ -97,12 +115,53 @@ export default function InternalMessaging() {
       category: messageCategory,
     };
 
-    setSentMessages((prev) => [sent, ...prev]);
-    setNewMessage({ to: "", subject: "", content: "" });
-    setActiveTab("inbox");
-    setMessageCategory("personal");
-    setActionType(null); // NEW: Clear action type after sending
+    try {
+      const response = await request.POST("http://127.0.0.1:8000/chat/", body);
+
+      if (response) {
+        alert("✅ Mail sent");
+
+        const savedMessage = {
+          id: response.id,
+          ...body,
+        };
+
+        // Update sent messages WITH backend ID
+        setSentMessages((prev) => [savedMessage, ...prev]);
+
+        // Reset UI
+        setNewMessage({ to: "", subject: "", content: "" });
+        setActiveTab("inbox");
+        setMessageCategory("personal");
+        setActionType(null);
+
+      } else {
+        alert("Mail send Failed");
+      }
+    } catch (error) {
+      console.error("Network Error", error);
+      alert("⚠️ Network or server error. Please try again later.");
+    }
   };
+
+  const loadSentMessages = async () => {
+    try {
+      const userID = localStorage.getItem("UserID");
+
+      const response = await request.GET(`http://127.0.0.1:8000/chat/sent/${userID}`);
+
+      if (response) {
+        setSentMessages(response);
+      } else {
+        console.warn("No sent messages received");
+      }
+    } catch (error) {
+      console.error("Error loading sent messages:", error);
+      alert("⚠️ Network or server error. Please try again later.");
+    }
+  };
+
+
 
   // NEW: Handle reply click
   const handleReply = (message) => {
@@ -193,7 +252,10 @@ const handleForward = (message) => {
 
             <Button
               variant={activeTab === "sent" ? "default" : "secondary"}
-              onClick={() => setActiveTab("sent")}
+              onClick={() => {
+                setActiveTab("sent");
+                loadSentMessages();
+              }}
             >
               📤 Sent
             </Button>
