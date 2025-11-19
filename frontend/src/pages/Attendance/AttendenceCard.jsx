@@ -12,11 +12,6 @@ import { Link } from 'react-router-dom';
 
 function AttendenceCard({catogery}) {
   
-  // The link path must be RELATIVE to its parent route!
-  // Parent route path: /admin/students/classes/:gradeLevel
-  // Child route path: :classId (which is className here)
-//   const linkPath = `${className}`; 
-
   return (
     <Card className="w-[300px] hover:shadow-lg hover:border-primary transition-all duration-200">
        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
