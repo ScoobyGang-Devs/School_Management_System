@@ -14,9 +14,15 @@ class guardianSerializer(serializers.ModelSerializer):
             'guardianEmail': {'validators': []},
         }
         
+class ClassroomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Classroom
+        fields = '__all__'
+
 class StudentDetailsSerializer(serializers.ModelSerializer):
-    
     guardian = guardianSerializer()
+
+    enrolledClassDisplay = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = StudentDetail
@@ -42,16 +48,18 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
         )
 
         return student
+    
+    def get_enrolledClassDisplay(self, obj):
+        if obj.enrolledClass:
+            return f"{obj.enrolledClass.grade} {obj.enrolledClass.className}"
+        return None
+
 
 class TeacherDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherDetail
         fields = '__all__'
 
-class ClassroomSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Classroom
-        fields = '__all__'
 
 class SignupSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(write_only=True, style={'input_type': 'password'})
@@ -92,9 +100,11 @@ class SignupSerializer(serializers.ModelSerializer):
         return user
     
 class StudentDetailSerializer(serializers.ModelSerializer):
+    enrolledClass = serializers.ModelSerializer(StudentDetailsSerializer,StudentDetail.enrolledClass)
+
     class Meta:
         model = StudentDetail
-        fields = '__all__'
+        fields = ['__all__','enrolledClass']
 
 class teachersClassViewSerializer(serializers.Serializer):
     teacherId = serializers.IntegerField()

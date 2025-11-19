@@ -5,7 +5,8 @@ urlpatterns = [
     path('guardiandetails/',guardianListCreateView.as_view(), name="guardianListCreate"),
     path('guardiandetails/<int:pk>/',guardianDetailView.as_view(),name ='guardianListDetail'),
     path('studentdetails/', StudentDetailsListCreateView.as_view(), name='studentdetails-list-create'),
-    path('studentdetails/<int:pk>/', StudentDetailsDetailView.as_view(), name='studentdetails-details'), # details of the student for student card
+    # details of the student for student card ---- this returns a json with both student and guardian details --- we need the index of the student
+    path('studentdetails/<int:pk>/', StudentDetailsDetailView.as_view(), name='studentdetails-details'), 
     #path('teacherdetails/',TeacherDetailsListCreateView.as_view(), name='teacherdetails-list-create'),
     path('teacher-profile/', TeacherDetailsDetailView.as_view(), name='teacherdetails-details'),
     path('classroom/<int:teacherId>/', ClassroomDetailView.as_view(), name='classroomDetail'),
