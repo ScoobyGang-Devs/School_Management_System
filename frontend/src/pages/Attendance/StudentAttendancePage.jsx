@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import StudentAttendanceTable from './StudentAttendanceTable.jsx';
 import { Button } from '@/components/ui/button'; // Assuming you'll use Shadcn Buttons
 import AttendanceDatePicker from './AttedanceDatePicker.jsx';
+import {Input} from '@/components/ui/input'
 
 // --- MOCK DATA to demonstrate filtering functionality ---
 // In a real app, this data would come from an API/Redux store.
@@ -64,6 +65,7 @@ const SchoolWideAttendance = () => {
     const [selectedGrade, setSelectedGrade] = useState('All');
     const [selectedClass, setSelectedClass] = useState('All');
     const [selectedDate, setSelectedDate] = useState(null); 
+    
 
     const dateString = selectedDate ? selectedDate.toISOString().split('T')[0] : null;
 
@@ -98,8 +100,14 @@ const SchoolWideAttendance = () => {
             {/* The UI components (Menubar/Button Bar) call the handlers */}
             <GradeMenubar onSelect={handleGradeChange} currentGrade={selectedGrade} />
             <ClassButtonBar onSelect={handleClassChange} currentClass={selectedClass} />
-            <div className="mb-4">
+
+            <div className="flex items-center gap-4 mb-2">
               <AttendanceDatePicker onSelect={handleDateChange} date={selectedDate}  />
+              <Input
+                type="text" 
+                placeholder="Search student..."
+                className="w-96"
+              />
             </div>
             
             
