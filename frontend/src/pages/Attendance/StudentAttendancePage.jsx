@@ -65,6 +65,7 @@ const SchoolWideAttendance = () => {
     const [selectedGrade, setSelectedGrade] = useState('All');
     const [selectedClass, setSelectedClass] = useState('All');
     const [selectedDate, setSelectedDate] = useState(null); 
+    const [search, setSearch] = useState("")
     
 
     const dateString = selectedDate ? selectedDate.toISOString().split('T')[0] : null;
@@ -107,13 +108,14 @@ const SchoolWideAttendance = () => {
                 type="text" 
                 placeholder="Search student..."
                 className="w-96"
+                onChange = {(e) => setSearch(e.target.value)}
               />
             </div>
             
             
 
             {/* The table component receives the filtered data */}
-            <StudentAttendanceTable attendanceData={attendanceData} />
+            <StudentAttendanceTable attendanceData={attendanceData} userSearch={search} />
             
             <p className="mt-4 text-sm text-muted-foreground">
                 Showing attendance for Grade: **{selectedGrade}**, Class: **{selectedClass}**. ({attendanceData.length} records found)
