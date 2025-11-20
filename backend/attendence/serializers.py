@@ -5,16 +5,18 @@ from admin_panel.models import *
 
 class studentAttendenceSerializer(serializers.ModelSerializer):
 
-    studentId = serializers.IntegerField(write_only=True)
+    className = serializers.IntegerField(write_only=True)
     status = serializers.CharField(write_only=True)
-
+    absentList = serializers.JSONField(default=list)
+    
     class Meta:
         model = studentAttendence
         fields = [
-            'studentId',
             'attendenceId',
+            'class',
             'date',
-            'status'
+            'is_marked',
+            'absent_list'
         ]
 
     def validate(self, data):

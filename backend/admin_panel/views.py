@@ -79,7 +79,7 @@ class SignupView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class StudentGradeSummary(APIView):
-    permission_classes = [IsStaffUser]
+    # permission_classes = [IsStaffUser]
 
     def get(self, request):
         summary = {}
@@ -105,7 +105,7 @@ class StudentGradeClassSummary(APIView):
         return Response(summary)
     
 class StudentByGradeList(generics.ListAPIView):
-    serializer_class = StudentDetailSerializer
+    serializer_class = StudentDetailsSerializer
     # permission_classes = [IsStaffUser]
     permission_classes = [AllowAny]
     #for TEMPORARY testing purposes I changed the permission classes -selith
