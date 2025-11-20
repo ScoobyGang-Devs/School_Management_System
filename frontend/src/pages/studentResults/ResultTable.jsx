@@ -1,5 +1,6 @@
 "use client"
 
+// FIX: Importing react-table functions directly to resolve compilation error
 import {
   flexRender,
   getCoreRowModel,
@@ -20,6 +21,7 @@ import {
 export function DataTable({
   columns,
   data,
+  emptyMessage, // Added for dynamic empty/loading state messaging
 }) {
   const table = useReactTable({
     data,
@@ -65,7 +67,7 @@ export function DataTable({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
+                {emptyMessage || "No results."} 
               </TableCell>
             </TableRow>
           )}
