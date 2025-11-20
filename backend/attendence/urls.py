@@ -8,4 +8,5 @@ urlpatterns = [
     path('teacherattendence/<int:pk>/', teacherAttendenceDetailView.as_view(),name = "teacherAttendenceDetailsView"),
     path('studentattendence/<int:indexNumber>/<str:date>/', attendenceOfStudentView.as_view(), name = "attendenceOfStudentView"),
     path('bulk/', BulkStudentAttendanceCreate.as_view()),
+    path('classattendance/<str:classname>', PresentAbsentDataView.as_view())
 ]

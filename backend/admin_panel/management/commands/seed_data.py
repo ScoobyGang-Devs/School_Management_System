@@ -1,35 +1,29 @@
 import random
+import json
 from datetime import timedelta
 from faker import Faker
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-# --- IMPORTANT: ADJUST THESE IMPORTS TO MATCH YOUR PROJECT STRUCTURE ---
-# Assuming your models are roughly grouped by the logical app names
+# --- CORRECTED IMPORTS ---
 from admin_panel.models import (
     Classroom, TeacherNIC, GuardianDetail, StudentDetail, TeacherDetail
 )
-# Assuming these are in other apps, adjust if they are in 'admin_panel'
-# If all models are in 'admin_panel.models', you can remove these lines
 try:
     from attendence.models import teacherAttendence, studentAttendence
 except ImportError:
-    print("Warning: Could not import attendance models. Skipping related seeding.")
-    # Define dummy classes if they are only used for seeding (to prevent script crash)
     class teacherAttendence: pass
     class studentAttendence: pass
 
 try:
     from chat.models import Message
 except ImportError:
-    print("Warning: Could not import Message model. Skipping related seeding.")
     class Message: pass
 
 try:
     from term_test.models import TermName, Subject, TermTest, SubjectwiseMark
 except ImportError:
-    print("Warning: Could not import grading models. Skipping related seeding.")
     class TermName: pass
     class Subject: pass
     class TermTest: pass
@@ -37,13 +31,14 @@ except ImportError:
 # --------------------------------------------------------------------------
 
 # --- Configuration ---
-NUM_CLASSES = 15
-NUM_TEACHERS = 100
+NUM_TEACHERS = 70
 NUM_GUARDIANS = 600
 NUM_STUDENTS = 800
-NUM_SUBJECTS = 8
+NUM_SUBJECTS = 8 # Used for mark calculations
 
-FAKE = Faker() # Use Sri Lankan locale for local names/numbers
+# Using default Faker locale
+FAKE = Faker() 
+
 PHONE_PREFIXES = ['+9471', '+9477', '+9478', '+9472']
 
 
@@ -59,38 +54,42 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS("--- Starting Database Seeding ---"))
 
-        # --- 1. Cleanup Old Data (Order doesn't matter much for deletion) ---
+        # --- 1. Cleanup Old Data (Fixed Order: Children before Parents) ---
         self.stdout.write(self.style.WARNING("Clearing existing data..."))
+        
+        # 1.1 Delete transactional data referencing students/teachers
+        # (Must go first to satisfy FOREIGN KEY constraints)
+        if hasattr(teacherAttendence, 'objects'): teacherAttendence.objects.all().delete()
+        if hasattr(studentAttendence, 'objects'): studentAttendence.objects.all().delete()
+        if hasattr(SubjectwiseMark, 'objects'): SubjectwiseMark.objects.all().delete()
+        if hasattr(TermTest, 'objects'): TermTest.objects.all().delete()
+        if hasattr(Message, 'objects'): Message.objects.all().delete()
+
+
+        # 1.2 Delete Core Entities (Students, Teachers, Guardians)
         StudentDetail.objects.all().delete()
         TeacherDetail.objects.all().delete()
         GuardianDetail.objects.all().delete()
+        
+        # 1.3 Delete Core Lookup/FK Entities 
         Classroom.objects.all().delete()
         TeacherNIC.objects.all().delete()
+        User.objects.filter(is_superuser=False).delete()
         
-        # FIX: Added hasattr checks for models imported inside try/except blocks
+        # 1.4 Delete Grading Lookups
         if hasattr(TermName, 'objects'):
             TermName.objects.all().delete()
         if hasattr(Subject, 'objects'):
             Subject.objects.all().delete()
-            
-        User.objects.filter(is_superuser=False).delete() # Keep superusers if any
-        # Delete dependent data (already correctly implemented with hasattr)
-        if hasattr(teacherAttendence, 'objects'): teacherAttendence.objects.all().delete()
-        if hasattr(studentAttendence, 'objects'): studentAttendence.objects.all().delete()
-        if hasattr(Message, 'objects'): Message.objects.all().delete()
-        if hasattr(TermTest, 'objects'): TermTest.objects.all().delete()
-        if hasattr(SubjectwiseMark, 'objects'): SubjectwiseMark.objects.all().delete()
         
         self.stdout.write(self.style.WARNING("Cleanup complete."))
 
         # --- 2. Seed Independent Entities (Dependencies) ---
         users = self._seed_users()
         classes = self._seed_classrooms()
-        # Must ensure NICs are unique across all mock NICs generated
         nics = self._seed_teacher_nics() 
         guardians = self._seed_guardians()
         
-        # Only seed these if the import succeeded
         terms = self._seed_terms() if hasattr(TermName, 'objects') else []
         subjects = self._seed_subjects() if hasattr(Subject, 'objects') else []
 
@@ -99,13 +98,13 @@ class Command(BaseCommand):
         students = self._seed_students(guardians, classes) 
 
         # --- 4. Seed Transactional Data (Attendance, Messages, Term Tests) ---
-        self._seed_attendance(teachers, students)
+        self._seed_attendance(teachers, students, classes) # Updated to pass students/classes
         self._seed_messages(teachers, students)
-        if terms: # Only seed term tests if terms were successfully created
-            termtests = self._seed_term_tests(students, terms)
+        if terms: 
+            self._seed_term_tests(students, terms)
 
         # --- 5. Seed Complex Transactional Data (Marks) ---
-        if terms and subjects: # Only seed marks if terms and subjects were successfully created
+        if terms and subjects: 
             self._seed_subjectwise_marks(students, teachers, terms, subjects)
 
         self.stdout.write(self.style.SUCCESS('--- Database Seeding Complete! ---'))
@@ -120,8 +119,8 @@ class Command(BaseCommand):
             username = FAKE.user_name() + str(i)
             user = User.objects.create_user(
                 username=username,
-                email=FAKE.unique.email(), # Ensure unique email for User model
-                password='password123' # Standard mock password
+                email=FAKE.unique.email(), 
+                password='password123'
             )
             users.append(user)
         return users
@@ -129,7 +128,7 @@ class Command(BaseCommand):
     def _seed_classrooms(self):
         self.stdout.write("Seeding Classrooms...")
         classes = []
-        for grade in range(6, 12): # Grades 6 through 10
+        for grade in range(6, 12): 
             for class_name in ['A', 'B', 'C','D']:
                 c = Classroom.objects.create(
                     className=class_name,
@@ -142,14 +141,12 @@ class Command(BaseCommand):
         self.stdout.write("Seeding Teacher NICs...")
         nics = []
         for i in range(NUM_TEACHERS):
-            # Generate a mock NIC number that is guaranteed to be unique
             nic_number = FAKE.unique.bothify(text='#########v') if random.random() < 0.5 else FAKE.unique.bothify(text='############')
             nic = TeacherNIC.objects.create(
                 nic_number=nic_number,
                 is_used=False
             )
             nics.append(nic)
-        # Reset Faker's unique provider for NICs, just to be safe before Guardians
         FAKE.unique.clear()
         return nics
 
@@ -169,11 +166,9 @@ class Command(BaseCommand):
             
             g = GuardianDetail.objects.create(
                 title=random.choice(title_choices),
-                # Ensure NIC is unique using Faker's unique provider
                 guardianNIC=FAKE.unique.ssn(), 
                 guardianName=name,
                 guardianType=guardian_type,
-                # Ensure Guardian Email is unique
                 guardianEmail=FAKE.unique.email(), 
                 permanentAddress=FAKE.address(),
                 currentAddress=FAKE.address(),
@@ -182,13 +177,12 @@ class Command(BaseCommand):
                 jobTitle=FAKE.job()
             )
             guardians.append(g)
-        FAKE.unique.clear() # Reset unique provider
+        FAKE.unique.clear()
         return guardians
 
     def _seed_teachers(self, users, nics, classes):
         self.stdout.write("Seeding Teachers...")
         teachers = []
-        
         assigned_classes = list(classes) 
         
         for i, user in enumerate(users):
@@ -221,13 +215,10 @@ class Command(BaseCommand):
                 assignedClass=assigned_class
             )
             
-            # Add ManyToMany teachingClasses
             teaching_classes = [assigned_class] if assigned_class else []
             other_classes = [c for c in classes if c not in teaching_classes]
-            
             num_to_add = random.randint(1, 3)
             teaching_classes.extend(random.sample(other_classes, min(num_to_add, len(other_classes))))
-            
             t.teachingClasses.set(teaching_classes)
             
             teachers.append(t)
@@ -240,7 +231,6 @@ class Command(BaseCommand):
             first_name = FAKE.first_name()
             last_name = FAKE.last_name()
             
-            # Use loop counter 'i' to guarantee unique indexNumber
             unique_index = 100000 + i 
             
             s = StudentDetail.objects.create(
@@ -257,12 +247,13 @@ class Command(BaseCommand):
                 enrolledClass=random.choice(classes)
             )
             students.append(s)
-        FAKE.unique.clear() # Reset unique provider
+        FAKE.unique.clear() 
         return students
 
     def _seed_terms(self):
         self.stdout.write("Seeding Terms...")
         terms = []
+        if not hasattr(TermName, 'objects'): return []
         for choice in [c[0] for c in TermName.TERM_CHOICES]:
             t = TermName.objects.create(termName=choice)
             terms.append(t)
@@ -270,46 +261,72 @@ class Command(BaseCommand):
 
     def _seed_subjects(self):
         self.stdout.write("Seeding Subjects...")
+        subjects = []
+        if not hasattr(Subject, 'objects'): return []
         subject_names = [
             'Mathematics', 'Science', 'English Language', 'Sinhala Language',
             'History', 'Geography', 'Information Technology', 'Art'
         ]
-        subjects = []
         for name in subject_names:
             s = Subject.objects.create(subjectName=name)
             subjects.append(s)
         return subjects
 
-    def _seed_attendance(self, teachers, students):
-        if not hasattr(teacherAttendence, 'objects'): return
+    def _seed_attendance(self, teachers, students, classes):
+        if not hasattr(teacherAttendence, 'objects') and not hasattr(studentAttendence, 'objects'): return
         self.stdout.write("Seeding Attendance records...")
         
-        # Seed Teacher Attendance (for the last 30 working days)
         today = timezone.now().date()
-        for i in range(30):
-            date = today - timedelta(days=i)
-            if date.weekday() >= 5: continue 
-
-            for teacher in teachers:
-                status_choice = "Present" if random.random() < 0.95 else "Absent"
-                teacherAttendence.objects.create(
-                    teacher_id=teacher,
-                    date=date,
-                    status=status_choice
-                )
         
-        # Seed Student Attendance (for the last 7 working days)
-        for i in range(7):
-            date = today - timedelta(days=i)
-            if date.weekday() >= 5: continue 
-            
+        # 1. Seed Teacher Attendance (no change needed)
+        if hasattr(teacherAttendence, 'objects'):
+            for i in range(30):
+                date = today - timedelta(days=i)
+                if date.weekday() >= 5: continue 
+                for teacher in teachers:
+                    teacherAttendence.objects.create(
+                        teacher_id=teacher,
+                        date=date,
+                        status="Present" if random.random() < 0.95 else "Absent"
+                    )
+
+        # 2. Seed Student Attendance (Updated for new model structure)
+        if hasattr(studentAttendence, 'objects'):
+            # Pre-group students by class for efficiency
+            students_by_class = {}
             for student in students:
-                status_choice = random.choice(['P', 'A'])
-                studentAttendence.objects.create(
-                    studentId=student,
-                    date=date,
-                    status=status_choice
-                )
+                class_key = student.enrolledClass.pk
+                if class_key not in students_by_class:
+                    students_by_class[class_key] = []
+                students_by_class[class_key].append(student)
+
+            for i in range(7):
+                date = today - timedelta(days=i)
+                if date.weekday() >= 5: continue 
+                
+                for class_obj in classes:
+                    class_students = students_by_class.get(class_obj.pk, [])
+                    total_students = len(class_students)
+
+                    if total_students == 0:
+                        present_percentage = 0.0
+                        absent_list = []
+                    else:
+                        # Choose 10-30% of students to be absent
+                        num_absent = random.randint(int(total_students * 0.1), int(total_students * 0.3))
+                        absent_students = random.sample(class_students, num_absent)
+                        
+                        absent_list = [s.indexNumber for s in absent_students]
+                        present_count = total_students - num_absent
+                        present_percentage = round((present_count / total_students) * 100, 2)
+
+                    studentAttendence.objects.create(
+                        className=class_obj,
+                        date=date,
+                        isMarked=True,
+                        presentPercentage=present_percentage,
+                        absentList=absent_list
+                    )
     
     def _seed_messages(self, teachers, students):
         if not hasattr(Message, 'objects'): return
@@ -340,7 +357,7 @@ class Command(BaseCommand):
             )
 
     def _seed_term_tests(self, students, terms):
-        if not hasattr(TermTest, 'objects'): return
+        if not hasattr(TermTest, 'objects'): return []
         self.stdout.write("Seeding Term Tests...")
         termtests = []
         for student in students:
@@ -362,13 +379,18 @@ class Command(BaseCommand):
         if not hasattr(SubjectwiseMark, 'objects'): return
         self.stdout.write("Seeding Subject-wise Marks...")
         
+        if not terms or not subjects:
+             self.stdout.write(self.style.ERROR("Skipping marks seeding: Terms or Subjects data missing."))
+             return
+
         for student in students:
             # Check if TermTest objects exist before trying to filter
-            if not hasattr(TermTest, 'objects'): continue
-            
-            existing_term_ids = TermTest.objects.filter(student=student).values_list('term_id', flat=True)
-            valid_terms = [t for t in terms if t.id in existing_term_ids]
-            
+            if hasattr(TermTest, 'objects'):
+                existing_term_ids = TermTest.objects.filter(student=student).values_list('term_id', flat=True)
+                valid_terms = [t for t in terms if t.id in existing_term_ids]
+            else:
+                valid_terms = terms # Use all terms if TermTest model isn't available
+
             for term in valid_terms:
                 for subject in subjects:
                     teacher = random.choice(teachers)

@@ -6,6 +6,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from admin_panel.models import StudentDetail
 from rest_framework.response import Response
+from django.utils import timezone
+import datetime
 
 
 # Create your views here.
@@ -90,3 +92,74 @@ class BulkStudentAttendanceCreate(APIView):
             {"error": "Request must contain a list of attendance objects"},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+class PresentAbsentDataView(APIView):
+
+    def get(self, request, classname):
+        today = timezone.now().date()
+        attendance_today = studentAttendence.objects.filter(date=today)
+        attendance_class = studentAttendence.objects.filter(className = classname)
+        response_list = []
+
+        try:
+            if attendance_today:
+
+                attendence_data = attendance_class[-2:-7:-1]
+
+                for dataset in attendence_data:
+                    data = {}
+                    data["date"] = dataset.date
+                    data["present average"] = dataset.presentPercentage
+                    data["absentees"] = dataset.absentList
+                    response_list.append(data)
+
+            else:
+                attendence_data = attendance_class[-1:-6:-1]
+
+                for dataset in attendence_data:
+                    data = {}
+                    data["date"] = dataset.date
+                    data["present average"] = dataset.presentPercentage
+                    data["absentees"] = dataset.absentList
+                    response_list.append(data)
+
+
+        except IndexError:
+            if attendance_class:
+
+                for dataset_ in attendance_class:
+                    data_ = {}
+                    data_["date"] = dataset_.date
+                    data_["present average"] = dataset_.presentPercentage
+                    data_["absentees"] = dataset_.absentList
+                    response_list.append(data_)
+
+        return Response({"class" : classname,
+                         "attendance detail" : response_list}, status=status.HTTP_201_CREATED)            
+
+        
+
+
+        
+
+# 
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
