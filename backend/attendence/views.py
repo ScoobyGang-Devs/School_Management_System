@@ -61,25 +61,25 @@ class BulkStudentAttendanceCreate(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         class_name = data_list[0].get("className") 
-        date = data_list[0].get("date") 
+        date = data_list[0].get("date")
         
         grade = class_name.split()[0]
-        className = class_name.split()[1]
+        class_letter = class_name.split()[1]
 
         try:
-            classroom = Classroom.objects.get(grade=int(grade), className=className)
+            classroom = Classroom.objects.get(grade=int(grade), className=class_letter)
         except Classroom.DoesNotExist:
             return Response({"error": "Class not found"}, status=400)
 
         # ---- Process student statuses ----
-        total = len(data_list)
-        absent = [s["indexNumber"] for s in data_list if s["status"] == "absent"]
+        total = len(data_list) - 1
+        absent = [s["indexNumber"] for s in data_list[1::] if s["status"] == "absent"]
         present_count = total - len(absent)
-        present_percentage = (present_count / total) * 100
+        present_percentage = round(((present_count / total) * 100), 2)
         
         # ---- Create attendance record ----
         serializer = studentAttendenceSerializer(data={
-            "className": classroom.id,
+            "className": f"{grade} {class_letter}",
             "date": date,
             "isMarked": True,
             "presentPercentage": present_percentage,
@@ -88,7 +88,7 @@ class BulkStudentAttendanceCreate(APIView):
         
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response({"Created": serializer.data}, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             # results = []

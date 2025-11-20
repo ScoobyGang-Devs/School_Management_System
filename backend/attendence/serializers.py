@@ -14,17 +14,19 @@ class studentAttendenceSerializer(serializers.ModelSerializer):
             'className',
             'date',
             'isMarked',
-            'precentPersentage',
+            'presentPercentage',
             'absentList'
         ]
 
     def validate_className(self, value):
-
-        grade = int(value.split()[0])
+        
+        parts = value.split()
+        grade, className = parts
         className = value.split()[1]
+
         # Lookup classroom
         try:
-            classroom = Classroom.objects.get(grade=grade, className=className)
+            classroom = Classroom.objects.get(grade=int(grade), className=className)
         except Classroom.DoesNotExist:
             raise serializers.ValidationError(f"Classroom '{value}' does not exist.")
 
@@ -36,7 +38,7 @@ class studentAttendenceSerializer(serializers.ModelSerializer):
         """
         data = super().to_representation(instance)
         data["className"] = str(instance.className)
-        
+
         return data
 
         # studentId = data.get("studentId")
