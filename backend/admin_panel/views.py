@@ -9,6 +9,8 @@ from .permissions import IsStaffUser
 from attendence.models import studentAttendence
 from term_test.models import TermTest
 from datetime import date
+from term_test.models import Subject, SubjectwiseMark
+from django.db.models import Avg
 
 
 # Create your views here.
@@ -195,3 +197,47 @@ class teacherClassView(APIView):
 class UserListView(ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserListSerializer
+
+class teacherClassResultView(APIView):
+    """
+    This view receives a teacherID from the frontend and returns
+    the teacher's assigned class reults.
+    """
+    permission_classes = [IsAuthenticated]
+    def post(self,request,grade,className,subjectName ):
+
+        try:
+            teacher = TeacherDetail.objects.get(user=request.user)
+        except TeacherDetail.DoesNotExist:
+            return Response({"error": "Teacher profile not found"}, status=404)
+
+        try:
+            class_obj = Classroom.objects.get(grade=grade, class_name=className)
+        except Classroom.DoesNotExist:
+            return Response({"error": "Class not found"}, status=404)
+
+        if class_obj not in teacher.teachingClasses.all():
+            return Response({"error": "You do not teach this class"}, status=403)
+        
+        try:
+            subject_obj = Subject.objects.get(subject_name=subjectName)
+        except Subject.DoesNotExist:
+            return Response({"error": "Subject not found"}, status=404)
+
+        if subject_obj not in teacher.teachingSubjects.all():
+            return Response({"error": "You do not teach this subject"}, status=403)
+                
+        marks_qs = SubjectwiseMark.objects.filter(
+            studentID__classID=class_obj,
+            subject=subject_obj,
+            teacherID=teacher
+        )
+
+        # 5. Calculate average
+        average_marks = marks_qs.aggregate(avg_marks=Avg('marksObtained'))['avg_marks']
+
+        return Response({
+            "class": f"{grade}{className}",
+            "subject": subjectName,
+            "average_marks": round(average_marks or 0, 2)  # handle None
+        })

@@ -113,3 +113,21 @@ class TeacherDetail(models.Model):
     def __str__(self):
         return f"{self.title} {self.fullName}"
 
+class ClassSubjectAssignment(models.Model):
+    """
+    Junction table to link a Teacher, a Classroom, and a Subject.
+    This defines the teacher's specific teaching duty (e.g., Teacher X teaches Science in 7A).
+    """
+    assignmentID = models.AutoField(primary_key=True)
+    
+    teacher = models.ForeignKey('TeacherDetail', on_delete=models.CASCADE, related_name='assignments')
+    
+    classroom = models.ForeignKey('Classroom', on_delete=models.CASCADE) 
+    
+    subject = models.ForeignKey('Subject', on_delete=models.CASCADE) 
+    
+    class Meta:
+        unique_together = ('classroom', 'subject') 
+
+    def __str__(self):
+        return f"{self.teacher.firstName} teaches {self.subject.subjectName} in {self.classroom}"
