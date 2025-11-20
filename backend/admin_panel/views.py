@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 from rest_framework import generics,status
 from rest_framework.permissions import IsAuthenticated , AllowAny
 from .serializers import *
@@ -80,7 +81,7 @@ class SignupView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class StudentGradeSummary(APIView):
-    permission_classes = [IsStaffUser]
+    # permission_classes = [IsStaffUser]
 
     def get(self, request):
         summary = {}
@@ -106,7 +107,7 @@ class StudentGradeClassSummary(APIView):
         return Response(summary)
     
 class StudentByGradeList(generics.ListAPIView):
-    serializer_class = StudentDetailSerializer
+    serializer_class = StudentDetailsSerializer
     # permission_classes = [IsStaffUser]
     permission_classes = [AllowAny]
     #for TEMPORARY testing purposes I changed the permission classes -selith
@@ -241,3 +242,6 @@ class AdminDashboardView(APIView):
             "grade_averages": grade_averages,
             "attendance_last_5_days": attendance_list
         })
+class UserListView(ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserListSerializer

@@ -10,8 +10,8 @@ export default function InternalMessaging() {
   const [messages, setMessages] = useState([
     {
       id: 1,
-      sender: "John Smith",
-      senderEmail: "john.smith@school.edu",
+      senderID: "John Smith",
+      senderName: "john.smith@school.edu",
       subject: "Meeting Agenda for Friday",
       content: "Hi team, please review the meeting agenda attached for our Friday session.",
       timestamp: "2024-01-15 10:30 AM",
@@ -20,8 +20,8 @@ export default function InternalMessaging() {
     },
     {
       id: 2,
-      sender: "Sarah Johnson",
-      senderEmail: "sarah.j@school.edu",
+      senderID: "Sarah Johnson",
+      senderName: "sarah.j@school.edu",
       subject: "Project Deadline Extension",
       content: "The project deadline has been extended by one week.",
       timestamp: "2024-01-15 09:15 AM",
@@ -30,8 +30,8 @@ export default function InternalMessaging() {
     },
     {
       id: 3,
-      sender: "IT Department",
-      senderEmail: "it@school.edu",
+      senderID: "IT Department",
+      senderName: "it@school.edu",
       subject: "System Maintenance Notice",
       content: "There will be scheduled maintenance this weekend.",
       timestamp: "2024-01-14 03:45 PM",
@@ -43,7 +43,7 @@ export default function InternalMessaging() {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [activeTab, setActiveTab] = useState("inbox");
   const [newMessage, setNewMessage] = useState({
-    to: "",
+    recieverName: "",
     subject: "",
     content: "",
   });
@@ -52,11 +52,12 @@ export default function InternalMessaging() {
   const [sentMessages, setSentMessages] = useState([
     {
       id: 100,
-      sender: "You",
-      senderEmail: "you@school.edu", 
+      senderID: "You",
+      senderName: "you@school.edu", 
       subject: "Welcome to the messaging system",
       content: "This is a sample sent message to show how the Sent tab works.",
-      to: "team@school.edu",
+      recieverID: "team",
+      recieverName: "team@school.edu",
       timestamp: "2024-01-16 09:00 AM",
       isRead: true,
       category: "personal",
@@ -98,7 +99,7 @@ export default function InternalMessaging() {
     if (messageCategory === "announcement") {
       recipients = "ALL";
     } else {
-      recipients = newMessage.to
+      recipients = newMessage.recieverName
         .split(",")
         .map((x) => x.trim())
         .filter((x) => x.length);
@@ -109,7 +110,7 @@ export default function InternalMessaging() {
       senderEmail: "you@school.edu",
       subject: newMessage.subject,
       content: newMessage.content,
-      to: recipients,
+      recieverName: recipients,
       timestamp: new Date().toLocaleString(),
       isRead: true,
       category: messageCategory,
@@ -130,7 +131,7 @@ export default function InternalMessaging() {
         setSentMessages((prev) => [savedMessage, ...prev]);
 
         // Reset UI
-        setNewMessage({ to: "", subject: "", content: "" });
+        setNewMessage({ recieverName: "", subject: "", content: "" });
         setActiveTab("inbox");
         setMessageCategory("personal");
         setActionType(null);
@@ -170,7 +171,7 @@ export default function InternalMessaging() {
     
     // Pre-fill the form for reply
     setNewMessage({
-      to: message.senderEmail,
+      recieverName: message.senderEmail,
       subject: `Re: ${message.subject}`,
       content: ""
     });
@@ -184,20 +185,20 @@ const handleForward = (message) => {
   setActiveTab("compose");
   
   // Check if it's your own message
-  const currentUserEmail = localStorage.getItem('Email');
-  const isMyOwnMessage = message.senderEmail === currentUserEmail;
+  const currentUserID = localStorage.getItem('UserID');
+  const isMyOwnMessage = message.senderID === currentUserID;
   
   if (isMyOwnMessage) {
     // For your own messages - send as new (no forwarding headers)
     setNewMessage({
-      to: "", // Empty for new recipients
+      recieverName: "", // Empty for new recipients
       subject: message.subject, // Keep original subject (no "Fwd:")
       content: message.content // Keep original content (no forwarding headers)
     });
   } else {
     // For others' messages - use forwarding format
     setNewMessage({
-      to: "", // Empty for forward
+      recieverName: "", // Empty for forward
       subject: `Fwd: ${message.subject}`,
       content: `\n\n--- Forwarded Message ---\nFrom: ${message.sender}\nDate: ${message.timestamp}\nSubject: ${message.subject}\n\n${message.content}`
     });
@@ -208,7 +209,7 @@ const handleForward = (message) => {
   // NEW: Handle cancel compose
   const handleCancelCompose = () => {
     setActiveTab("inbox");
-    setNewMessage({ to: "", subject: "", content: "" });
+    setNewMessage({ recieverName: "", subject: "", content: "" });
     setMessageCategory("personal");
     setActionType(null);
   };
@@ -265,7 +266,7 @@ const handleForward = (message) => {
               onClick={() => {
                 setActiveTab("compose");
                 setActionType(null); // NEW: Clear action type for new compose
-                setNewMessage({ to: "", subject: "", content: "" });
+                setNewMessage({ recieverName: "", subject: "", content: "" });
               }}
             >
               ✏️ Compose
@@ -296,11 +297,11 @@ const handleForward = (message) => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-sm">
-                          {msg.sender[0]}
+                          {msg.senderID[0]}
                         </div>
                         <div>
-                          <div className="text-sm">{msg.sender}</div>
-                          <div className="text-xs text-muted-foreground">{msg.senderEmail}</div>
+                          <div className="text-sm">{msg.senderID}</div>
+                          <div className="text-xs text-muted-foreground">{msg.senderName}</div>
                         </div>
                       </div>
 
@@ -426,9 +427,9 @@ const handleForward = (message) => {
                       <label className="text-sm block mb-1">To (comma separated emails)</label>
                       <Input
                         placeholder="john@school.edu, sara@school.edu"
-                        value={newMessage.to}
+                        value={newMessage.recieverName}
                         onChange={(e) =>
-                          setNewMessage({ ...newMessage, to: e.target.value })
+                          setNewMessage({ ...newMessage, recieverName: e.target.value })
                         }
                         required
                       />
@@ -483,7 +484,7 @@ const handleForward = (message) => {
                             </div>
                             <div>
                               <div className="text-sm font-medium">To: {Array.isArray(msg.to) ? msg.to.join(', ') : msg.to}</div>
-                              <div className="text-xs text-muted-foreground">{msg.senderEmail}</div>
+                              <div className="text-xs text-muted-foreground">{msg.senderName}</div>
                             </div>
                           </div>
                           <div className="text-xs text-muted-foreground">{msg.timestamp}</div>
@@ -523,7 +524,7 @@ const handleForward = (message) => {
         onClick={() => {
           setActiveTab("compose");
           setActionType(null);
-          setNewMessage({ to: "", subject: "", content: "" });
+          setNewMessage({ recieverName: "", subject: "", content: "" });
         }}
       >
         + Compose

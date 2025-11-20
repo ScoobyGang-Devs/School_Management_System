@@ -98,10 +98,8 @@ class TeacherDetail(models.Model):
     )
     teacherId = models.AutoField(primary_key=True, blank=False, unique=True)
     nic_number = models.OneToOneField(TeacherNIC, on_delete=models.PROTECT)
-    title = models.CharField(max_length=10, choices=TITLE_CHOICES, null=True, blank=True)
-    firstName = models.CharField(max_length=100, null=True, blank=True)
-    lastName = models.CharField(max_length=100, null=True, blank=True)
-    surName = models.CharField(max_length=100, null=True, blank=True)
+    title = models.CharField(max_length=20, null=True, blank=True)
+    nameWithInitials = models.CharField(max_length=100, null=True, blank=True)
     fullName = models.CharField(max_length=300, null=True, blank=True)
     dateOfBirth = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=1, choices=GENDER, blank=False, null=True)
@@ -111,7 +109,8 @@ class TeacherDetail(models.Model):
     mobileNumber = models.CharField(validators=[phone_regex], max_length=16, null=True, blank=True)
     section = models.CharField(max_length=300, null=True, blank=True)
     assignedClass = models.OneToOneField(Classroom, on_delete=models.SET_NULL, null=True, blank=True, related_name='teachers')
-    teachingClasses = models.ManyToManyField(Classroom, null=True, blank=True, related_name='subteachers')
+    teachingClasses = models.ManyToManyField(Classroom, blank=True, related_name='subteachers')
 
     def __str__(self):
         return f"{self.title} {self.fullName}"
+

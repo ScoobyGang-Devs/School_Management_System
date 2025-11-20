@@ -58,7 +58,7 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
 class TeacherDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherDetail
-        exclude = ['assignedClass','teachingClasses']
+        fields = '__all__'
 
 
 class SignupSerializer(serializers.ModelSerializer):
@@ -104,7 +104,39 @@ class StudentDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StudentDetail
-        fields = ['__all__','enrolledClass']
+        fields = '__all__'
 
 class teachersClassViewSerializer(serializers.Serializer):
     teacherId = serializers.IntegerField()
+
+# use this serializer for the view that shows the list of current users list in the database
+class UserListSerializer(serializers.ModelSerializer):
+    status = serializers.SerializerMethodField()    # a read-only field whose value comes from a method on the serializer rather than a model field
+    role = serializers.SerializerMethodField()
+    userName = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['userName', 'email', 'role', 'status', 'last_login']
+
+    def get_userName(self, obj):
+        if hasattr(obj, "teacher_profile"):
+            return str(obj.teacher_profile)
+        return obj.get_full_name()
+    
+    def get_email(self, obj):
+        if hasattr(obj, "teacher_profile"):
+            return obj.teacher_profile.email
+        return "Null"
+    
+    def get_status(self, obj):
+        return "Active" if obj.is_active else "Inactive"
+    
+    def get_role(self, obj):
+        if obj.is_superuser:
+            return "Admin"
+        elif obj.is_staff:
+            return "Staff"
+        else:
+            return "Teacher"
