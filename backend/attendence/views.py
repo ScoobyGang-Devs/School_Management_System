@@ -6,6 +6,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from admin_panel.models import StudentDetail
 from rest_framework.response import Response
+from django.utils import timezone
+import datetime
 
 
 # Create your views here.
@@ -91,33 +93,73 @@ class BulkStudentAttendanceCreate(APIView):
             return Response({"Created": serializer.data}, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            # results = []
-            # errors = []
 
-            # for index, item in enumerate(request.data):
+class PresentAbsentDataView(APIView):
 
-            #     serializer = studentAttendenceSerializer(data=item)
-            #     if serializer.is_valid():
-            #         serializer.save()
-            #         results.append(serializer.data)
-            #     else:
-            #         errors.append({
-            #             "row": index,        # which item failed
-            #             "errors": serializer.errors
-            #         })
+    def get(self, request, classname):
+        today = timezone.now().date()
+        attendance_today = studentAttendence.objects.filter(date=today)
+        attendance_class = studentAttendence.objects.filter(className = classname)
+        response_list = []
 
-            # # If some items have errors → 207 Multi-Status
-            # if errors:
-            #     return Response(
-            #         {
-            #             "created": results,   # valid records saved
-            #             "errors": errors      # invalid rows
-            #         },
-            #         status=status.HTTP_207_MULTI_STATUS
-            #     )
+        try:
+            if attendance_today:
 
-            # # All records valid
-            # return Response(
-            #     results,
-            #     status=status.HTTP_201_CREATED
-            # )
+                attendence_data = attendance_class[-2:-7:-1]
+
+                for dataset in attendence_data:
+                    data = {}
+                    data["date"] = dataset.date
+                    data["present average"] = dataset.presentPercentage
+                    data["absentees"] = dataset.absentList
+                    response_list.append(data)
+
+            else:
+                attendence_data = attendance_class[-1:-6:-1]
+
+                for dataset in attendence_data:
+                    data = {}
+                    data["date"] = dataset.date
+                    data["present average"] = dataset.presentPercentage
+                    data["absentees"] = dataset.absentList
+                    response_list.append(data)
+
+
+        except IndexError:
+            if attendance_class:
+
+                for dataset_ in attendance_class:
+                    data_ = {}
+                    data_["date"] = dataset_.date
+                    data_["present average"] = dataset_.presentPercentage
+                    data_["absentees"] = dataset_.absentList
+                    response_list.append(data_)
+
+        return Response({"class" : classname,
+                         "attendance detail" : response_list}, status=status.HTTP_201_CREATED)            
+
+        
+
+
+        
+
+# 
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
