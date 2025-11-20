@@ -90,3 +90,5 @@ class BulkStudentAttendanceCreate(APIView):
             {"error": "Request must contain a list of attendance objects"},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
