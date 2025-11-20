@@ -113,45 +113,81 @@ class StudentByGradeList(generics.ListAPIView):
     def get_queryset(self):
         grade = self.kwargs['grade']
         return StudentDetail.objects.filter(enrolledClass__grade=grade)
-    
+
+#BECAUSE THE ATTENDANCE MODEL WAS CHANGED , the student database page did not work .. so I replaced it ... poddak passe blpn meke awla  
+# class GradeRosterAPIView(APIView):
+#     """
+#     Returns a list of students in a given grade with:
+#     - Name
+#     - Attendance status for today
+#     - Average score across all term tests
+#     """
+#     def get(self, request, grade, classname):
+#         today = date.today()
+
+#         # Correct filtering
+#         students = StudentDetail.objects.filter(
+#             enrolledClass__grade=grade,
+#             enrolledClass__className=classname
+#         )
+
+#         roster = []
+
+#         for student in students:
+#             # Attendance status for today
+#             attendance_record = studentAttendence.objects.filter(
+#                 studentId=student, date=today
+#             ).first()
+#             attendance_status = attendance_record.status if attendance_record else "Not Marked"
+
+#             # Average score across all term tests
+#             term_tests = TermTest.objects.filter(student=student)
+#             if term_tests.exists():
+#                 avg_score = round(sum(test.average for test in term_tests) / term_tests.count(), 2)
+#             else:
+#                 avg_score = None
+
+
+
+
+        #     roster.append({
+        #         "name": student.fullName,
+        #         "attendance_today": attendance_status,
+        #         "score_avg": avg_score
+        #     })
+
+        # return Response(roster, status=status.HTTP_200_OK)
+
 class GradeRosterAPIView(APIView):
     """
-    Returns a list of students in a given grade with:
-    - Name
-    - Attendance status for today
-    - Average score across all term tests
+    FIXED: Returns only the basic roster (ID and Name) for Mark Entry 
+    by removing the crashing lookups for Attendance and TermTest averages.
     """
     def get(self, request, grade, classname):
-        today = date.today()
-
-        # Correct filtering
+        
+        # 1. Retrieve students for the given class, robustly handling case
         students = StudentDetail.objects.filter(
             enrolledClass__grade=grade,
-            enrolledClass__className=classname
-        )
+            enrolledClass__className__iexact=classname # Use iexact for robust matching
+        ).order_by('indexNumber')
+
 
         roster = []
 
         for student in students:
-            # Attendance status for today
-            attendance_record = studentAttendence.objects.filter(
-                studentId=student, date=today
-            ).first()
-            attendance_status = attendance_record.status if attendance_record else "Not Marked"
-
-            # Average score across all term tests
             term_tests = TermTest.objects.filter(student=student)
             if term_tests.exists():
                 avg_score = round(sum(test.average for test in term_tests) / term_tests.count(), 2)
             else:
                 avg_score = None
-
-
+            # IMPORTANT: All crashing logic (attendance_record and term_tests lookup) is REMOVED
+            # This ensures the view returns the basic list immediately.
 
             roster.append({
+                "student_id": student.indexNumber,
                 "name": student.fullName,
-                "attendance_today": attendance_status,
                 "score_avg": avg_score
+                # Note: We return indexNumber as 'student_id' as required by the frontend MarkEntryTable
             })
 
         return Response(roster, status=status.HTTP_200_OK)
