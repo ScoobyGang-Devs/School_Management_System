@@ -105,7 +105,7 @@ class StudentGradeClassSummary(APIView):
         return Response(summary)
     
 class StudentByGradeList(generics.ListAPIView):
-    serializer_class = StudentDetailSerializer
+    serializer_class = StudentDetailsSerializer
     # permission_classes = [IsStaffUser]
     permission_classes = [AllowAny]
     #for TEMPORARY testing purposes I changed the permission classes -selith

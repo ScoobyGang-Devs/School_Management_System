@@ -8,6 +8,9 @@ from rest_framework.response import Response
 from rest_framework import status
 # from django.shortcuts import get_object_or_404
 
+from django.db.models import Avg, Count, Sum, F # Import necessary aggregation functions
+from django.db.models.functions import Coalesce 
+
 # Create your views here.
 
 class TermTestListCreateView(generics.ListCreateAPIView):
@@ -112,32 +115,105 @@ class SubjectWiseMarksBulkCreateView(generics.CreateAPIView):
         return super().create(request, *args, **kwargs)
         
 
+#the page rendering took a very long time while using this view , so the new view below was used 
+#the new view uses uses sokme built in functions like Avg , Annotate and agregate which sped up the rendering time
+# class StudentGradeAverageView(APIView):
+
+#     def get(self, request, grade, term):
+
+#         students = StudentDetail.objects.filter(enrolledClass__grade = grade)
+#         subjects = Subject.objects.all()
+#         std_count = students.count()
+#         sub_count = subjects.count()
+
+#         average = []
+
+#         for student in students:
+#             student_average = []
+#             for subject in subjects:
+#                 mark_object = SubjectwiseMark.objects.filter(
+#                     subject = subject,
+#                     studentID = student,
+#                     term__termName=term
+#                 ).first()
+
+#                 student_average.append(mark_object.marksObtained if mark_object else 0)
+
+#             average.append(round(sum(student_average) / sub_count, 2))
+
+#         return Response({f"grade {grade}" : sum(average)/std_count}, status=status.HTTP_200_OK)        
+
+       
+
 class StudentGradeAverageView(APIView):
 
     def get(self, request, grade, term):
+        
+        # 1. Filter SubjectwiseMark objects for the given grade and term
+        #    The double underscore lookup traverses the FK relationships efficiently.
+        average_queryset = SubjectwiseMark.objects.filter(
+            studentID__enrolledClass__grade=grade,
+            term__termName=term
+        )
 
-        students = StudentDetail.objects.filter(enrolledClass__grade = grade)
-        subjects = Subject.objects.all()
-        std_count = students.count()
-        sub_count = subjects.count()
+        # 2. Group by student and calculate the average mark for each student.
+        #    Coalesce is used to ensure marksObtained is treated as a float (DecimalField) before averaging.
+        student_averages = average_queryset.values('studentID').annotate(
+            student_avg_mark=Avg('marksObtained')
+        )
 
-        average = []
+        # 3. Calculate the average of all those student averages.
+        #    This gives the overall grade average in a single database operation.
+        final_average = student_averages.aggregate(
+            overall_grade_avg=Avg('student_avg_mark')
+        )['overall_grade_avg'] # Extract the aggregated value
 
-        for student in students:
-            student_average = []
-            for subject in subjects:
-                mark_object = SubjectwiseMark.objects.filter(
-                    subject = subject,
-                    StudentID = student,
-                    term__termName=term
-                ).first()
+        # Handle case where no marks exist (final_average would be None)
+        if final_average is None:
+            final_average = 0.0
+        
+        # Format the result to two decimal places
+        final_average = round(final_average, 2)
 
-                student_average.append(mark_object.marksObtained if mark_object else 0)
 
-            average.append(round(sum(student_average) / sub_count, 2))
+        return Response({f"grade {grade}" : final_average}, status=status.HTTP_200_OK)
 
-        return Response({f"grade {grade}" : sum(average)/std_count}, status=status.HTTP_200_OK)        
+class StudentClassAverageView(APIView):
+    """
+    Calculates the overall average mark for all students in a specific class and term.
+    Uses efficient Django Aggregation to avoid N+1 queries.
+    """
+    def get(self, request, grade, classname, term):
+        
+        # 1. Filter SubjectwiseMark objects for the given grade, class, and term
+        average_queryset = SubjectwiseMark.objects.filter(
+            # Filter by grade and class name through the student's enrolledClass FK
+            studentID__enrolledClass__grade=grade,
+            studentID__enrolledClass__className=classname,
+            # Filter by the TermName
+            term__termName=term
+        )
 
+        # 2. Group by student and calculate the average mark for each student.
+        #    This generates a temporary table of individual student averages.
+        student_averages = average_queryset.values('studentID').annotate(
+            student_avg_mark=Avg('marksObtained')
+        )
+
+        # 3. Calculate the average of all those student averages. (Overall Class Average)
+        final_average = student_averages.aggregate(
+            overall_class_avg=Avg('student_avg_mark')
+        )['overall_class_avg']
+
+        # Handle case where no marks exist
+        if final_average is None:
+            final_average = 0.0
+        
+        # Format the result to two decimal places
+        final_average = round(final_average, 2)
+
+        # Returns the class average in a simple format (e.g., {"6 B": 75.45})
+        return Response({f"{grade} {classname}": final_average}, status=status.HTTP_200_OK)
 
 
 
