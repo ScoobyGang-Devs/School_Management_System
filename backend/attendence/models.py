@@ -36,5 +36,8 @@ class studentAttendence(models.Model):
     presentPercentage = models.DecimalField(max_digits=5, decimal_places=2)
     absentList = models.JSONField(null=True, blank=True, default=list)
 
+    class Meta:
+        unique_together = ('className', 'date')
+        
     def __str__(self):
         return f"{self.className} : {self.date}"

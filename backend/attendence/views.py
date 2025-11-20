@@ -52,41 +52,72 @@ class BulkStudentAttendanceCreate(APIView):
 
     def post(self, request, *args, **kwargs):
 
+        data_list = request.data 
+
         # Expecting a LIST of attendance objects
-        if isinstance(request.data, list):
+        if not isinstance(data_list, list):
+            return Response({
+                "error" : "Request must be a non-empty list of student records"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-            results = []
-            errors = []
+        class_name = data_list[0].get("className") 
+        date = data_list[0].get("date") 
+        
+        grade = class_name.split()[0]
+        className = class_name.split()[1]
 
-            for index, item in enumerate(request.data):
+        try:
+            classroom = Classroom.objects.get(grade=int(grade), className=className)
+        except Classroom.DoesNotExist:
+            return Response({"error": "Class not found"}, status=400)
 
-                serializer = studentAttendenceSerializer(data=item)
-                if serializer.is_valid():
-                    serializer.save()
-                    results.append(serializer.data)
-                else:
-                    errors.append({
-                        "row": index,        # which item failed
-                        "errors": serializer.errors
-                    })
+        # ---- Process student statuses ----
+        total = len(data_list)
+        absent = [s["indexNumber"] for s in data_list if s["status"] == "absent"]
+        present_count = total - len(absent)
+        present_percentage = (present_count / total) * 100
+        
+        # ---- Create attendance record ----
+        serializer = studentAttendenceSerializer(data={
+            "className": classroom.id,
+            "date": date,
+            "isMarked": True,
+            "presentPercentage": present_percentage,
+            "absentList": absent
+        })
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-            # If some items have errors → 207 Multi-Status
-            if errors:
-                return Response(
-                    {
-                        "created": results,   # valid records saved
-                        "errors": errors      # invalid rows
-                    },
-                    status=status.HTTP_207_MULTI_STATUS
-                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            # results = []
+            # errors = []
 
-            # All records valid
-            return Response(
-                results,
-                status=status.HTTP_201_CREATED
-            )
+            # for index, item in enumerate(request.data):
 
-        return Response(
-            {"error": "Request must contain a list of attendance objects"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+            #     serializer = studentAttendenceSerializer(data=item)
+            #     if serializer.is_valid():
+            #         serializer.save()
+            #         results.append(serializer.data)
+            #     else:
+            #         errors.append({
+            #             "row": index,        # which item failed
+            #             "errors": serializer.errors
+            #         })
+
+            # # If some items have errors → 207 Multi-Status
+            # if errors:
+            #     return Response(
+            #         {
+            #             "created": results,   # valid records saved
+            #             "errors": errors      # invalid rows
+            #         },
+            #         status=status.HTTP_207_MULTI_STATUS
+            #     )
+
+            # # All records valid
+            # return Response(
+            #     results,
+            #     status=status.HTTP_201_CREATED
+            # )
