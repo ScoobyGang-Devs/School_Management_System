@@ -16,11 +16,25 @@ class teacherAttendence(models.Model):
     def __str__(self):
         return self.attendence_id
 
+# class studentAttendence(models.Model):
+#     attendenceId = models.AutoField(primary_key=True)
+#     studentId = models.ForeignKey(StudentDetail,on_delete=models.CASCADE)
+#     date = models.DateField()
+#     status = models.CharField(max_length=1,choices=attendence_choice,)
+
+#     def __str__(self):
+#         return f"{self.studentId} : {self.date} : {self.status}"
+
 class studentAttendence(models.Model):
     attendenceId = models.AutoField(primary_key=True)
-    studentId = models.ForeignKey(StudentDetail,on_delete=models.CASCADE)
+    className = models.ForeignKey(Classroom,
+                                  on_delete=models.CASCADE,
+                                  related_name='student_attendence',
+                                  )
     date = models.DateField()
-    status = models.CharField(max_length=1,choices=attendence_choice,)
+    isMarked = models.BooleanField(default=False)
+    presentPercentage = models.DecimalField(max_digits=5, decimal_places=2)
+    absentList = models.JSONField(null=True, blank=True, default=list)
 
     def __str__(self):
-        return f"{self.studentId} : {self.date} : {self.status}"
+        return f"{self.className} : {self.date}"

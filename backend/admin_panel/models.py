@@ -108,7 +108,7 @@ class TeacherDetail(models.Model):
     mobileNumber = models.CharField(validators=[phone_regex], max_length=16, null=True, blank=True)
     section = models.CharField(max_length=300, null=True, blank=True)
     assignedClass = models.OneToOneField(Classroom, on_delete=models.SET_NULL, null=True, blank=True, related_name='teachers')
-    teachingClasses = models.ManyToManyField(Classroom, null=True, blank=True, related_name='subteachers')
+    teachingClasses = models.ManyToManyField(Classroom, blank=True, related_name='subteachers')
 
     def __str__(self):
         return f"{self.title} {self.fullName}"
