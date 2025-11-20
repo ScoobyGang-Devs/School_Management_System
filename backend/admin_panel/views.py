@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 from rest_framework import generics,status
 from rest_framework.permissions import IsAuthenticated , AllowAny
 from .serializers import *
@@ -8,7 +9,6 @@ from .permissions import IsStaffUser
 from attendence.models import studentAttendence
 from term_test.models import TermTest
 from datetime import date
-
 
 
 # Create your views here.
@@ -68,7 +68,6 @@ class ClassroomDetailView(APIView):
             "students": studentsSerializer.data
         })
     
-
 class SignupView(APIView):
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
@@ -79,7 +78,6 @@ class SignupView(APIView):
                 status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
 class StudentGradeSummary(APIView):
     permission_classes = [IsStaffUser]
 
@@ -116,8 +114,6 @@ class StudentByGradeList(generics.ListAPIView):
         grade = self.kwargs['grade']
         return StudentDetail.objects.filter(enrolledClass__grade=grade)
     
-
-
 class GradeRosterAPIView(APIView):
     """
     Returns a list of students in a given grade with:
@@ -125,8 +121,6 @@ class GradeRosterAPIView(APIView):
     - Attendance status for today
     - Average score across all term tests
     """
-
-class GradeRosterAPIView(APIView):
     def get(self, request, grade, classname):
         today = date.today()
 
@@ -148,7 +142,7 @@ class GradeRosterAPIView(APIView):
             # Average score across all term tests
             term_tests = TermTest.objects.filter(student=student)
             if term_tests.exists():
-                avg_score = round(sum(test.average_mark for test in term_tests) / term_tests.count(), 2)
+                avg_score = round(sum(test.average for test in term_tests) / term_tests.count(), 2)
             else:
                 avg_score = None
 
@@ -162,3 +156,42 @@ class GradeRosterAPIView(APIView):
 
         return Response(roster, status=status.HTTP_200_OK)
     
+class teacherClassView(APIView):
+
+    """
+    This view receives a teacherId from the frontend and returns
+    the teacher's assigned class and teaching classes.
+    """
+
+    def post(self,request):
+        serializer = teachersClassViewSerializer(data = request.data)
+
+        if serializer.is_valid():
+            teacherId = serializer.validated_data['teacherId']
+            teacherDetail = TeacherDetail.objects.filter(teacherId = teacherId).first()
+
+            if not teacherDetail:
+                return Response(
+                    {"error": "Teacher not found"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            assigned_class_data = f"{teacherDetail.assignedClass.grade} {teacherDetail.assignedClass.className}"
+            teaching_classes_data = [
+                f"{c.grade} {c.className}" for c in teacherDetail.teachingClasses.all()
+            ]
+            responseData = {
+                "assignedClass":assigned_class_data,
+                "teachingClasses":teaching_classes_data
+
+            }
+
+            return Response(
+                responseData,
+                status=status.HTTP_200_OK
+            )
+
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    
+class UserListView(ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserListSerializer

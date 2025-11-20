@@ -25,12 +25,19 @@ class TeacherNIC(models.Model):
     
 class GuardianDetail(models.Model):
 
+    TITLE_CHOICES = [
+        ('Mr', 'Mr'),
+        ('Ms', 'Ms'),
+        ('Mrs', 'Mrs'),
+        ('Ven', 'Ven')
+    ]
+
     GUARDIAN = [
         ('M',"Mother"),
         ('F',"Father"),
         ('G',"Guardian")
     ]
-
+    title = models.CharField(max_length=10, choices=TITLE_CHOICES, null=True, blank=True)
     guardianId = models.AutoField(primary_key=True, unique=True)
     guardianNIC = models.CharField(max_length=20,unique=True)
     guardianName = models.CharField(max_length=100000)
@@ -54,9 +61,7 @@ class StudentDetail(models.Model):
 
     indexNumber = models.IntegerField(primary_key=True,unique=True)
     guardian = models.ForeignKey(GuardianDetail, on_delete=models.CASCADE, related_name='students')
-    firstName = models.CharField(max_length=100)
-    lastName = models.CharField(max_length=100)
-    surName = models.CharField(max_length=100)
+    nameWithInitials = models.CharField(max_length=100, null=True,blank=True)
     fullName = models.CharField(max_length=300)
     dateOfBirth = models.DateField()
     gender = models.CharField(max_length=1, choices=GENDER, blank=False)
@@ -67,7 +72,7 @@ class StudentDetail(models.Model):
     enrolledClass = models.ForeignKey(Classroom, on_delete=models.SET_NULL, null=True, related_name='students')
 
     def __str__(self):
-        return f"{self.firstName} {self.lastName}"
+        return f"{self.fullName}"
     
 
 class TeacherDetail(models.Model):
@@ -77,17 +82,23 @@ class TeacherDetail(models.Model):
         'F':'Female'
     }
 
+    TITLE_CHOICES = [
+        ('Mr', 'Mr'),
+        ('Ms', 'Ms'),
+        ('Mrs', 'Mrs'),
+        ('Ven', 'Ven')
+    ]
+
+
     owner = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
         related_name='teacher_profile'
     )
-
     teacherId = models.AutoField(primary_key=True, blank=False, unique=True)
     nic_number = models.OneToOneField(TeacherNIC, on_delete=models.PROTECT)
-    firstName = models.CharField(max_length=100, null=True, blank=True)
-    lastName = models.CharField(max_length=100, null=True, blank=True)
-    surName = models.CharField(max_length=100, null=True, blank=True)
+    title = models.CharField(max_length=20, null=True, blank=True)
+    nameWithInitials = models.CharField(max_length=100, null=True, blank=True)
     fullName = models.CharField(max_length=300, null=True, blank=True)
     dateOfBirth = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=1, choices=GENDER, blank=False, null=True)
@@ -97,7 +108,8 @@ class TeacherDetail(models.Model):
     mobileNumber = models.CharField(validators=[phone_regex], max_length=16, null=True, blank=True)
     section = models.CharField(max_length=300, null=True, blank=True)
     assignedClass = models.OneToOneField(Classroom, on_delete=models.SET_NULL, null=True, blank=True, related_name='teachers')
+    teachingClasses = models.ManyToManyField(Classroom, null=True, blank=True, related_name='subteachers')
 
     def __str__(self):
-        return f"{self.firstName} {self.lastName}"
+        return f"{self.title} {self.fullName}"
 

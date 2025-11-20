@@ -15,10 +15,10 @@ import { Button } from '@/components/ui/button';
 // Mock Data for students
 
 
-const StudentAttendanceTable = ({attendanceData}) => {
+const StudentAttendanceTable = ({attendanceData, userSearch}) => {
 
     const dataToDisplay = attendanceData || [];
-const getStatusStyle = (status) => {
+    const getStatusStyle = (status) => {
         switch (status) {
             case 'Present': return 'bg-green-100 text-green-800';
             case 'Absent': return 'bg-red-100 text-red-800';
@@ -47,7 +47,8 @@ const getStatusStyle = (status) => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {dataToDisplay.map((student) => (
+                        {dataToDisplay.map((student) => 
+                            student.name.toLowerCase().includes(userSearch.toLowerCase()) &&
                             <TableRow key={student.id}>
                                 <TableCell className="font-medium text-muted-foreground">{student.id}</TableCell>
                                 <TableCell className="font-semibold">{student.name}</TableCell>
@@ -61,7 +62,7 @@ const getStatusStyle = (status) => {
                                     <Button variant="ghost" size="sm">View Details</Button>
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        )}
                     </TableBody>
                 </Table>
             </div>

@@ -14,9 +14,15 @@ class guardianSerializer(serializers.ModelSerializer):
             'guardianEmail': {'validators': []},
         }
         
+class ClassroomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Classroom
+        fields = '__all__'
+
 class StudentDetailsSerializer(serializers.ModelSerializer):
-    
     guardian = guardianSerializer()
+
+    enrolledClassDisplay = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = StudentDetail
@@ -42,16 +48,18 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
         )
 
         return student
+    
+    def get_enrolledClassDisplay(self, obj):
+        if obj.enrolledClass:
+            return f"{obj.enrolledClass.grade} {obj.enrolledClass.className}"
+        return None
+
 
 class TeacherDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherDetail
-        exclude = ['assignedClass']
-
-class ClassroomSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Classroom
         fields = '__all__'
+
 
 class SignupSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(write_only=True, style={'input_type': 'password'})
@@ -91,9 +99,44 @@ class SignupSerializer(serializers.ModelSerializer):
         
         return user
     
-
-
 class StudentDetailSerializer(serializers.ModelSerializer):
+    enrolledClass = serializers.ModelSerializer(StudentDetailsSerializer,StudentDetail.enrolledClass)
+
     class Meta:
         model = StudentDetail
-        fields = '__all__'
+        fields = ['__all__','enrolledClass']
+
+class teachersClassViewSerializer(serializers.Serializer):
+    teacherId = serializers.IntegerField()
+
+# use this serializer for the view that shows the list of current users list in the database
+class UserListSerializer(serializers.ModelSerializer):
+    status = serializers.SerializerMethodField()    # a read-only field whose value comes from a method on the serializer rather than a model field
+    role = serializers.SerializerMethodField()
+    userName = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['userName', 'email', 'role', 'status', 'last_login']
+
+    def get_userName(self, obj):
+        if hasattr(obj, "teacher_profile"):
+            return str(obj.teacher_profile)
+        return obj.get_full_name()
+    
+    def get_email(self, obj):
+        if hasattr(obj, "teacher_profile"):
+            return obj.teacher_profile.email
+        return "Null"
+    
+    def get_status(self, obj):
+        return "Active" if obj.is_active else "Inactive"
+    
+    def get_role(self, obj):
+        if obj.is_superuser:
+            return "Admin"
+        elif obj.is_staff:
+            return "Staff"
+        else:
+            return "Teacher"

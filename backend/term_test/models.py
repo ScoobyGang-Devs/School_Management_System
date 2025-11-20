@@ -3,7 +3,7 @@ from admin_panel.models import *
 
 # Create your models here.
 
-class TermTest(models.Model):
+class TermName(models.Model):
 
     TERM_CHOICES = [
         ('1', 'Term 1'),
@@ -11,63 +11,72 @@ class TermTest(models.Model):
         ('3', 'Term 3')
     ]
 
-    PASS_FAIL_CHOICES = [
-        ('P', 'Pass'),
-        ('F', 'Fail')
-    ]
-
-    term_summary_id = models.AutoField(primary_key=True)
-    student = models.ForeignKey(StudentDetail, on_delete=models.CASCADE)
-    term = models.CharField(max_length=10, choices=TERM_CHOICES)
-    total_marks = models.DecimalField(max_digits=6, decimal_places=2)
-    average_mark = models.DecimalField(max_digits=5, decimal_places=2)
-    rank = models.IntegerField()
-    pass_fail_status = models.CharField(max_length=10 ,choices=PASS_FAIL_CHOICES)
-
+    termName = models.CharField(max_length=1, choices=TERM_CHOICES, unique=True)
 
     def __str__(self):
-        return f"{self.student.firstName} {self.student.lastName} - {self.term}"
+        return f"Term {self.termName}"
     
+
 class Subject(models.Model):
-    Subject_ID = models.AutoField(primary_key=True)
-    Subject_name = models.CharField(max_length=100)
+
+    subjectID = models.AutoField(primary_key=True)
+    subjectName = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
-        return self.Subject_name
-
-
+        return self.subjectName
     
-class SubjectwiseMark(models.Model):
-    subjectwise_Mark_ID=models.BigAutoField(primary_key=True)
-    Student_ID = models.ForeignKey(
+    
+class TermTest(models.Model):
+
+    termtestId = models.AutoField(primary_key=True)
+    student = models.ForeignKey(
         StudentDetail,
         on_delete=models.CASCADE,
-        related_name='student_mark_id'
+        related_name='termtest'
     )
-
-    Subject_ID = models.ForeignKey(
-        Subject,
+    rank = models.IntegerField(null=True, blank=True)
+    term = models.ForeignKey(
+        TermName, 
         on_delete=models.CASCADE,
-        related_name='subject_marks'
+        related_name='termtest'
     )
+    total = models.IntegerField(null=True, blank=True)
+    average = models.DecimalField(decimal_places=2, max_digits=6)
 
-    Term = models.ForeignKey(
-        TermTest,
+    def __str__(self):
+        return f"Index {self.student.indexNumber} : Term {self.term.termName}"
+
+
+class SubjectwiseMark(models.Model):
+
+    subjectWiseMarkID=models.BigAutoField(primary_key=True)
+
+    subject = models.ForeignKey(
+        Subject, 
+        on_delete=models.CASCADE, 
+        related_name='subjectwisemark'
+    )
+    studentID = models.ForeignKey(
+        StudentDetail,
         on_delete=models.CASCADE,
-        related_name='mark_term'
+        related_name='subjectwisemark'
+    )
+    term = models.ForeignKey(
+        TermName,
+        on_delete=models.CASCADE,
+        related_name='subjectwisemark'
     )
 
-    Marks_Obtained = models.DecimalField(max_digits=5, decimal_places=2)
-    Max_Marks = models.DecimalField(max_digits=5, decimal_places=2)
+    marksObtained = models.DecimalField(max_digits=5, decimal_places=2)
 
-    Teacher_ID = models.ForeignKey(
+    teacherID = models.ForeignKey(
         TeacherDetail,
         on_delete=models.SET_NULL,
         null=True,
-        related_name='teacher_marking'
+        related_name='subjectwisemark'
     )
 
-    Date_Recorded = models.DateTimeField(auto_now_add=True)
+    dateRecorded = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.Student_ID.firstName} - {self.Subject_ID.Subject_name} - {self.Term}"
+        return f"Term {self.term.termName} : {self.studentID.firstName} : {self.subject.subjectName}"
