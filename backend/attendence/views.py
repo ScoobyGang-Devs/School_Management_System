@@ -96,16 +96,25 @@ class BulkStudentAttendanceCreate(APIView):
 
 class PresentAbsentDataView(APIView):
 
-    def get(self, request, classname):
+    def get(self, request, classname, grade):
+
         today = timezone.now().date()
-        attendance_today = studentAttendence.objects.filter(date=today)
-        attendance_class = studentAttendence.objects.filter(className = classname)
+        attendance_today = studentAttendence.objects.filter(
+            date=today,
+            className__className = classname,
+            className__grade = grade
+        )
+        attendance_class = studentAttendence.objects.filter(
+            className__className = classname,
+            className__grade = grade
+        )
         response_list = []
 
         try:
             if attendance_today:
 
-                attendence_data = attendance_class[-2:-7:-1]
+                attendence_data = attendance_class.order_by('-date')[1:6]
+                
 
                 for dataset in attendence_data:
                     data = {}
@@ -115,7 +124,7 @@ class PresentAbsentDataView(APIView):
                     response_list.append(data)
 
             else:
-                attendence_data = attendance_class[-1:-6:-1]
+                attendence_data = attendance_class.order_by('-date')[0:5]
 
                 for dataset in attendence_data:
                     data = {}
@@ -135,15 +144,8 @@ class PresentAbsentDataView(APIView):
                     data_["absentees"] = dataset_.absentList
                     response_list.append(data_)
 
-        return Response({"class" : classname,
-                         "attendance detail" : response_list}, status=status.HTTP_201_CREATED)            
-
-        
-
-
-        
-
-# 
+        return Response({"class" : f"{grade} {classname}",
+                         "absent list" : response_list}, status=status.HTTP_201_CREATED)            
 
 
                     
