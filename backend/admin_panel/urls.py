@@ -17,6 +17,7 @@ urlpatterns = [
     path('api/students/grade/<int:grade>/', StudentByGradeList.as_view(), name='students_by_grade'),
     path('student-summary-by-class-name/<int:grade>/', StudentGradeClassSummary.as_view(), name='student_by_class_name'),
     path('roster/<int:grade>/<str:classname>/', GradeRosterAPIView.as_view(), name='grade-roster'),
+    path('admin_dashboard/', AdminDashboardView.as_view(), name='admin-dashboard'),
     path('teacherclassview/', teacherClassView.as_view(), name='teacher_class_view'),
     path('user/', UserListView.as_view(), name='user-list') # use this to view all logged in users' details
 ]
