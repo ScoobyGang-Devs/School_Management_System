@@ -4,7 +4,7 @@ from .serializers import *
 from .models import *
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
-from admin_panel.models import StudentDetail
+from admin_panel.models import *
 from rest_framework.response import Response
 from django.utils import timezone
 import datetime
@@ -12,9 +12,30 @@ import datetime
 
 # Create your views here.
 
+# attendance/views.py
+
+# ... (other imports)
+
 class studentAttenenceListCreateView(generics.ListCreateAPIView):
-    queryset = studentAttendence.objects.all()
+
     serializer_class = studentAttendenceSerializer
+
+    def get_queryset(self):
+        # Start with all objects
+        queryset = studentAttendence.objects.all()
+
+        # Get the 'date' parameter from the URL query string (e.g., ?date=2025-11-21)
+        date_param = self.request.query_params.get('date', None)
+
+        if date_param is not None:
+            # Filter the queryset by the date parameter
+            # This is the crucial step you need!
+            queryset = queryset.filter(date=date_param)
+        
+        # We can also add a filter for the selected class to reduce data load, 
+        # but the current React logic requires filtering by date only for the List API:
+        
+        return queryset
 
 
 class studentAttendenceDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -23,8 +44,21 @@ class studentAttendenceDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class teacherAttenenceListCreateView(generics.ListCreateAPIView):
-    queryset = teacherAttendence.objects.all()
+
     serializer_class = teacherAttendenceSerializer
+
+    def get_queryset(self):
+        # Start with all objects
+        queryset = teacherAttendence.objects.all()
+
+        # Get the 'date' parameter from the URL
+        date_param = self.request.query_params.get('date', None)
+
+        if date_param is not None:
+            # Filter by date if provided
+            queryset = queryset.filter(date=date_param)
+        
+        return queryset
 
 
 class teacherAttendenceDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -96,16 +130,25 @@ class BulkStudentAttendanceCreate(APIView):
 
 class PresentAbsentDataView(APIView):
 
-    def get(self, request, classname):
+    def get(self, request, classname, grade):
+
         today = timezone.now().date()
-        attendance_today = studentAttendence.objects.filter(date=today)
-        attendance_class = studentAttendence.objects.filter(className = classname)
+        attendance_today = studentAttendence.objects.filter(
+            date=today,
+            className__className = classname,
+            className__grade = grade
+        )
+        attendance_class = studentAttendence.objects.filter(
+            className__className = classname,
+            className__grade = grade
+        )
         response_list = []
 
         try:
             if attendance_today:
 
-                attendence_data = attendance_class[-2:-7:-1]
+                attendence_data = attendance_class.order_by('-date')[1:6]
+                
 
                 for dataset in attendence_data:
                     data = {}
@@ -115,7 +158,7 @@ class PresentAbsentDataView(APIView):
                     response_list.append(data)
 
             else:
-                attendence_data = attendance_class[-1:-6:-1]
+                attendence_data = attendance_class.order_by('-date')[0:5]
 
                 for dataset in attendence_data:
                     data = {}
@@ -135,8 +178,10 @@ class PresentAbsentDataView(APIView):
                     data_["absentees"] = dataset_.absentList
                     response_list.append(data_)
 
-        return Response({"class" : classname,
-                         "attendance detail" : response_list}, status=status.HTTP_201_CREATED)            
+        # return Response({"class" : classname,
+        #                  "attendance detail" : response_list}, status=status.HTTP_201_CREATED)   
+        return Response({"class" : f"{grade} {classname}",
+                         "absent list" : response_list}, status=status.HTTP_201_CREATED)            
 
 class StudentDetailForAttendenceView(APIView):
 
@@ -155,10 +200,7 @@ class StudentDetailForAttendenceView(APIView):
             name_index_list.append(data)
 
         return Response(name_index_list, status=status.HTTP_200_OK)
-
-        
-
-# 
+         
 
 
                     

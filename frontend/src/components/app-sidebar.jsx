@@ -16,8 +16,28 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 
-const data = {
-  navMain: [
+//----------------------------------------------------------------------------------
+const navData = {
+  teacher: [
+    {
+      title: "NAVIGATION",
+      items: [
+        { title: "Dashboard", url: "/" },
+        { title: "Settings", url: "/settings" },
+        { title: "Internal Messaging", url: "/messaging" },
+        { title: "Edit Profile", url: "/edit-profile" },
+      ],
+    },
+    {
+      title: "TEACHER TOOLS",
+      items: [
+        { title: "My Classes", url: "/teacher/classes" },
+        { title: "Take Attendance", url: "/teacher/attendance" },
+        { title: "Grade Assignments", url: "/teacher/grades" },
+      ],
+    },
+  ],
+  admin: [
     {
       title: "NAVIGATION",
       items: [
@@ -36,7 +56,7 @@ const data = {
         { title: "Student Database", url: "/admin/students" },
       ],
     },
-    {
+        {
       title: "TEACHER TOOLS",
       items: [
         { title: "My Classes", url: "/teacher/classes" },
@@ -45,11 +65,30 @@ const data = {
       ],
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }) {
-  const [collapsed, setCollapsed] = useState(true)
-  const location = useLocation()
+  const [collapsed, setCollapsed] = useState(true);
+  const location = useLocation();
+  
+  let role = 'admin';
+  try {
+    if (window.fakeRole) role = window.fakeRole;
+  } catch {}
+  
+  // This is the correctly filtered navigation array
+  // const nav = navData[role].filter(
+  //   section =>
+  //     (role === 'teacher' && section.title === 'NAVIGATION') ||
+  //     (role === 'teacher' && section.title === 'TEACHER TOOLS') ||
+  //     (role === 'admin' && section.title === 'NAVIGATION') ||
+  //     (role === 'admin' && section.title === 'ADMINISTRATION')
+  // );
+  const nav = navData[role];
+
+
+//----------------------------------------------------------------------------------
+
 
   return (
       <div
@@ -89,7 +128,8 @@ export function AppSidebar({ ...props }) {
         <SidebarContent>
           <SidebarGroup>
             <SidebarMenu className="gap-2">
-              {data.navMain.map((section) => (
+              {/* ✅ FIX: Mapping over the correct 'nav' variable */}
+              {nav.map((section) => (
                 <SidebarMenuItem key={section.title}>
                   <div className="font-semibold px-3 py-1 text-gray-500 uppercase text-xs tracking-wide">
                     {section.title}
@@ -100,7 +140,7 @@ export function AppSidebar({ ...props }) {
                         <SidebarMenuSubItem key={subItem.title}>
                           <SidebarMenuSubButton
                             asChild
-                            isActive={location.pathname === subItem.url}
+                            isActive={location.pathname.startsWith(subItem.url)} // Using startsWith for nested routes
                           >
                             <Link to={subItem.url}>{subItem.title}</Link>
                           </SidebarMenuSubButton>

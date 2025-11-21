@@ -1,3 +1,4 @@
+# term_test.models
 from django.db import models
 from admin_panel.models import *
 
@@ -25,12 +26,12 @@ class Subject(models.Model):
     def __str__(self):
         return self.subjectName
     
-    
+
 class TermTest(models.Model):
 
     termtestId = models.AutoField(primary_key=True)
     student = models.ForeignKey(
-        StudentDetail,
+        "admin_panel.StudentDetail",
         on_delete=models.CASCADE,
         related_name='termtest'
     )
@@ -57,7 +58,7 @@ class SubjectwiseMark(models.Model):
         related_name='subjectwisemark'
     )
     studentID = models.ForeignKey(
-        StudentDetail,
+        "admin_panel.StudentDetail",
         on_delete=models.CASCADE,
         related_name='subjectwisemark'
     )
@@ -70,7 +71,7 @@ class SubjectwiseMark(models.Model):
     marksObtained = models.DecimalField(max_digits=5, decimal_places=2)
 
     teacherID = models.ForeignKey(
-        TeacherDetail,
+        "admin_panel.TeacherDetail",
         on_delete=models.SET_NULL,
         null=True,
         related_name='subjectwisemark'
@@ -79,4 +80,4 @@ class SubjectwiseMark(models.Model):
     dateRecorded = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Term {self.term.termName} : {self.studentID.firstName} : {self.subject.subjectName}"
+        return f"Term {self.term.termName} : {self.studentID.indexNumber} : {self.subject.subjectName}"

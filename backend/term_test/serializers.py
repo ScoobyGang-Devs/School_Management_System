@@ -1,3 +1,4 @@
+# term_test serializers.py
 from rest_framework import serializers
 from .models import *
 from admin_panel.models import *
@@ -7,7 +8,7 @@ from django.db import transaction
 class StudentDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentDetail
-        fields = ['indexNumber', 'firstName', 'lastName'] 
+        fields = ['indexNumber', 'fullName'] 
 
 class TermTestSerializer(serializers.ModelSerializer):
     student = StudentDetailsSerializer(read_only=True)
@@ -78,3 +79,4 @@ class SubjectwiseMarkSerializer(serializers.ModelSerializer):
             subject=subjectObj,
             **validated_data
         )
+    

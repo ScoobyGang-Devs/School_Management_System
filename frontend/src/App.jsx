@@ -5,6 +5,7 @@ import { SidebarProvider } from './components/ui/sidebar'
 import { Routes, Route,useLocation} from 'react-router-dom'
 import { ThemeProvider } from "@/components/theme-provider"
 import { createContext } from 'react'
+import React, { useState } from 'react';
 
 // Create Theme Context
 export const ThemeContext = createContext()
@@ -13,6 +14,10 @@ export const ThemeContext = createContext()
 import LoginForm from './pages/navigation/loginForm'
 import SignupForm from './pages/navigation/signUp'
 import Dashboard from './pages/navigation/Dashboard'
+
+import AdminDashboard from './pages/AdminDashboard'
+import TeacherDashboard from './pages/TeacherDashboard'
+
 import Settings from './pages/navigation/Settings'
 import InternalMessaging from './pages/navigation/InternalMessaging'
 import SchoolWideAttendance from './pages/administration/SchoolWideAttendance'
@@ -42,6 +47,9 @@ function App() {
   // ✅ Check if we are on the login or signup page
   const isAuthPage = location.pathname === "/login" || location.pathname === "/signup"
 
+  // Get role from sidebar toggle (for demo)
+  const [role, setRole] = useState('teacher');
+  // Pass setRole to AppSidebar so it can update role
   return (
     <ThemeProvider defaultTheme="root" storageKey="vite-ui-theme">
       <SidebarProvider>
@@ -67,7 +75,7 @@ function App() {
                 color: "var(--sidebar-foreground)",
               }}
             >
-              <AppSidebar />
+              <AppSidebar role={role} setRole={setRole} />
             </aside>
 
             {/* Main Content */}
@@ -80,9 +88,7 @@ function App() {
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/messaging" element={<InternalMessaging />} />
                   <Route path="/edit-profile" element={<EditProfile />} />
-
-                  {/* ADMIN */}
-                  <Route path="/admin/attendance/*" element={<SchoolWideAttendance />}>
+                  <Route path="/admin/attendance/*" element={<SchoolWideAttendance />}> 
                     <Route index element={<AttendanceMainPage />} />
                     <Route path="students/" element={<StudentAttendancePage />} />
                     <Route path="teachers/" element={<TeacherAttendancePage />} />
@@ -97,13 +103,18 @@ function App() {
                   
 
                   <Route path="/admin/students/*" element={<StudentDatabase />} >
-                          <Route index element={<GradesPage />} /> 
-                          <Route path="classes/:gradeLevel" element={<RelaventClassesForGrade />} >
-                              <Route path=":classId" element={<ClassPage />} /> 
+                    <Route index element={<GradesPage />} /> 
+                    <Route path="classes/:gradeLevel" element={<RelaventClassesForGrade />} >
+                      <Route path=":classId" element={<ClassPage />} /> 
 
-                           </Route>
+                    </Route>
                   </Route>
                   <Route path="/admin/users" element={<UserManagement />} />
+
+                  {/* 🚀 NEW DASHBOARD ROUTES ADDED HERE */}
+                  <Route path="/admin-dashboard" element={<AdminDashboard />} /> 
+                  <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+                  {/* END NEW DASHBOARD ROUTES */}
 
                   {/* TEACHER */}
                   <Route path="/teacher/classes" element={<MyClasses />} />
