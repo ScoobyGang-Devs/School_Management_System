@@ -16,11 +16,7 @@ export default function StudentAttendance() {
   const [date, setDate] = useState("");
   const [resultData, setResultData] = useState(null); // <--- NEW STATE
 
-  const [students, setStudents] = useState([
-    { id: 1, index: "001", name: "John Doe", present: false },
-    { id: 2, index: "002", name: "Sarah Lee", present: false },
-    { id: 3, index: "003", name: "Michael Chan", present: false },
-  ]);
+  const [students, setStudents] = useState([ ]);
 
  useEffect(() => {
     const grade = user.grade;
@@ -29,19 +25,19 @@ export default function StudentAttendance() {
     const fetchStudents = async () => {
       try {
         const res = await request.GET(
-          `http://localhost:8000/student-list/${grade}/`,subclass
+          `http://localhost:8000/attendence/student-list/${grade}`,subclass
         );
 
-        if (!res || !res.students) {
+        if (!res) {
           console.error("Backend returned unexpected data:", res);
           return;
         }
 
         setStudents(
-          res.students.map((student, index) => ({
-            id: index + 1,
-            name: student.studentName,
-            index: student.index,
+          res.map((data, ind) => ({
+            id: ind + 1,
+            name: data.name,
+            index: data.indexNumber,
             present: false,
           }))
         );
