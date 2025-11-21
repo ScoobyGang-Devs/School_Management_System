@@ -56,6 +56,14 @@ const navData = {
         { title: "Student Database", url: "/admin/students" },
       ],
     },
+        {
+      title: "TEACHER TOOLS",
+      items: [
+        { title: "My Classes", url: "/teacher/classes" },
+        { title: "Take Attendance", url: "/teacher/attendance" },
+        { title: "Grade Assignments", url: "/teacher/grades" },
+      ],
+    },
   ],
 };
 
@@ -69,13 +77,14 @@ export function AppSidebar({ ...props }) {
   } catch {}
   
   // This is the correctly filtered navigation array
-  const nav = navData[role].filter(
-    section =>
-      (role === 'teacher' && section.title === 'NAVIGATION') ||
-      (role === 'teacher' && section.title === 'TEACHER TOOLS') ||
-      (role === 'admin' && section.title === 'NAVIGATION') ||
-      (role === 'admin' && section.title === 'ADMINISTRATION')
-  );
+  // const nav = navData[role].filter(
+  //   section =>
+  //     (role === 'teacher' && section.title === 'NAVIGATION') ||
+  //     (role === 'teacher' && section.title === 'TEACHER TOOLS') ||
+  //     (role === 'admin' && section.title === 'NAVIGATION') ||
+  //     (role === 'admin' && section.title === 'ADMINISTRATION')
+  // );
+  const nav = navData[role];
 
 
 //----------------------------------------------------------------------------------
