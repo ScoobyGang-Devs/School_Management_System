@@ -17,7 +17,7 @@ import datetime
 # ... (other imports)
 
 class studentAttenenceListCreateView(generics.ListCreateAPIView):
-    # REMOVE 'queryset = studentAttendence.objects.all()'
+
     serializer_class = studentAttendenceSerializer
 
     def get_queryset(self):
@@ -44,8 +44,21 @@ class studentAttendenceDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class teacherAttenenceListCreateView(generics.ListCreateAPIView):
-    queryset = teacherAttendence.objects.all()
+
     serializer_class = teacherAttendenceSerializer
+
+    def get_queryset(self):
+        # Start with all objects
+        queryset = teacherAttendence.objects.all()
+
+        # Get the 'date' parameter from the URL
+        date_param = self.request.query_params.get('date', None)
+
+        if date_param is not None:
+            # Filter by date if provided
+            queryset = queryset.filter(date=date_param)
+        
+        return queryset
 
 
 class teacherAttendenceDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -165,8 +178,29 @@ class PresentAbsentDataView(APIView):
                     data_["absentees"] = dataset_.absentList
                     response_list.append(data_)
 
+        # return Response({"class" : classname,
+        #                  "attendance detail" : response_list}, status=status.HTTP_201_CREATED)   
         return Response({"class" : f"{grade} {classname}",
                          "absent list" : response_list}, status=status.HTTP_201_CREATED)            
+
+class StudentDetailForAttendenceView(APIView):
+
+    def get(self, request, grade, class_letter):
+        
+        students = StudentDetail.objects.filter(
+            enrolledClass__grade=grade,
+            enrolledClass__className=class_letter
+        )   
+
+        name_index_list = []
+
+        for student in students:
+            data = {"indexNumber": student.indexNumber,
+                    "name": student.fullName}
+            name_index_list.append(data)
+
+        return Response(name_index_list, status=status.HTTP_200_OK)
+         
 
 
                     
