@@ -23,17 +23,13 @@ export default function StudentAttendance() {
   ]);
 
  useEffect(() => {
-    const teacherId = user.teacherId;
-
-    if (!teacherId) {
-      console.warn("No teacher ID found in localStorage");
-      return;
-    }
+    const grade = user.grade;
+    const subclass = user.subClass;
 
     const fetchStudents = async () => {
       try {
         const res = await request.GET(
-          `http://localhost:8000/api/students/${teacherId}/`
+          `http://localhost:8000/student-list/${grade}/`,subclass
         );
 
         if (!res || !res.students) {
