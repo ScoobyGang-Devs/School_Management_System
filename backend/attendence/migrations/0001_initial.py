@@ -33,4 +33,18 @@ class Migration(migrations.Migration):
                 ('teacher_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='admin_panel.teacherdetail')),
             ],
         ),
+        migrations.CreateModel(
+            name='studentAttendence',
+            fields=[
+                ('attendenceId', models.AutoField(primary_key=True, serialize=False)),
+                ('date', models.DateField()),
+                ('isMarked', models.BooleanField(default=False)),
+                ('presentPercentage', models.DecimalField(decimal_places=2, max_digits=5)),
+                ('absentList', models.JSONField(blank=True, default=list, null=True)),
+                ('className', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='student_attendence', to='admin_panel.classroom')),
+            ],
+            options={
+                'unique_together': {('className', 'date')},
+            },
+        ),
     ]

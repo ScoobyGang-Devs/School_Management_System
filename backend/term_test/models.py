@@ -1,3 +1,4 @@
+# term_test.models
 from django.db import models
 from admin_panel.models import *
 
