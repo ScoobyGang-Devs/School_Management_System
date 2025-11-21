@@ -30,6 +30,12 @@ class StudentDetailsDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = StudentDetail.objects.all()
     serializer_class = StudentDetailsSerializer
 
+class TeacherListView(generics.ListAPIView):
+    queryset = TeacherDetail.objects.all()
+    serializer_class = TeacherDetailsSerializer
+    # You can change this to [IsAuthenticated] if you want only logged-in users to see it
+    permission_classes = [AllowAny]
+
 class StudentsCreateView(generics.CreateAPIView):
         
         def post(self, request, *args, **kwargs):
