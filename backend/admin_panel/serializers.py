@@ -24,7 +24,7 @@ class ClassroomSerializer(serializers.ModelSerializer):
 class StudentDetailsSerializer(serializers.ModelSerializer):
     guardian = guardianSerializer()
 
-    enrolledClassDisplay = serializers.SerializerMethodField(read_only=True)
+    # enrolledClassDisplay = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = StudentDetail
@@ -51,10 +51,60 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
 
         return student
     
-    def get_enrolledClassDisplay(self, obj):
-        if obj.enrolledClass:
-            return f"{obj.enrolledClass.grade} {obj.enrolledClass.className}"
-        return None
+    # def get_enrolledClassDisplay(self, obj):
+    #     if obj.enrolledClass:
+    #         return f"{obj.enrolledClass.grade} {obj.enrolledClass.className}"
+    #     return None
+
+    def to_representation(self, instance):
+        """
+        We override this to format data for the frontend (GET requests).
+        This keeps the Class Display logic simple and separate from writing.
+        """
+        # 1. Get the standard data (includes 'guardian' object and 'enrolledClass' ID)
+        data = super().to_representation(instance)
+
+        # 2. Add the readable Class Name string
+        #    The frontend can now use: student.enrolledClass_str -> "6 A"
+        if instance.enrolledClass:
+            data['enrolledClass_str'] = f"{instance.enrolledClass.grade} {instance.enrolledClass.className}"
+        else:
+            data['enrolledClass_str'] = "Unassigned"
+
+        return data
+    
+    def update(self, instance, validated_data):
+        """
+        Handle updates (PATCH/PUT requests).
+        We separate the guardian data from the student data and update them individually.
+        """
+
+        # this code was added becasue without a specifically made update method ... the default patch method causes an error 
+        
+        
+        # 1. Extract guardian data if it exists in the request
+        guardian_data = validated_data.pop('guardian', None)
+
+        # 2. Update the Student fields
+        # when the fronend sends data in the form ... it contains data that is changed and non changed data too...
+        #we loop through all of these and update the data in the database ... reardless of whether they are changed or not
+
+        # fact - put --> changed and unchaged data /// patch --> chagned data only ... 
+        for attr, value in validated_data.items():
+            #this changes the python object of the database
+            setattr(instance, attr, value)
+        #instance.save() is where the DB data is ACTUALLY changed!
+        instance.save()
+
+        # 3. Update the Guardian fields (only if data was sent)
+        #if the gaurdian data is changed then changing the gaurdian data is done i this code snippet
+        if guardian_data and instance.guardian:
+            guardian = instance.guardian
+            for attr, value in guardian_data.items():
+                setattr(guardian, attr, value)
+            guardian.save()
+
+        return instance
 
 
 class TeacherDetailsSerializer(serializers.ModelSerializer):

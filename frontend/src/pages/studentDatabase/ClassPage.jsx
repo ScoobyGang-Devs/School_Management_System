@@ -4,6 +4,7 @@ import { LayoutList, UserPlus, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react'; // You're already importing these
 import api from '../../api.js';
+import { useNavigate } from 'react-router-dom';
 // Import all necessary Shadcn Table components
 import {
     Table,
@@ -18,6 +19,7 @@ import {
 
 const ClassDataPage = () => {
     const { gradeLevel, classId } = useParams();
+    const navigate = useNavigate();
 
     // CHANGED: Create state to hold your students
     const [students, setStudents] = useState([]);
@@ -105,7 +107,13 @@ const ClassDataPage = () => {
                                     {student.score_avg ? `${student.score_avg}%` : 'N/A'}
                                 </TableCell>
                                 <TableCell className="text-center">
-                                    <Button variant="ghost" size="sm">Details</Button>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm"
+                                            onClick={() => navigate(`/student-profile/${student.student_id || student.indexNumber}`)}
+                                        >
+                                            Details
+                                        </Button>
                                 </TableCell>
                             </TableRow>
                         ))}
