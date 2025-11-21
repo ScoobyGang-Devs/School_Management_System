@@ -7,7 +7,7 @@ from django.db import transaction
 class StudentDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentDetail
-        fields = ['indexNumber', 'firstName', 'lastName'] 
+        fields = ['indexNumber', 'fullName'] 
 
 class TermTestSerializer(serializers.ModelSerializer):
     student = StudentDetailsSerializer(read_only=True)

@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import *
-from .views import teacherClassResultView
+
 urlpatterns = [
     path('guardiandetails/',guardianListCreateView.as_view(), name="guardianListCreate"),
     path('guardiandetails/<int:pk>/',guardianDetailView.as_view(),name ='guardianListDetail'),
@@ -19,5 +19,5 @@ urlpatterns = [
     path('roster/<int:grade>/<str:classname>/', GradeRosterAPIView.as_view(), name='grade-roster'),
     path('teacherclassview/', teacherClassView.as_view(), name='teacher_class_view'),
     path('user/', UserListView.as_view(), name='user-list'), # use this to view all logged in users' details
-    path('teacherclassresultview/', teacherClassResultView.as_view(),name='teacher_result_view')
+    path('teacherclassresultview/<int:grade>/<str:className>/<str:subjectName>', teacherClassResultView.as_view(),name='teacher_result_view')
 ]

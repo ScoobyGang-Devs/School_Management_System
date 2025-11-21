@@ -107,7 +107,7 @@ class StudentDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StudentDetail
-        fields = ['__all__','enrolledClass']
+        fields = '__all__'
 
 
 class teachersClassViewSerializer(serializers.Serializer):

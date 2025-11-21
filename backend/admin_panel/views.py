@@ -6,10 +6,10 @@ from rest_framework.permissions import IsAuthenticated , AllowAny
 from .serializers import *
 from .models import *
 from .permissions import IsStaffUser
-from attendence.models import studentAttendence
-from term_test.models import TermTest
+from attendence.models import *
+from term_test.models import *
 from datetime import date
-from term_test.models import Subject, SubjectwiseMark
+from term_test.models import *
 from django.db.models import Avg
 
 
@@ -81,7 +81,7 @@ class SignupView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class StudentGradeSummary(APIView):
-    permission_classes = [IsStaffUser]
+    # permission_classes = [IsStaffUser]
 
     def get(self, request):
         summary = {}
@@ -107,7 +107,7 @@ class StudentGradeClassSummary(APIView):
         return Response(summary)
     
 class StudentByGradeList(generics.ListAPIView):
-    serializer_class = StudentDetailSerializer
+    serializer_class = StudentDetailsSerializer
     # permission_classes = [IsStaffUser]
     permission_classes = [AllowAny]
     #for TEMPORARY testing purposes I changed the permission classes -selith
@@ -203,16 +203,16 @@ class teacherClassResultView(APIView):
     This view receives a teacherID from the frontend and returns
     the teacher's assigned class reults.
     """
-    permission_classes = [IsAuthenticated]
-    def post(self,request,grade,className,subjectName ):
+    permission_classes = [AllowAny]
+    def get(self,request,grade,className,subjectName ):
 
         try:
-            teacher = TeacherDetail.objects.get(user=request.user)
+            teacher = TeacherDetail.objects.get(owner=request.user)
         except TeacherDetail.DoesNotExist:
             return Response({"error": "Teacher profile not found"}, status=404)
 
         try:
-            class_obj = Classroom.objects.get(grade=grade, class_name=className)
+            class_obj = Classroom.objects.get(grade=grade, className=className)
         except Classroom.DoesNotExist:
             return Response({"error": "Class not found"}, status=404)
 
@@ -220,7 +220,7 @@ class teacherClassResultView(APIView):
             return Response({"error": "You do not teach this class"}, status=403)
         
         try:
-            subject_obj = Subject.objects.get(subject_name=subjectName)
+            subject_obj = Subject.objects.get(subjectName=subjectName)
         except Subject.DoesNotExist:
             return Response({"error": "Subject not found"}, status=404)
 

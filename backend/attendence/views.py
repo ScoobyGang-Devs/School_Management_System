@@ -4,7 +4,7 @@ from .serializers import *
 from .models import *
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
-from admin_panel.models import StudentDetail
+from admin_panel.models import *
 from rest_framework.response import Response
 
 

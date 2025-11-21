@@ -1,6 +1,8 @@
 from django.db import models
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
+from .models import *
+from term_test.models import *
 
 # Create your models here.
 
@@ -97,7 +99,7 @@ class TeacherDetail(models.Model):
     )
     teacherId = models.AutoField(primary_key=True, blank=False, unique=True)
     nic_number = models.OneToOneField(TeacherNIC, on_delete=models.PROTECT)
-    title = models.CharField(max_length=20, null=True, blank=True)
+    title = models.CharField(max_length=20, null=True, blank=True, choices=TITLE_CHOICES)
     nameWithInitials = models.CharField(max_length=100, null=True, blank=True)
     fullName = models.CharField(max_length=300, null=True, blank=True)
     dateOfBirth = models.DateField(null=True, blank=True)
@@ -108,7 +110,7 @@ class TeacherDetail(models.Model):
     mobileNumber = models.CharField(validators=[phone_regex], max_length=16, null=True, blank=True)
     section = models.CharField(max_length=300, null=True, blank=True)
     assignedClass = models.OneToOneField(Classroom, on_delete=models.SET_NULL, null=True, blank=True, related_name='teachers')
-    teachingClasses = models.ManyToManyField(Classroom, null=True, blank=True, related_name='subteachers')
+    teachingClasses = models.ManyToManyField(Classroom, blank=True, related_name='subteachers')
 
     def __str__(self):
         return f"{self.title} {self.fullName}"
@@ -120,11 +122,11 @@ class ClassSubjectAssignment(models.Model):
     """
     assignmentID = models.AutoField(primary_key=True)
     
-    teacher = models.ForeignKey('TeacherDetail', on_delete=models.CASCADE, related_name='assignments')
+    teacher = models.ForeignKey(TeacherDetail, on_delete=models.CASCADE, related_name='assignments')
     
-    classroom = models.ForeignKey('Classroom', on_delete=models.CASCADE) 
+    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE) 
     
-    subject = models.ForeignKey('Subject', on_delete=models.CASCADE) 
+    subject = models.ForeignKey("term_test.Subject", on_delete=models.CASCADE) 
     
     class Meta:
         unique_together = ('classroom', 'subject') 
