@@ -29,7 +29,7 @@ export default function StudentAttendance() {
     const fetchStudents = async () => {
       try {
         const res = await request.GET(
-          `http://localhost:8000/student-list/${grade}/`,subclass
+          `http://localhost:8000/attendence/student-list/${grade}`,subclass
         );
 
         if (!res || !res.students) {
@@ -38,10 +38,10 @@ export default function StudentAttendance() {
         }
 
         setStudents(
-          res.students.map((student, index) => ({
-            id: index + 1,
-            name: student.studentName,
-            index: student.index,
+          res.map((data, ind) => ({
+            id: ind + 1,
+            name: data.studentName,
+            index: data.index,
             present: false,
           }))
         );

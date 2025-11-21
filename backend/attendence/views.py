@@ -195,8 +195,8 @@ class StudentDetailForAttendenceView(APIView):
         name_index_list = []
 
         for student in students:
-            data = {"indexNumber": student.indexNumber,
-                    "name": student.fullName}
+            data = {"index": student.indexNumber,
+                    "studentName": student.fullName}
             name_index_list.append(data)
 
         return Response(name_index_list, status=status.HTTP_200_OK)
