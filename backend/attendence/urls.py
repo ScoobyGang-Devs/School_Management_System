@@ -9,4 +9,5 @@ urlpatterns = [
     path('studentattendence/<int:indexNumber>/<str:date>/', attendenceOfStudentView.as_view(), name = "attendenceOfStudentView"),
     path('classattendance/<int:grade>/<str:classname>', PresentAbsentDataView.as_view()),
     path('students/bulk-create/', BulkStudentAttendanceCreate.as_view(), name="class-attendance-mark"),
+    path('student-list/<int:grade>/<str:class_letter>/', StudentDetailForAttendenceView.as_view(), name='student-name-index-view-for-attendence'),
 ]

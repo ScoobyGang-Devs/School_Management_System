@@ -4,8 +4,8 @@ from .models import Message
 
 class MessageAdminForm(forms.ModelForm):
     receivers_text = forms.CharField(
-        label="Receivers (comma-separated emails)",
-        help_text='Enter emails separated by commas',
+        label="Receivers (comma-separated teacher IDs)",
+        help_text='Enter teacher IDs separated by commas',
         required=True
     )
 
@@ -15,23 +15,29 @@ class MessageAdminForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        emails = [email.strip() for email in self.cleaned_data["receivers_text"].split(",")]
-        instance.receivers = emails
-        instance.read_status = {email: False for email in emails}
+        ids = [tid.strip() for tid in self.cleaned_data["receivers_text"].split(",")]
+        instance.recipients = ids
+        instance.read_status = {tid: False for tid in ids}
         if commit:
             instance.save()
         return instance
 
+
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
     form = MessageAdminForm
-    list_display = ("subject", "sender", "category", "urgent", "timestamp", "recipient_count", "unread_count")
+    list_display = ("subject", "sender_name", "category", "urgent", "timestamp", "recipient_count", "unread_count")
     list_filter = ("category", "urgent", "timestamp")
-    search_fields = ("subject", "content", "sender", "sender_email")
+    search_fields = ("subject", "content", "sender_teacher__fullName")
     readonly_fields = ("read_status", "timestamp")
 
+    # Custom method to display sender name
+    def sender_name(self, obj):
+        return obj.sender_teacher.fullName
+    sender_name.short_description = "Sender"
+
     def recipient_count(self, obj):
-        return len(obj.receivers) if obj.receivers else 0
+        return len(obj.recipients) if obj.recipients else 0
     recipient_count.short_description = "Recipients"
 
     def unread_count(self, obj):
