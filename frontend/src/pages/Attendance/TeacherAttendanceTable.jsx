@@ -49,7 +49,7 @@ const TeacherAttendanceTable = ({attendanceData, userSearch}) => {
                     <TableBody>
                         {dataToDisplay.map((teacher) => 
                             teacher.name.toLowerCase().includes(userSearch.toLowerCase()) &&
-                            <TableRow key={student.id}>
+                            <TableRow key={teacher.id}>
                                 <TableCell className="font-medium text-muted-foreground">{teacher.id}</TableCell>
                                 <TableCell className="font-semibold">{teacher.name}</TableCell>
                                 <TableCell>
