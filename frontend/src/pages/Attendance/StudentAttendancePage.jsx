@@ -1,32 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import StudentAttendanceTable from './StudentAttendanceTable.jsx';
-import { Button } from '@/components/ui/button'; // Assuming you'll use Shadcn Buttons
+import { Button } from '@/components/ui/button';
 import AttendanceDatePicker from './AttedanceDatePicker.jsx';
-import {Input} from '@/components/ui/input'
-import api from "../../api.js"
+import { Input } from '@/components/ui/input';
+import api from "../../api.js";
 
-// --- MOCK DATA to demonstrate filtering functionality ---
-// In a real app, this data would come from an API/Redux store.
-const MOCK_DATA = [
-    // --- Attendance for November 15, 2025 (Today) ---
-    { id: 1, name: "Alice", grade: "6", class: "A", date: "2025-11-15", status: "Present" },
-    { id: 2, name: "Bob", grade: "6", class: "B", date: "2025-11-15", status: "Absent" },
-    { id: 3, name: "Charlie", grade: "7", class: "A", date: "2025-11-15", status: "Late" },
-    { id: 4, name: "Diana", grade: "6", class: "A", date: "2025-11-15", status: "Present" },
-    { id: 5, name: "Eve", grade: "7", class: "B", date: "2025-11-15", status: "Absent" },
-    { id: 6, name: "Frank", grade: "8", class: "C", date: "2025-11-15", status: "Present" },
-
-    // --- Attendance for November 14, 2025 (Yesterday) ---
-    { id: 7, name: "Alice", grade: "6", class: "A", date: "2025-11-14", status: "Absent" },
-    { id: 8, name: "Bob", grade: "6", class: "B", date: "2025-11-14", status: "Late" },
-    { id: 9, name: "Charlie", grade: "7", class: "A", date: "2025-11-14", status: "Present" },
-    // ... additional students for the 14th ...
-];
-// --- Placeholder Components ---
-// You will replace these with your actual Shadcn Menubar and ButtonBar components.
-
+// --- Placeholder Components (GradeMenubar, ClassButtonBar remain the same) ---
 const GradeMenubar = ({ onSelect, currentGrade }) => {
-    const grades = ['All', '6', '7', '8','9','10','11'];
+    const grades = [ '6', '7', '8','9','10','11'];
     return (
         <div className="flex space-x-2 p-2 border-b">
             {grades.map(grade => (
@@ -43,7 +24,7 @@ const GradeMenubar = ({ onSelect, currentGrade }) => {
 };
 
 const ClassButtonBar = ({ onSelect, currentClass }) => {
-    const classes = ['All', 'A', 'B', 'C','D'];
+    const classes = [ 'A', 'B', 'C','D'];
     return (
         <div className="flex space-x-2 p-2 mb-4">
             {classes.map(className => (
@@ -59,45 +40,133 @@ const ClassButtonBar = ({ onSelect, currentClass }) => {
     );
 };
 
+const formatLocalISO = (date) => {
+    if (!date) return null;
+    // Get year, month, and day based on local time
+    const year = date.getFullYear();
+    // Month is 0-indexed, so add 1
+    const month = String(date.getMonth() + 1).padStart(2, '0'); 
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    // Concatenate to YYYY-MM-DD format, which is what Django expects
+    return `${year}-${month}-${day}`;
+};
+
 
 // --- Main Component ---
 const SchoolWideAttendance = () => {
-    // 1. Initialize state for the selections
-    const [selectedGrade, setSelectedGrade] = useState('All');
-    const [selectedClass, setSelectedClass] = useState('All');
-    const [selectedDate, setSelectedDate] = useState(null); 
-    const [search, setSearch] = useState("")
+    // 1. Initialize state
+    const [selectedGrade, setSelectedGrade] = useState('6');
+    const [selectedClass, setSelectedClass] = useState('A');
+    const [selectedDate, setSelectedDate] = useState(new Date()); // Default to today
+    const [search, setSearch] = useState("");
     
+    // New state for fetched data
+    const [roster, setRoster] = useState([]); // List of students in the selected class
+    const [aggregateAttendance, setAggregateAttendance] = useState(null); // The single attendance record for the selected class/date
+    const [isLoading, setIsLoading] = useState(false);
 
-    const dateString = selectedDate ? selectedDate.toISOString().split('T')[0] : null;
+    // Helper to format the selected date for API calls
+    const dateString = formatLocalISO(selectedDate);
+    console.log(dateString)
 
-
+    // --- EFFECT 1: Fetch Roster (triggered by Grade or Class change) ---
     useEffect(() => {
-        const fetchAttendance = async () => {
-            try {
-                const response = await api.get('attendence/studentattendence/');
-                console.log(response.data);
-            } catch (err) {
-                // intentionally no-op
+        const fetchRoster = async () => {
+            if (selectedGrade && selectedClass) {
+                setIsLoading(true);
+                try {
+                    // API Call: roster/<int:grade>/<str:classname>/
+                    const response = await api.get(`roster/${selectedGrade}/${selectedClass}/`);
+                    setRoster(response.data);
+                    console.log(response.data);
+                } catch (err) {
+                    console.error("Error fetching roster:", err);
+                    setRoster([]);
+                }
             }
         };
-        fetchAttendance();
-    }, []);
+        fetchRoster();
+        // Dependency array ensures this runs whenever the selected class/grade changes
+    }, [selectedGrade, selectedClass]); 
+
+    // --- EFFECT 2: Fetch Aggregate Attendance (triggered by Grade, Class, or Date change) ---
+    useEffect(() => {
+        const fetchAggregateAttendance = async () => {
+            if (selectedGrade && selectedClass && dateString) {
+                setIsLoading(true);
+                // Construct the expected class name string (e.g., "6 A")
+                const fullClassName = `${selectedGrade} ${selectedClass}`;
+                
+                try {
+                    // API Call: studentattendence/?date=YYYY-MM-DD
+                    // We must filter the entire list response manually to find our class/date record
+                    const response = await api.get(`attendence/studentattendence/?date=${dateString}`);
+                    
+                    // Filter the 24+ records to find the one matching the current class
+                    const classRecord = response.data.find(
+                        record => record.className === fullClassName
+                    );
+
+                    console.log(classRecord)
+
+                    setAggregateAttendance(classRecord || null);
+                    
+                } catch (err) {
+                    console.error("Error fetching aggregate attendance:", err);
+                    setAggregateAttendance(null);
+                } finally {
+                    setIsLoading(false);
+                }
+            }
+        };
+        fetchAggregateAttendance();
+        // Dependency array includes class/grade (for className string) and dateString
+    }, [selectedGrade, selectedClass, dateString]);
 
 
-
-    // 2. Fetch or filter data based on the state variables using useMemo
+    // 2. Compute the final merged attendance data using useMemo
     const attendanceData = useMemo(() => {
-        // Filter the mock data based on current selections
-        return MOCK_DATA.filter(student =>
-            (selectedGrade === 'All' || student.grade === selectedGrade) &&
-            (selectedClass === 'All' || student.class === selectedClass) &&
-            (dateString === null || student.date === dateString)
+        // Step 1: Initialize the data based on the full class roster
+        const mergedData = roster.map(student => {
+            // Ensure student objects have an indexNumber field from the roster API
+            const studentIndex = student.student_id; 
+            
+            return {
+                ...student, // Includes name, grade, class, indexNumber, etc.
+                status: 'Not Marked', // Default status
+                indexNumber: studentIndex, // Use a consistent key
+                date: dateString, // The date being viewed
+            };
+        });
+
+        // Step 2: Apply attendance status using the aggregate record
+        if (aggregateAttendance && aggregateAttendance.absentList) {
+            const absentIDs = aggregateAttendance.absentList.map(String); // Ensure IDs are strings for comparison
+            
+            return mergedData.map(student => {
+                if (absentIDs.includes(String(student.indexNumber))) {
+                    return { ...student, status: 'Absent' };
+                }
+                // If a record exists (aggregateAttendance is not null) and the student ID 
+                // is NOT in the absent list, they are marked Present.
+                return { ...student, status: 'Present' };
+            });
+        }
+        
+        // Step 3: Apply client-side search filter
+        return mergedData.filter(student => 
+            student.name.toLowerCase().includes(search.toLowerCase()) ||
+            String(student.indexNumber).includes(search)
         );
-    }, [selectedGrade, selectedClass,selectedDate]);
+        
+    }, [roster, aggregateAttendance, dateString, search]); 
+
 
     // 3. Handlers for your UI elements
     const handleGradeChange = (newGrade) => {
+        // Reset class selection if "All" is selected in the Menubar (optional)
+        // If your Menubar only has specific grades, this is fine.
         setSelectedGrade(newGrade);
     };
 
@@ -106,15 +175,19 @@ const SchoolWideAttendance = () => {
     };
 
     const handleDateChange = (newDate) => {
-        // newDate will be the Date object provided by the date picker
         setSelectedDate(newDate);
     };
+
+
+    // Helper for display text
+    const recordsFoundText = isLoading 
+        ? "Loading attendance..." 
+        : `(${attendanceData.length} records found)`;
 
     return (
         <div className="p-6">
             <h1 className="text-3xl font-bold mb-4">School-Wide Attendance</h1>
             
-            {/* The UI components (Menubar/Button Bar) call the handlers */}
             <GradeMenubar onSelect={handleGradeChange} currentGrade={selectedGrade} />
             <ClassButtonBar onSelect={handleClassChange} currentClass={selectedClass} />
 
@@ -128,13 +201,16 @@ const SchoolWideAttendance = () => {
               />
             </div>
             
-            
+            {isLoading && <p className="text-blue-500">Fetching data...</p>}
 
             {/* The table component receives the filtered data */}
-            <StudentAttendanceTable attendanceData={attendanceData} userSearch={search} />
+            <StudentAttendanceTable 
+                attendanceData={attendanceData} 
+                userSearch={search} 
+            />
             
             <p className="mt-4 text-sm text-muted-foreground">
-                Showing attendance for Grade: **{selectedGrade}**, Class: **{selectedClass}**. ({attendanceData.length} records found)
+                Showing attendance for Grade: **{selectedGrade}**, Class: **{selectedClass}**. {recordsFoundText}
             </p>
         </div>
     );

@@ -12,9 +12,30 @@ import datetime
 
 # Create your views here.
 
+# attendance/views.py
+
+# ... (other imports)
+
 class studentAttenenceListCreateView(generics.ListCreateAPIView):
-    queryset = studentAttendence.objects.all()
+    # REMOVE 'queryset = studentAttendence.objects.all()'
     serializer_class = studentAttendenceSerializer
+
+    def get_queryset(self):
+        # Start with all objects
+        queryset = studentAttendence.objects.all()
+
+        # Get the 'date' parameter from the URL query string (e.g., ?date=2025-11-21)
+        date_param = self.request.query_params.get('date', None)
+
+        if date_param is not None:
+            # Filter the queryset by the date parameter
+            # This is the crucial step you need!
+            queryset = queryset.filter(date=date_param)
+        
+        # We can also add a filter for the selected class to reduce data load, 
+        # but the current React logic requires filtering by date only for the List API:
+        
+        return queryset
 
 
 class studentAttendenceDetailView(generics.RetrieveUpdateDestroyAPIView):
