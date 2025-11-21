@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import StudentAttendanceTable from './StudentAttendanceTable.jsx';
 import { Button } from '@/components/ui/button'; // Assuming you'll use Shadcn Buttons
 import AttendanceDatePicker from './AttedanceDatePicker.jsx';
 import {Input} from '@/components/ui/input'
+import api from "../../api.js"
 
 // --- MOCK DATA to demonstrate filtering functionality ---
 // In a real app, this data would come from an API/Redux store.
@@ -69,6 +70,21 @@ const SchoolWideAttendance = () => {
     
 
     const dateString = selectedDate ? selectedDate.toISOString().split('T')[0] : null;
+
+
+    useEffect(() => {
+        const fetchAttendance = async () => {
+            try {
+                const response = await api.get('attendence/studentattendence/');
+                console.log(response.data);
+            } catch (err) {
+                // intentionally no-op
+            }
+        };
+        fetchAttendance();
+    }, []);
+
+
 
     // 2. Fetch or filter data based on the state variables using useMemo
     const attendanceData = useMemo(() => {
