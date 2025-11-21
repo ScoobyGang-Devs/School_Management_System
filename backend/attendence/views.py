@@ -17,7 +17,7 @@ import datetime
 # ... (other imports)
 
 class studentAttenenceListCreateView(generics.ListCreateAPIView):
-    # REMOVE 'queryset = studentAttendence.objects.all()'
+
     serializer_class = studentAttendenceSerializer
 
     def get_queryset(self):
@@ -44,8 +44,21 @@ class studentAttendenceDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class teacherAttenenceListCreateView(generics.ListCreateAPIView):
-    queryset = teacherAttendence.objects.all()
+
     serializer_class = teacherAttendenceSerializer
+
+    def get_queryset(self):
+        # Start with all objects
+        queryset = teacherAttendence.objects.all()
+
+        # Get the 'date' parameter from the URL
+        date_param = self.request.query_params.get('date', None)
+
+        if date_param is not None:
+            # Filter by date if provided
+            queryset = queryset.filter(date=date_param)
+        
+        return queryset
 
 
 class teacherAttendenceDetailView(generics.RetrieveUpdateDestroyAPIView):

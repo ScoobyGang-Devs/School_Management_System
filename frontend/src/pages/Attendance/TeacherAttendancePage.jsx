@@ -1,78 +1,135 @@
-// import React from 'react'
-
-// const TeahcerAttendancePage = () => {
-//   return (
-//     <div>TeahcerAttendancePage</div>
-//   )
-// }
-
-// export default TeahcerAttendancePage
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import TeacherAttendanceTable from './TeacherAttendanceTable.jsx';
 import AttendanceDatePicker from './AttedanceDatePicker.jsx';
-import {Input} from '@/components/ui/input'
+import { Input } from '@/components/ui/input';
+import api from "../../api.js";
 
-// --- MOCK DATA to demonstrate filtering functionality ---
-// In a real app, this data would come from an API/Redux store.
-const TEACHER_MOCK_DATA = [
-  // --- Attendance for November 15, 2025 (Today) ---
-  { id: 1, name: "Mr. Smith", date: "2025-11-15", status: "Present" },
-  { id: 2, name: "Ms. Johnson", date: "2025-11-15", status: "Absent" },
-  { id: 3, name: "Mr. Williams", date: "2025-11-15", status: "Late" },
-  { id: 4, name: "Ms. Brown", date: "2025-11-15", status: "Present" },
-  { id: 5, name: "Mr. Davis", date: "2025-11-15", status: "Present" },
+// --- Helper for Date Formatting ---
+const formatLocalISO = (date) => {
+    if (!date) return null;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
 
-  // --- Attendance for November 14, 2025 (Yesterday) ---
-  { id: 6, name: "Mr. Smith", date: "2025-11-14", status: "Absent" },
-  { id: 7, name: "Ms. Johnson", date: "2025-11-14", status: "Present" },
-  { id: 8, name: "Mr. Williams", date: "2025-11-14", status: "Present" },
-  { id: 9, name: "Ms. Brown", date: "2025-11-14", status: "Late" },
-  { id: 10, name: "Mr. Davis", date: "2025-11-14", status: "Absent" },
-];
-
-
-
-// --- Main Component ---
-const SchoolWideAttendance = () => {
-    // 1. Initialize state for the selections
-    const [selectedDate, setSelectedDate] = useState(null); 
-    const [search, setSearch] = useState("")
+const TeacherAttendancePage = () => {
+    // 1. Initialize state
+    const [selectedDate, setSelectedDate] = useState(new Date()); // Default to today
+    const [search, setSearch] = useState("");
     
+    // Data State
+    const [teacherRoster, setTeacherRoster] = useState([]); 
+    const [attendanceRecords, setAttendanceRecords] = useState([]); 
+    const [isLoading, setIsLoading] = useState(false);
 
-    const dateString = selectedDate ? selectedDate.toISOString().split('T')[0] : null;
+    // Format date for API
+    const dateString = formatLocalISO(selectedDate);
 
-    // 2. Fetch or filter data based on the state variables using useMemo
+    // --- EFFECT 1: Fetch All Teachers (Runs once on mount) ---
+    useEffect(() => {
+        const fetchTeachers = async () => {
+            setIsLoading(true);
+            try {
+                // API Call: teachers/all/
+                const response = await api.get('teachers/all/');
+                setTeacherRoster(response.data);
+            } catch (err) {
+                console.error("Error fetching teacher roster:", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchTeachers();
+    }, []); 
+
+    // --- EFFECT 2: Fetch Attendance for Selected Date ---
+    useEffect(() => {
+        const fetchAttendance = async () => {
+            if (dateString) {
+                try {
+                    // API Call: attendence/teacherattendence/?date=YYYY-MM-DD
+                    const response = await api.get(`attendence/teacherattendence/?date=${dateString}`);
+                    setAttendanceRecords(response.data);
+                } catch (err) {
+                    console.error("Error fetching teacher attendance:", err);
+                    setAttendanceRecords([]);
+                }
+            }
+        };
+        fetchAttendance();
+    }, [dateString]); // Runs whenever the date changes
+
+
+    // 2. Compute final merged data using useMemo
     const attendanceData = useMemo(() => {
-        // Filter the mock data based on current selections
-        return TEACHER_MOCK_DATA.filter(teacher =>
-            (dateString === null || teacher.date === dateString)
-        );
-    }, [selectedDate]);
+        // Create a quick lookup map for attendance: { teacher_id: "Present/Absent" }
+        // Note: Check your API response to see if it uses 'teacher_id' (integer) or an object.
+        const attendanceMap = {};
+        
+        attendanceRecords.forEach(record => {
+            // Assuming the serializer returns the ID in 'teacher_id'
+            attendanceMap[record.teacher_id] = record.status;
+        });
 
-    // 3. Handlers for your UI elements
+        // Merge Roster with Attendance Status
+        const mergedData = teacherRoster.map(teacher => {
+            // Defensive check for name
+            const name = teacher.fullName || teacher.nameWithInitials || "Unknown Teacher";
+            
+            return {
+                id: teacher.teacherId, 
+                name: name,
+                title: teacher.title, // 'Mr', 'Ms', etc.
+                date: dateString,
+                // Look up status, default to 'Not Marked' if not found
+                status: attendanceMap[teacher.teacherId] || 'Not Marked' 
+            };
+        });
+        
+        // Apply Client-side Search Filter
+        return mergedData.filter(teacher => 
+            teacher.name.toLowerCase().includes(search.toLowerCase()) ||
+            String(teacher.id).includes(search)
+        );
+        
+    }, [teacherRoster, attendanceRecords, dateString, search]); 
+
+    // 3. Handlers
     const handleDateChange = (newDate) => {
-        // newDate will be the Date object provided by the date picker
         setSelectedDate(newDate);
     };
 
+    const recordsFoundText = isLoading 
+        ? "Loading..." 
+        : `(${attendanceData.length} records found)`;
+
     return (
         <div className="p-6">
-            <h1 className="text-3xl font-bold mb-4">School-Wide Attendance</h1>
+            <h1 className="text-3xl font-bold mb-4">Teacher Attendance</h1>
             
-            <div className="flex items-center gap-4 mb-2">
+            <div className="flex items-center gap-4 mb-4">
               <AttendanceDatePicker onSelect={handleDateChange} date={selectedDate}  />
               <Input
                 type="text" 
-                placeholder="Search student..."
+                placeholder="Search teacher name or ID..."
                 className="w-96"
                 onChange = {(e) => setSearch(e.target.value)}
               />
             </div>
 
-            {/* The table component receives the filtered data */}
-            <TeacherAttendanceTable attendanceData={attendanceData} userSearch={search} />
+            {isLoading && <p className="text-blue-500 mb-2">Fetching data...</p>}
+
+            {/* The table component receives the processed data */}
+            <TeacherAttendanceTable 
+                attendanceData={attendanceData} 
+                userSearch={search} 
+            />
+             <p className="mt-4 text-sm text-muted-foreground">
+                Showing attendance for: **{dateString}** {recordsFoundText}
+            </p>
         </div>
     );
 };
 
-export default SchoolWideAttendance;
+export default TeacherAttendancePage;
