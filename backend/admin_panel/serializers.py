@@ -13,11 +13,13 @@ class guardianSerializer(serializers.ModelSerializer):
             'guardianNIC': {'validators': []},
             'guardianEmail': {'validators': []},
         }
-        
+
+
 class ClassroomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Classroom
         fields = '__all__'
+
 
 class StudentDetailsSerializer(serializers.ModelSerializer):
     guardian = guardianSerializer()
@@ -98,7 +100,8 @@ class SignupSerializer(serializers.ModelSerializer):
         nic_entry.save()
         
         return user
-    
+
+
 class StudentDetailSerializer(serializers.ModelSerializer):
     enrolledClass = serializers.ModelSerializer(StudentDetailsSerializer,StudentDetail.enrolledClass)
 
@@ -106,11 +109,14 @@ class StudentDetailSerializer(serializers.ModelSerializer):
         model = StudentDetail
         fields = '__all__'
 
+
 class teachersClassViewSerializer(serializers.Serializer):
     teacherId = serializers.IntegerField()
 
-# use this serializer for the view that shows the list of current users list in the database
+
 class UserListSerializer(serializers.ModelSerializer):
+
+    
     status = serializers.SerializerMethodField()    # a read-only field whose value comes from a method on the serializer rather than a model field
     role = serializers.SerializerMethodField()
     userName = serializers.SerializerMethodField()
@@ -140,3 +146,5 @@ class UserListSerializer(serializers.ModelSerializer):
             return "Staff"
         else:
             return "Teacher"
+        
+
