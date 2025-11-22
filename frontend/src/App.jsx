@@ -31,6 +31,7 @@ import GradeAssignments from './pages/teacher_tools/GradeAssignments'
 import RelaventClassesForGrade from './pages/studentDatabase/RelaventClassesForGrade.jsx'
 import GradesPage from './pages/studentDatabase/GradesPage.jsx'
 import ClassPage from './pages/studentDatabase/ClassPage.jsx'
+import TeacherDatabase from './pages/administration/TeacherDatabase'
 
 import RelaventClassResultsForGrade from './pages/studentResults/RelaventClassResultsForGrade.jsx'
 import ResultGradePage from './pages/studentResults/ResultGradePage.jsx'
@@ -41,6 +42,7 @@ import StudentAttendancePage from './pages/Attendance/StudentAttendancePage.jsx'
 import TeacherAttendancePage from './pages/Attendance/TeacherAttendancePage.jsx'
 import StudentProfilePage from './pages/studentDatabase/StudentCard'
 import AddStudentPage from './pages/administration/AddStudentPage'
+import TeacherProfilePage from './pages/TeacherDatabase/TeacherProfileCard'
 
 
 function App() {
@@ -112,6 +114,7 @@ function App() {
                     </Route>
                   </Route>
                   <Route path="/admin/users" element={<UserManagement />} />
+                  <Route path="/admin/teachers" element={<TeacherDatabase />} />
 
                   {/* 🚀 NEW DASHBOARD ROUTES ADDED HERE */}
                   <Route path="/admin-dashboard" element={<AdminDashboard />} /> 
@@ -123,8 +126,11 @@ function App() {
                   <Route path="/teacher/attendance" element={<TakeAttendance />} />
                   <Route path="/teacher/grades" element={<GradeAssignments />} />
                   <Route path="/student-profile/:id" element={<StudentProfilePage />} />
+                  <Route path="/teacher-profile/:id" element={<TeacherProfilePage />} />
 
                   <Route path="/add-student/:id" element={<AddStudentPage />} />
+
+
 
                   {/* 404 */}
                   <Route path="*" element={<h1 className="text-center text-lg font-semibold">404 | Page Not Found</h1>} />

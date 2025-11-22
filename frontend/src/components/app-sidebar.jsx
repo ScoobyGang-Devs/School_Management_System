@@ -54,6 +54,7 @@ const navData = {
         { title: "School-Wide Results", url: "/admin/results" },
         { title: "User Management", url: "/admin/users" },
         { title: "Student Database", url: "/admin/students" },
+        { title: "Teacher Database", url: "/admin/teachers"}
       ],
     },
         {

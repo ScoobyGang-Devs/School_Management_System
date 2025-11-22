@@ -22,4 +22,5 @@ urlpatterns = [
     path('user/', UserListView.as_view(), name='user-list'), # use this to view all logged in users' details
     path('teacherclassresultview/<int:grade>/<str:className>/<str:subjectName>', teacherClassResultView.as_view(),name='teacher_result_view'),
     path('teachers/all/', TeacherListView.as_view(), name='all-teachers-list'),
+    path('teacherdetails/<int:teacherId>/', TeacherRetrieveView.as_view(), name='teacher-detail-by-id'),
 ]
