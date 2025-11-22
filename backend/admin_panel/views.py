@@ -262,8 +262,8 @@ class AdminDashboardView(APIView):
         attendance_qs = (
             studentAttendence.objects
             .filter(date__range=(five_days_ago, today - timedelta(days=1)))
-            .values('date', 'studentId__enrolledClass')
-            .annotate(present_count=Count('attendenceId', filter=Q(status='P')))
+            .values('date', 'className')
+            .annotate(present_count=Count('attendenceId'))
             .order_by('date')
         )
 
@@ -271,7 +271,7 @@ class AdminDashboardView(APIView):
         class_map = {cls.id: str(cls) for cls in Classroom.objects.all()}
 
         for record in attendance_qs:
-            class_id = record['studentId__enrolledClass']
+            class_id = record['className']
             attendance_list.append({
                 "date": record['date'],
                 "class": class_map.get(class_id, "Unknown"),
