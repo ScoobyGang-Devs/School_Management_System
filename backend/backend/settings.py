@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'term_test',
     'rest_framework_simplejwt',
-    'chat'
+    'chat',
+    'dashboard'
 ]
 
 MIDDLEWARE = [

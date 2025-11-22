@@ -29,5 +29,6 @@ urlpatterns = [
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('tokenrefresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('chat/',include('chat.urls')),
+    path('dashboard/', include('dashboard.urls')),
 
 ]
