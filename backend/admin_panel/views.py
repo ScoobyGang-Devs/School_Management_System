@@ -332,3 +332,13 @@ class teacherClassResultView(APIView):
             "subject": subjectName,
             "average_marks": round(average_marks or 0, 2)  # handle None
         })
+    
+class TeacherRetrieveView(generics.RetrieveAPIView):
+    """
+    Returns the details of a specific teacher by ID.
+    Accessible by: /teacherdetails/<id>/
+    """
+    queryset = TeacherDetail.objects.all()
+    serializer_class = TeacherDetailsSerializer
+    permission_classes = [AllowAny] # Change to IsAuthenticated if needed
+    lookup_field = 'teacherId' # Matches the primary key in your model

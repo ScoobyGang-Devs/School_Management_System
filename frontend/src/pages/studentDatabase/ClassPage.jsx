@@ -62,10 +62,15 @@ const ClassDataPage = () => {
                     <LayoutList className="w-6 h-6" /> {pageTitle}
                 </h1>
                 <div className="flex gap-3">
-                    <Button variant="outline" className="flex items-center gap-2">
+                    <Button 
+                    variant="outline" 
+                    className="flex items-center gap-2">
                         <FileText className="w-4 h-4" /> Export Roster
                     </Button>
-                    <Button className="flex items-center gap-2">
+                    <Button 
+                        className="flex items-center gap-2"
+                        onClick={() => navigate(`/add-student/${gradeLevel}${classId}`)
+                    }>
                         <UserPlus className="w-4 h-4" /> Add Student
                     </Button>
                 </div>

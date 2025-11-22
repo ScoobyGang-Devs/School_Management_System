@@ -1,8 +1,10 @@
 import React from 'react'
-
+import UserManagementMain from '../UserManagament/UserManagementMain'
 const UserManagement = () => {
   return (
-    <div>UserManagement</div>
+    <div>
+      <UserManagementMain />
+    </div>
   )
 }
 
