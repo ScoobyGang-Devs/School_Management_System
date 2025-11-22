@@ -20,6 +20,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from .views import ChangePasswordView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -30,5 +31,5 @@ urlpatterns = [
     path('tokenrefresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('chat/',include('chat.urls')),
     path('dashboard/', include('dashboard.urls')),
-
+    path('change-password/', ChangePasswordView.as_view(), name='password-change'),
 ]
