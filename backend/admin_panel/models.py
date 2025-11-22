@@ -19,7 +19,8 @@ class Classroom(models.Model):
     def __str__(self):
         return f"{self.grade} {self.className}"
 
-class TeacherNIC(models.Model):
+# data table of school staff members' NICs
+class StaffNIC(models.Model):
     nic_number = models.CharField(max_length=25, unique=True, blank=False, null=False)
     is_used = models.BooleanField(default=False)
 
@@ -99,7 +100,7 @@ class TeacherDetail(models.Model):
         related_name='teacher_profile'
     )
     teacherId = models.AutoField(primary_key=True, blank=False, unique=True)
-    nic_number = models.OneToOneField(TeacherNIC, on_delete=models.PROTECT)
+    nic_number = models.OneToOneField(StaffNIC, on_delete=models.PROTECT)
     title = models.CharField(max_length=20, null=True, blank=True, choices=TITLE_CHOICES)
     nameWithInitials = models.CharField(max_length=100, null=True, blank=True)
     fullName = models.CharField(max_length=300, null=True, blank=True)
@@ -134,3 +135,49 @@ class ClassSubjectAssignment(models.Model):
 
     def __str__(self):
         return f"{self.teacher.firstName} teaches {self.subject.subjectName} in {self.classroom}"
+    
+class AdminProfile(models.Model):
+    """
+    A model for collect details of admins like principal, vice principals, section heads and etc...
+    """
+
+    GENDER = {
+        'M':'Male',
+        'F':'Female'
+    }
+
+    TITLE_CHOICES = [
+        ('Mr', 'Mr'),
+        ('Ms', 'Ms'),
+        ('Mrs', 'Mrs'),
+        ('Ven', 'Ven')
+    ]
+
+    POSITONS = {
+        'Principal':'Principal',
+        'Vice Principal':'Vice Principal',
+        'Section Head':'Section Head',
+        'Staff Admin':'Staff Admin'
+    }
+
+    owner = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='admin_profile'
+    )
+
+    adminProfileID = models.AutoField(primary_key=True, blank=False, unique=True)
+    nic_number = models.OneToOneField(StaffNIC, on_delete=models.PROTECT)
+    title = models.CharField(max_length=20, null=True, blank=True, choices=TITLE_CHOICES)
+    nameWithInitials = models.CharField(max_length=100, null=True, blank=True)
+    fullName = models.CharField(max_length=300, null=True, blank=True)
+    dateOfBirth = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=1, choices=GENDER, blank=False, null=True)
+    email = models.EmailField(max_length=254, null=True, blank=True)
+    address = models.TextField(null=True, blank=True)
+    enrollmentDate = models.DateField(null=True, blank=True)
+    mobileNumber = models.CharField(validators=[phone_regex], max_length=16, null=True, blank=True)
+    position = models.CharField(max_length=20, null=True, blank=True, choices=POSITONS)
+
+    def __str__(self):
+        return f"{self.title} {self.fullName}"

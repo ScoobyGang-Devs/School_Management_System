@@ -19,7 +19,7 @@ urlpatterns = [
     path('roster/<int:grade>/<str:classname>/', GradeRosterAPIView.as_view(), name='grade-roster'),
     path('admin_dashboard/', AdminDashboardView.as_view(), name='admin-dashboard'),
     path('teacherclassview/', teacherClassView.as_view(), name='teacher_class_view'),
-    path('user/', UserListView.as_view(), name='user-list'), # use this to view all logged in users' details
+    path('users/', UserListView.as_view(), name='user-list'), # use this to view all logged in users' details
     path('teacherclassresultview/<int:grade>/<str:className>/<str:subjectName>', teacherClassResultView.as_view(),name='teacher_result_view'),
     path('teachers/all/', TeacherListView.as_view(), name='all-teachers-list'),
 ]

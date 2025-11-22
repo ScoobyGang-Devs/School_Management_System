@@ -284,6 +284,7 @@ class AdminDashboardView(APIView):
             "grade_averages": grade_averages,
             "attendance_last_5_days": attendance_list
         })
+    
 class UserListView(ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserListSerializer
