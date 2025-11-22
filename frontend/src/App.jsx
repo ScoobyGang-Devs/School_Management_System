@@ -40,6 +40,7 @@ import AttendanceMainPage from './pages/Attendance/AttendanceMainPage.jsx'
 import StudentAttendancePage from './pages/Attendance/StudentAttendancePage.jsx'
 import TeacherAttendancePage from './pages/Attendance/TeacherAttendancePage.jsx'
 import StudentProfilePage from './pages/studentDatabase/StudentCard'
+import AddStudentPage from './pages/administration/AddStudentPage'
 
 
 function App() {
@@ -122,6 +123,8 @@ function App() {
                   <Route path="/teacher/attendance" element={<TakeAttendance />} />
                   <Route path="/teacher/grades" element={<GradeAssignments />} />
                   <Route path="/student-profile/:id" element={<StudentProfilePage />} />
+
+                  <Route path="/add-student/:id" element={<AddStudentPage />} />
 
                   {/* 404 */}
                   <Route path="*" element={<h1 className="text-center text-lg font-semibold">404 | Page Not Found</h1>} />
