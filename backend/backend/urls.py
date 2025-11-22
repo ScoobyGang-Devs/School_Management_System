@@ -40,4 +40,7 @@ urlpatterns = [
     # Password Reset API endpoints
     path("reset-password/", ForgotPasswordView.as_view(), name="password-reset"),
     path("reset-password/confirm/", ResetPasswordView.as_view(), name="password-reset-confirm"),    # send the uid and the token inside headers and new pw inside body    
+    
+    # System Settings URLS
+    path('settings/',include('SystemSettings.urls'))
 ]
