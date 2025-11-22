@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'term_test',
     'rest_framework_simplejwt',
     'chat',
-    'dashboard'
+    'dashboard',
+    'SystemSettings'
 ]
 
 MIDDLEWARE = [

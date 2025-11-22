@@ -32,4 +32,5 @@ urlpatterns = [
     path('chat/',include('chat.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('change-password/', ChangePasswordView.as_view(), name='password-change'),
+    path('settings/',include('SystemSettings.urls'))
 ]
