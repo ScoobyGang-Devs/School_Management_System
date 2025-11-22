@@ -172,3 +172,7 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),   # 10 minutes
     "REFRESH_TOKEN_LIFETIME": timedelta(hours=7),      # 7 hours
 }
+
+
+# During development, print emails to console instead of sending real emails
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

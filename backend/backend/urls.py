@@ -20,16 +20,24 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from .views import ChangePasswordView
+from .views import ChangePasswordView, ForgotPasswordView, ResetPasswordView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('admin_panel.urls')),
     path('attendence/',include('attendence.urls')),
     path('termtest/',include('term_test.urls')),
-    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('tokenrefresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('chat/',include('chat.urls')),
     path('dashboard/', include('dashboard.urls')),
+
+    # Auth Token Endpoints
+    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('tokenrefresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    # Change Password Endpoint
     path('change-password/', ChangePasswordView.as_view(), name='password-change'),
+
+    # Password Reset API endpoints
+    path("reset-password/", ForgotPasswordView.as_view(), name="password-reset"),
+    path("reset-password/confirm/", ResetPasswordView.as_view(), name="password-reset-confirm"),    # send the uid and the token inside headers and new pw inside body    
 ]
