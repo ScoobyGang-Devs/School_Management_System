@@ -243,7 +243,7 @@ class UserListView(ListAPIView):
 class teacherClassResultView(APIView):
     """
     This view receives a teacherID from the frontend and returns
-    the teacher's assigned class reults.
+    the teacher's assigned class results.
     """
     # permission_classes = [IsAuthenticated]
     def get(self,request,grade,className,subjectName):

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     School, BookOpen, Save, 
-    Loader2, LockKeyhole
+    Loader2, LockKeyhole, Upload
 } from 'lucide-react';
+import api from '../../api.js'; // Importing your custom axios instance
 
 // --- Shadcn Components ---
 import { 
@@ -12,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { 
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
@@ -21,68 +23,132 @@ import { toast } from "sonner";
 const SettingsPage = () => {
     const [isLoading, setIsLoading] = useState(false);
 
-    // 1. Security Settings State (Notifications removed)
+    // 1. Security Settings (Mock Data)
     const [security, setSecurity] = useState({
         currentPassword: "",
         newPassword: "",
         confirmPassword: ""
     });
 
-    // 2. School Configuration (Singleton Data)
+    // 2. School Configuration (Real Data from Django)
     const [schoolConfig, setSchoolConfig] = useState({
-        schoolName: "SAMS Management Portal",
-        contactEmail: "support@sams.edu",
-        website: "www.sams.edu.lk",
-        logoUrl: ""
+        schoolName: "",
+        motto: "",
+        principalName: "",
+        currentSignatureUrl: null 
     });
+    
+    // State for the new file upload
+    const [signatureFile, setSignatureFile] = useState(null);
 
-    // 3. Academic Management (Pass Mark & Locking removed)
+    // 3. Academic Management (Mock Data)
     const [academicConfig, setAcademicConfig] = useState({
         currentYear: "2025",
         currentTerm: "1"
     });
 
+    // --- Fetch Data on Load using API ---
+    useEffect(() => {
+        getSchoolData();
+    }, []);
+
+    const getSchoolData = () => {
+        api.get('settings/schooldetail/')
+            .then((res) => res.data)
+            .then((data) => {
+                // Logic to find the active config (or the last one created)
+                const activeConfig = data.find(item => item.isActive) || data[data.length - 1];
+                
+                if (activeConfig) {
+                    setSchoolConfig({
+                        schoolName: activeConfig.schoolName || "",
+                        motto: activeConfig.motto || "",
+                        principalName: activeConfig.principalName || "",
+                        currentSignatureUrl: activeConfig.principlSignature // URL from Django
+                    });
+                }
+
+                console.log(schoolConfig)
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("Connection Error", { description: "Could not load school details." });
+            });
+    };
+
     // --- Handlers ---
 
     const handleSavePassword = () => {
-
-      //checking if the two passwords are not the same
         if (security.newPassword !== security.confirmPassword) {
             toast.error("Password Mismatch", { description: "New passwords do not match." });
             return;
         }
-
-        //if they are the same ...
-        //setislading-->true is used so that the user doesn't press the button twice!
         setIsLoading(true);
-        //creates a delay of 1 second and then whatever;s inside starts...
         setTimeout(() => {
             setIsLoading(false);
-            //updates the varibales
             setSecurity(prev => ({ ...prev, currentPassword: "", newPassword: "", confirmPassword: "" }));
-            toast.success("Password Changed", {
-                description: "Your account security has been updated."
-            });
+            toast.success("Password Changed", { description: "Your account security has been updated." });
         }, 1000);
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.type !== "image/png") {
+                toast.error("Invalid Format", { description: "Only PNG images are allowed for the signature." });
+                e.target.value = null; 
+                return;
+            }
+            setSignatureFile(file);
+        }
     };
 
     const handleSaveSchoolConfig = () => {
         setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
-            toast.success("System Updated", {
-                description: "Global school configuration saved."
+
+        const formData = new FormData();
+        formData.append('schoolName', schoolConfig.schoolName);
+        formData.append('motto', schoolConfig.motto);
+        formData.append('principalName', schoolConfig.principalName);
+        
+        // Only append file if user selected a new one
+        if (signatureFile) {
+            formData.append('principlSignature', signatureFile);
+        }
+
+        // Axios handles the Content-Type for FormData automatically
+        api.post('settings/schooldetail/', formData)
+            .then((res) => {
+                toast.success("System Updated", { description: "School configuration saved successfully." });
+                
+                // Update state with the new data from server response
+                setSchoolConfig(prev => ({
+                    ...prev,
+                    currentSignatureUrl: res.data.principlSignature
+                }));
+                setSignatureFile(null); // Clear file input state
+            })
+            .catch((err) => {
+                console.error(err);
+                const errData = err.response?.data;
+                
+                // Display specific error if signature failed validation on backend
+                if(errData && errData.principlSignature) {
+                    toast.error("Signature Error", { description: errData.principlSignature[0] });
+                } else {
+                    toast.error("Update Failed", { description: "Please check your inputs." });
+                }
+            })
+            .finally(() => {
+                setIsLoading(false);
             });
-        }, 1000);
     };
 
     const handleSaveAcademic = () => {
         setIsLoading(true);
         setTimeout(() => {
             setIsLoading(false);
-            toast.success("Academic Settings Saved", {
-                description: "Current academic year and term updated."
-            });
+            toast.success("Academic Settings Saved", { description: "Current academic year and term updated." });
         }, 800);
     };
 
@@ -95,7 +161,6 @@ const SettingsPage = () => {
                 </p>
             </div>
 
-            {/* Default Tab is Security */}
             <Tabs defaultValue="security" className="space-y-6">
                 <TabsList className="grid w-full grid-cols-3 lg:w-[450px]">
                     <TabsTrigger value="security">Security</TabsTrigger>
@@ -103,7 +168,7 @@ const SettingsPage = () => {
                     <TabsTrigger value="academic">Academic</TabsTrigger>
                 </TabsList>
 
-                {/* ================= SECURITY TAB ================= */}
+                {/* ================= SECURITY TAB (MOCK) ================= */}
                 <TabsContent value="security">
                     <div className="max-w-2xl">
                         <Card>
@@ -148,45 +213,71 @@ const SettingsPage = () => {
                     </div>
                 </TabsContent>
 
-                {/* ================= SCHOOL CONFIG (ADMIN) ================= */}
+                {/* ================= SCHOOL CONFIG (REAL DATA) ================= */}
                 <TabsContent value="school">
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <School className="w-5 h-5 text-primary" /> School Configuration
                             </CardTitle>
-                            <CardDescription>Global settings visible to all users on the portal.</CardDescription>
+                            <CardDescription>Global settings. Changing the signature will deactivate previous principals.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div className="grid md:grid-cols-2 gap-6">
+                                {/* School Name */}
                                 <div className="space-y-2">
-                                    <Label>School Display Name</Label>
+                                    <Label>School Name</Label>
                                     <Input 
                                         value={schoolConfig.schoolName} 
+                                        placeholder="e.g. Moratuwa Central College"
                                         onChange={(e) => setSchoolConfig({...schoolConfig, schoolName: e.target.value})}
                                     />
                                 </div>
+
+                                {/* Principal Name */}
                                 <div className="space-y-2">
-                                    <Label>Official Website</Label>
+                                    <Label>Principal's Name</Label>
                                     <Input 
-                                        value={schoolConfig.website} 
-                                        onChange={(e) => setSchoolConfig({...schoolConfig, website: e.target.value})}
+                                        value={schoolConfig.principalName} 
+                                        placeholder="e.g. Mrs. S. Perera"
+                                        onChange={(e) => setSchoolConfig({...schoolConfig, principalName: e.target.value})}
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Support / Contact Email</Label>
-                                    <Input 
-                                        value={schoolConfig.contactEmail} 
-                                        onChange={(e) => setSchoolConfig({...schoolConfig, contactEmail: e.target.value})}
+
+                                {/* Motto */}
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label>School Motto</Label>
+                                    <Textarea 
+                                        value={schoolConfig.motto} 
+                                        placeholder="e.g. Wisdom is Power"
+                                        onChange={(e) => setSchoolConfig({...schoolConfig, motto: e.target.value})}
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Logo URL</Label>
-                                    <Input 
-                                        value={schoolConfig.logoUrl} 
-                                        placeholder="https://..."
-                                        onChange={(e) => setSchoolConfig({...schoolConfig, logoUrl: e.target.value})}
-                                    />
+
+                                {/* Signature Upload */}
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label>Principal's Signature (PNG Only)</Label>
+                                    <div className="flex items-center gap-4">
+                                        <Input 
+                                            type="file" 
+                                            accept="image/png"
+                                            onChange={handleFileChange}
+                                            className="cursor-pointer"
+                                        />
+                                    </div>
+                                    
+                                    {/* Preview Existing Signature */}
+                                    {schoolConfig.currentSignatureUrl && (
+                                        <div className="mt-4 p-4 border rounded-md bg-gray-50 w-fit">
+                                            <p className="text-xs text-muted-foreground mb-2">Current Signature:</p>
+                                            {/* Note: Adjust the base URL if your API doesn't return absolute URLs for media */}
+                                            <img 
+                                                src={`http://127.0.0.1:8000${schoolConfig.currentSignatureUrl}`} 
+                                                alt="Principal Signature" 
+                                                className="h-16 object-contain"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </CardContent>
@@ -199,7 +290,7 @@ const SettingsPage = () => {
                     </Card>
                 </TabsContent>
 
-                {/* ================= ACADEMIC MANAGEMENT (CRITICAL) ================= */}
+                {/* ================= ACADEMIC MANAGEMENT (MOCK) ================= */}
                 <TabsContent value="academic">
                     <div className="max-w-3xl">
                         <Card>
