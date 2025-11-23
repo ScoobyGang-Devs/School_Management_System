@@ -53,11 +53,65 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
         return data
     
 
-
 class TeacherDetailsSerializer(serializers.ModelSerializer):
+    # Show NIC in GET responses but not editable
+    nic_number = serializers.CharField(source='nic_number.nic_number', read_only=True)
+
+    # Returned to frontend as human-readable names
+    assignedClass = serializers.SerializerMethodField()
+    teachingClasses = serializers.SerializerMethodField()
+
+    # Received from frontend as strings
+    assignedClass_input = serializers.CharField(write_only=True, required=False, allow_null=True)
+    teachingClasses_input = serializers.ListField(
+        child=serializers.CharField(),
+        write_only=True,
+        required=False
+    )
+
     class Meta:
         model = TeacherDetail
-        fields = '__all__'
+        exclude = ['owner']  # hide owner from frontend
+
+    # ---------- DISPLAY METHODS ----------
+    def get_assignedClass(self, obj):
+        return str(obj.assignedClass) if obj.assignedClass else None
+
+    def get_teachingClasses(self, obj):
+        return [str(c) for c in obj.teachingClasses.all()]
+
+    # ---------- UPDATE / CREATE HANDLING ----------
+    def update(self, instance, validated_data):
+        # Handle assignedClass
+        class_name = validated_data.pop('assignedClass_input', None)
+        if class_name:
+            grade, sub_class = class_name.split()
+            instance.assignedClass = Classroom.objects.get(grade = int(grade), className = sub_class)
+
+        # Handle teachingClasses
+        teaching_names = validated_data.pop('teachingClasses_input', None)
+        class_list = []
+
+        if teaching_names is not None:
+
+            for cls in teaching_names:
+                # Example cls = "6 A"
+                try:
+                    grade, sub_classs = cls.split()   # splits "6 A" → ["6", "A"]
+                    classroom = Classroom.objects.get(
+                        grade=int(grade),
+                        className=sub_classs
+                    )
+                    class_list.append(classroom)
+                except Classroom.DoesNotExist:
+                    raise serializers.ValidationError(
+                        {"error": f"Classroom '{cls}' does not exist."}
+                    )
+
+        instance.teachingClasses.set(class_list)
+        
+        # Save normal fields
+        return super().update(instance, validated_data)
 
 
 class SignupSerializer(serializers.ModelSerializer):
