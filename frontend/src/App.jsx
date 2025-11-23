@@ -1,11 +1,12 @@
 import './App.css'
+import { useState, useEffect, createContext } from 'react';
+import { Routes, Route,useLocation} from 'react-router-dom'
+import { ThemeProvider } from "@/components/theme-provider"
+
 import { AppSidebar } from '@/components/app-sidebar.jsx'
 import TopBar from './components/TopBar'
 import { SidebarProvider } from './components/ui/sidebar'
-import { Routes, Route,useLocation} from 'react-router-dom'
-import { ThemeProvider } from "@/components/theme-provider"
-import { createContext } from 'react'
-import React, { useState } from 'react';
+import { fetchUserProfile } from './api';
 
 // Create Theme Context
 export const ThemeContext = createContext()
@@ -51,9 +52,38 @@ function App() {
   // ✅ Check if we are on the login or signup page
   const isAuthPage = location.pathname === "/login" || location.pathname === "/signup"
 
-  // Get role from sidebar toggle (for demo)
-  const [role, setRole] = useState('teacher');
+  // --- STATE MANAGEMENT ---
+  const [role, setRole] = useState(null);
+  const [userProfile, setUserProfile] = useState(null); 
+  const [loading, setLoading] = useState(true);
   // Pass setRole to AppSidebar so it can update role
+  // --- EFFECT: FETCH USER PROFILE ON LOAD ---
+  useEffect(() => {
+    const initUser = async () => {
+      if (isAuthPage) {
+        setLoading(false);
+        return;
+      }
+      try {
+        // Fetch profile from Django Backend
+        const profile = await fetchUserProfile();
+        setRole(profile.role);
+        setUserProfile(profile);
+        
+        // Keep for legacy components if needed
+        window.fakeRole = profile.role; 
+      } catch (err) {
+        console.log("User not logged in or API error", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    initUser();
+  }, [isAuthPage]);
+
+  // Show loading screen while checking authentication
+  if (loading) return <div className="flex h-screen w-full items-center justify-center text-lg">Loading SAMS...</div>;
+
   return (
     <ThemeProvider defaultTheme="root" storageKey="vite-ui-theme">
       <SidebarProvider>
@@ -79,7 +109,7 @@ function App() {
                 color: "var(--sidebar-foreground)",
               }}
             >
-              <AppSidebar role={role} setRole={setRole} />
+              <AppSidebar role={role || 'guest'} setRole={setRole} />
             </aside>
 
             {/* Main Content */}
@@ -88,17 +118,24 @@ function App() {
 
               <main className="flex-1 overflow-y-auto overflow-x-hidden p-8">
                 <Routes>
-                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/" element={<Dashboard user={userProfile} />} />
+                  {/* --- NEW DASHBOARD ROUTES (CONNECTED TO API) --- */}
+                  <Route path="/admin-dashboard" element={<AdminDashboard user={userProfile} />} /> 
+                  {/* PASS userProfile PROP TO TEACHER DASHBOARD */}
+                  <Route path="/teacher-dashboard" element={<TeacherDashboard user={userProfile} />} />
+                  {/* ----------------------------------------------- */}
+
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/messaging" element={<InternalMessaging />} />
                   <Route path="/edit-profile" element={<EditProfile />} />
+
                   <Route path="/admin/attendance/*" element={<SchoolWideAttendance />}> 
                     <Route index element={<AttendanceMainPage />} />
                     <Route path="students/" element={<StudentAttendancePage />} />
                     <Route path="teachers/" element={<TeacherAttendancePage />} />
                   </Route>
-                  <Route path="/admin/results/*" element={<SchoolWideResults />} >
 
+                  <Route path="/admin/results/*" element={<SchoolWideResults />} >
                     <Route index element={<ResultGradePage />} />
                     <Route path="classes/:gradeLevel" element={<RelaventClassResultsForGrade />} >
                       <Route path=":classId" element={<ResultClassPage />} />
@@ -116,12 +153,9 @@ function App() {
                   <Route path="/admin/users" element={<UserManagement />} />
                   <Route path="/admin/teachers" element={<TeacherDatabase />} />
 
-                  {/* 🚀 NEW DASHBOARD ROUTES ADDED HERE */}
-                  <Route path="/admin-dashboard" element={<AdminDashboard />} /> 
-                  <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
-                  {/* END NEW DASHBOARD ROUTES */}
+                  
 
-                  {/* TEACHER */}
+                  {/* TEACHER TOOLS */}
                   <Route path="/teacher/classes" element={<MyClasses />} />
                   <Route path="/teacher/attendance" element={<TakeAttendance />} />
                   <Route path="/teacher/grades" element={<GradeAssignments />} />

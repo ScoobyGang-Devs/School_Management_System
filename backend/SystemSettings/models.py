@@ -20,7 +20,7 @@ class SchoolDetail(models.Model):
     schoolName = models.CharField(max_length=100,blank=True)
     motto = models.TextField()
     principalName = models.CharField(max_length=100,blank=True)
-    principlSignature = models.ImageField(upload_to='signatures/', validators=[validatePNG])
+    principlSignature = models.ImageField(upload_to='signatures/', validators=[validatePNG],blank=True, null=True)
 
     isActive = models.BooleanField(default=True)  # Only one principal active
 

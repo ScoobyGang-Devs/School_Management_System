@@ -64,6 +64,17 @@ export default function StudentAttendance() {
       return;
     }
 
+    const selectedDate = new Date(date);
+    const today = new Date();
+
+    selectedDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate > today) {
+      alert("Invalid date!");
+      return;
+    }
+
     try {
       const headerObj = {
         className: `${user.grade} ${user.subClass}`,

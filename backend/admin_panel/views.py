@@ -9,7 +9,10 @@ from .permissions import IsStaffUser
 from attendence.models import *
 from term_test.models import *
 from admin_panel.models import *
-from django.db.models import Avg
+from django.db.models import Avg,Count
+from datetime import timedelta
+from django.utils.timezone import now
+
 
 # Create your views here.
 class guardianListCreateView(generics.ListCreateAPIView):
@@ -234,6 +237,55 @@ class teacherClassView(APIView):
 
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
+
+class AdminDashboardView(APIView):
+    def get(self, request):
+        today = now().date()
+        five_days_ago = today - timedelta(days=5)
+
+        # 1. Total number of students
+        total_students = StudentDetail.objects.count()
+
+        # 2. Total number of staff
+        total_staff = TeacherDetail.objects.count()
+
+        # 3. Gradewise average results (from TermTest)
+        grade_averages = {}
+        for cls in Classroom.objects.all():
+            avg = (
+                TermTest.objects
+                .filter(student__enrolledClass=cls)
+                .aggregate(avg_score=Avg('average'))['avg_score']
+            )
+            grade_averages[str(cls)] = round(avg, 2) if avg is not None else None
+
+        # 4. Student attendance in last 5 days by class
+        attendance_qs = (
+            studentAttendence.objects
+            .filter(date__range=(five_days_ago, today - timedelta(days=1)))
+            .values('date', 'className')
+            .annotate(present_count=Count('attendenceId'))
+            .order_by('date')
+        )
+
+        attendance_list = []
+        class_map = {cls.id: str(cls) for cls in Classroom.objects.all()}
+
+        for record in attendance_qs:
+            class_id = record['className']
+            attendance_list.append({
+                "date": record['date'],
+                "class": class_map.get(class_id, "Unknown"),
+                "present_count": record['present_count']
+            })
+
+        return Response({
+            "total_students": total_students,
+            "total_staff": total_staff,
+            "grade_averages": grade_averages,
+            "attendance_last_5_days": attendance_list
+        })
+    
    
 class UserListView(ListAPIView):
     queryset = User.objects.all()
@@ -243,7 +295,7 @@ class UserListView(ListAPIView):
 class teacherClassResultView(APIView):
     """
     This view receives a teacherID from the frontend and returns
-    the teacher's assigned class reults.
+    the teacher's assigned class results.
     """
     permission_classes = [IsAuthenticated]
     def get(self,request,grade,className,subjectName):

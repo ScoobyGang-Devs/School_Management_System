@@ -3,5 +3,8 @@ from .views import AdminDashboardView
 
 
 urlpatterns = [
-    path('admin-dashboard/', AdminDashboardView.as_view(), name='admin-dashboard'),
+    # used?  - gives the admin dashboard related data
+    path('admin_dashboard/', AdminDashboardView.as_view(), name='admin-dashboard'),
+
+    # --> teacher_dashboard ...
 ]

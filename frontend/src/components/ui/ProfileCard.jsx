@@ -2,59 +2,30 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function ProfileCard({ onClose }) {
   const navigate = useNavigate();
-
-  const user =
-    JSON.parse(localStorage.getItem("user")) || {
-      teacherId: "",
-      nic_number: "",
-      title: "",
-      nameWithInitials: "",
-      fullName: "",
-      dateOfBirth: "",
-      gender: "",
-      email: "",
-      address: "",
-      enrollmentDate: "",
-      mobileNumber: "",
-      grade: "",
-      subClass: "",
-      assignedToClass: "",
-    };
+  
+  const status = localStorage.getItem("status");
+  const user = JSON.parse(localStorage.getItem("user"));
 
   // Create combined fields
   const combinedName =
-    user.title && user.nameWithInitials
-      ? `${user.title} ${user.nameWithInitials}`
+    user.nameWithInitials
+      ? `${user.title} ${user.nameWithInitials}`.trim()
       : null;
 
-  const combinedClass =
-    user.grade && user.subClass
-      ? `${user.grade} ${user.subClass}`
-      : user.grade || user.subClass || null;
-
-  // Convert key-value pairs to show only filled fields, excluding combined ones
-  const visibleFields = Object.entries(user).filter(
-    ([key, value]) =>
-      value &&
-      value.trim() !== "" &&
-      !["title", "nameWithInitials", "grade", "subClass", "fullName"].includes(
-        key
-      )
-  );
-
-  // Add combined fields if they exist
-  if (combinedClass) {
-    visibleFields.unshift(["combinedClass", combinedClass]);
-  }
-  if (combinedName) {
-    visibleFields.unshift(["combinedName", combinedName]);
-  }
+  let visibleFields = {
+      combinedName: combinedName,
+      nic_number: user.nic_number,
+      address: user.address,
+      dateOfBirth: user.dateOfBirth,
+      gender: user.gender,
+      mobileNumber: user.mobileNumber,
+      email: user.email,
+      enrollmentDate: user.enrollmentDate
+    };
 
   // Pretty labels for each key
-  const fieldLabels = {
+  let fieldLabels = {
     combinedName: "Name",
-    combinedClass: "Class",
-    teacherId: "Teacher ID",
     nic_number: "NIC Number",
     fullName: "Full Name",
     dateOfBirth: "Date of Birth",
@@ -63,8 +34,28 @@ export default function ProfileCard({ onClose }) {
     address: "Address",
     enrollmentDate: "Enrollment Date",
     mobileNumber: "Mobile Number",
-    assignedToClass: "Assigned To A Class?",
   };
+
+  if(status === 'teacher'){
+    visibleFields.section = user.section;
+    visibleFields.assignedClass = user.assignedClass;
+    visibleFields.teachingClasses = user.teachingClasses.join(", ");
+    fieldLabels.section = "Section";
+    fieldLabels.assignedClass = "My Class";
+    fieldLabels.teachingClasses = "Teaching Classes";
+  }
+  else{
+    visibleFields.position = user.position;
+    fieldLabels.position = "Position";
+  }
+
+  visibleFields = Object.fromEntries(Object.entries(visibleFields).filter(([key, value]) => {
+      if (value === null || value === undefined) return false;
+      if (value === "") return false;
+      return true;
+    })
+  );
+
 
   // ✅ Logout handler
   const handleLogout = () => {
@@ -82,7 +73,7 @@ export default function ProfileCard({ onClose }) {
       <h2 className="text-lg font-semibold mb-3 text-center">Profile</h2>
 
       <div className="space-y-1 text-sm mb-4">
-        {visibleFields.map(([key, value]) => (
+        {Object.entries(visibleFields).map(([key, value]) => (
           <p key={key}>
             <strong>{fieldLabels[key] || key}:</strong> {value}
           </p>
