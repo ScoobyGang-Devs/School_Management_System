@@ -1,26 +1,37 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import AdminDashboard from '../AdminDashboard';
 import TeacherDashboard from '../TeacherDashboard';
 
-// Simulate role from backend (replace with real backend logic later)
-const fakeRole = 'admin'; // Change to 'teacher' to test teacher dashboard
+// CHANGED: Removed all 'fakeRole' logic and window assignments.rely on real API data now.
 
-// Set role globally for sidebar and other components
-if (typeof window !== 'undefined') {
-  window.fakeRole = fakeRole;
-}
+const Dashboard =({ user }) => {
+  // Loading State
+  if (!user) {
+    return <div className="p-8 text-center text-muted-foreground">Loading Dashboard...</div>;
+  }
 
-const Dashboard = () => {
-  useEffect(() => {
-    window.fakeRole = fakeRole;
-  }, []);
-  if (fakeRole === 'admin') {
+  // Admin View
+  if (user.role === 'admin') {
     return <AdminDashboard />;
   }
-  if (fakeRole === 'teacher') {
-    return <TeacherDashboard />;
+
+  // Teacher View (Pass the user object so it can access teacherId)
+  if (user.role === 'teacher') {
+    return <TeacherDashboard user={user} />;
   }
-  return <div className="p-8 text-center">No dashboard available for this role.</div>;
+
+  // Fallback for errors
+  return (
+    <div className="p-8 text-center">
+      <h2 className="text-xl font-semibold text-red-500">Access Restricted</h2>
+      <p className="text-gray-600">No dashboard available for role: {user.role}</p>
+    </div>
+  );
+
 };
 
 export default Dashboard;
+
+
+
+

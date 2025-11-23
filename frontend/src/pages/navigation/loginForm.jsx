@@ -31,25 +31,20 @@ const LoginForm = () => {
     e.preventDefault();
 
     if (validateForm()) {
-      const path =
-        formData.userType === "teacher" ? "teacherdetails" : "admindetails";
-
       try {
         const response = await request.POST(
-          `http://localhost:8000/login/`,
+          "http://localhost:8000/login/",
           {
             username: formData.username,
             password: formData.password,
           }
         );
 
-        if (response) {
-          localStorage.setItem("Tokens",JSON.stringify(response));
-          const headers = {'Authorization':`Bearer ${response.access}`};
-          const data = await request.GET('http://127.0.0.1:8000',path,headers);
-          localStorage.setItem("user",JSON.stringify(data));
+        if (response && response.access) {
           alert(`✅ Login successful!`);
-          navigate("/"); // ✅ navigate to Dashboard
+          localStorage.setItem("access", response.access);
+          localStorage.setItem("refresh", response.refresh);
+          navigate("/"); // Go to dashboard
         } else {
           alert("❌ Username or password is wrong!");
         }
