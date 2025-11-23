@@ -221,3 +221,15 @@ class UserListSerializer(serializers.ModelSerializer):
             return "Teacher"
         
 
+class AdminDetailsSerializer(serializers.ModelSerializer):
+    # Show NIC in GET responses but not editable
+    nic_number = serializers.CharField(source='nic_number.nic_number', read_only=True)
+
+    class Meta:
+        model = AdminProfile
+        exclude = ['owner']  # hide owner from frontend
+
+    # ---------- UPDATE / CREATE HANDLING ----------
+    def update(self, instance, validated_data):
+        # Save normal fields
+        return super().update(instance, validated_data)

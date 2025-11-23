@@ -11,6 +11,9 @@ urlpatterns = [
     
     # Teacher can edit his/her profile using this endpoint ---> can handle GET/PUT/PATCH reqests
     path('teacher-profile/', TeacherDetailsUpdateView.as_view(), name='teacher-profile-update'),
+
+    # Admins can edit his/her profile using this endpoint ---> can handle GET/PUT/PATCH reqests
+    path('admin-profile/', AdminProfileUpdateView.as_view(), name='admin-profile-update'),
     
     path('classroom/<int:teacherId>/', ClassroomDetailView.as_view(), name='classroomDetail'),
     path('signup/', SignupView.as_view(), name='signup'),
