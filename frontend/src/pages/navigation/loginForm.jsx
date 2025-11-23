@@ -36,7 +36,7 @@ const LoginForm = () => {
 
       try {
         const response = await request.POST(
-          `http://localhost:8000/login/${path}`,
+          `http://localhost:8000/login/`,
           {
             username: formData.username,
             password: formData.password,
@@ -44,12 +44,11 @@ const LoginForm = () => {
         );
 
         if (response) {
-          alert(`✅ Login successful!`);
-          localStorage.setItem("user", JSON.stringify(response));
-          // to create token headers
-          // Headers = localStorage
-          const data = request.GET('http://localhost:8000/teacherprofiles',)
+          localStorage.setItem("Tokens",JSON.stringify(response));
+          const headers = {'Authorization':`Bearer ${response.access}`};
+          const data = await request.GET('http://127.0.0.1:8000',path,headers);
           localStorage.setItem("user",JSON.stringify(data));
+          alert(`✅ Login successful!`);
           navigate("/"); // ✅ navigate to Dashboard
         } else {
           alert("❌ Username or password is wrong!");

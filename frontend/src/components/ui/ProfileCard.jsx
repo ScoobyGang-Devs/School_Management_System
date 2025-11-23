@@ -19,6 +19,7 @@ export default function ProfileCard({ onClose }) {
       grade: "",
       subClass: "",
       assignedToClass: "",
+      section: ""
     };
 
   // Create combined fields
