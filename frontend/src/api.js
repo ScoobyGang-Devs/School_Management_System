@@ -25,20 +25,25 @@ api.interceptors.request.use(
 // --- 3. NEW API FUNCTIONS (Add these for your Dashboard) ---
 
 // User Profile (Decides if user is Teacher or Admin)
+// api.js
+
 export const fetchUserProfile = async () => {
   try {
-    // Try to get teacher profile
     const response = await api.get('teacher-profile/');
     return { role: 'teacher', ...response.data };
   } catch (error) {
-    // If 404/403, assume Admin
+    // If the error is 401 (Unauthorized), throw it so App.jsx can redirect to login
+    if (error.response && error.response.status === 401) {
+        throw error; 
+    }
+    // If it's 404 (Not Found), it means the user exists but isn't a teacher -> assume Admin
     return { role: 'admin' };
   }
 };
 
 // Admin Dashboard Stats
 export const fetchAdminDashboard = async () => {
-  const response = await api.get('admin_dashboard/');
+  const response = await api.get('dashboard/admin_dashboard/');
   return response.data;
 };
 

@@ -1,6 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView,RetrieveUpdateAPIView
 from rest_framework import generics,status
 from rest_framework.permissions import IsAuthenticated , AllowAny
 from .serializers import *
@@ -8,10 +8,8 @@ from .models import *
 from .permissions import IsStaffUser
 from attendence.models import *
 from term_test.models import *
-from datetime import date, timedelta
-from django.db.models import Count, Q, Avg
-from django.utils.timezone import now
 from admin_panel.models import *
+from django.db.models import Avg
 
 # Create your views here.
 class guardianListCreateView(generics.ListCreateAPIView):
@@ -47,11 +45,11 @@ class StudentsCreateView(generics.CreateAPIView):
             
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class TeacherDetailsDetailView(generics.RetrieveUpdateAPIView):
-    queryset = TeacherDetail.objects.all()
+class TeacherDetailsUpdateView(RetrieveUpdateAPIView):
     serializer_class = TeacherDetailsSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny] # passe wenas karanna meka IsAuthenticated widiyt
     
+    # to ensure teacher can edit only his/her profile
     def get_object(self):
         return self.request.user.teacher_profile
 
@@ -285,17 +283,19 @@ class AdminDashboardView(APIView):
             "attendance_last_5_days": attendance_list
         })
     
+   
 class UserListView(ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserListSerializer
 
+
 class teacherClassResultView(APIView):
     """
     This view receives a teacherID from the frontend and returns
-    the teacher's assigned class reults.
+    the teacher's assigned class results.
     """
-    permission_classes = [IsAuthenticated]
-    def get(self,request,grade,className,subjectName ):
+    # permission_classes = [IsAuthenticated]
+    def get(self,request,grade,className,subjectName):
 
         try:
             teacher = TeacherDetail.objects.get(owner=request.user)
@@ -315,8 +315,8 @@ class teacherClassResultView(APIView):
         except Subject.DoesNotExist:
             return Response({"error": "Subject not found"}, status=404)
 
-        if subject_obj not in teacher.teachingSubjects.all():
-            return Response({"error": "You do not teach this subject"}, status=403)
+        # if subject_obj not in teacher.teachingSubjects.all():
+        #     return Response({"error": "You do not teach this subject"}, status=403)
                 
         marks_qs = SubjectwiseMark.objects.filter(
             studentID__classID=class_obj,
@@ -328,7 +328,7 @@ class teacherClassResultView(APIView):
         average_marks = marks_qs.aggregate(avg_marks=Avg('marksObtained'))['avg_marks']
 
         return Response({
-            "class": f"{grade}{className}",
+            "class": f"{grade} {className}",
             "subject": subjectName,
             "average_marks": round(average_marks or 0, 2)  # handle None
         })

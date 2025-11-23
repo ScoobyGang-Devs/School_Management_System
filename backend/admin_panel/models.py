@@ -100,7 +100,7 @@ class TeacherDetail(models.Model):
         related_name='teacher_profile'
     )
     teacherId = models.AutoField(primary_key=True, blank=False, unique=True)
-    nic_number = models.OneToOneField(StaffNIC, on_delete=models.PROTECT)
+    nic_number = models.OneToOneField(StaffNIC, on_delete=models.PROTECT, related_name='nic')
     title = models.CharField(max_length=20, null=True, blank=True, choices=TITLE_CHOICES)
     nameWithInitials = models.CharField(max_length=100, null=True, blank=True)
     fullName = models.CharField(max_length=300, null=True, blank=True)
@@ -128,13 +128,13 @@ class ClassSubjectAssignment(models.Model):
     
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE) 
     
-    subject = models.ForeignKey("term_test.Subject", on_delete=models.CASCADE) 
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE) 
     
     class Meta:
         unique_together = ('classroom', 'subject') 
 
     def __str__(self):
-        return f"{self.teacher.firstName} teaches {self.subject.subjectName} in {self.classroom}"
+        return f"{self.teacher.fullName} teaches {self.subject.subjectName} in {self.classroom}"
     
 class AdminProfile(models.Model):
     """
