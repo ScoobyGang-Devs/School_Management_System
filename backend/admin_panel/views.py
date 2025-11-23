@@ -245,7 +245,7 @@ class teacherClassResultView(APIView):
     This view receives a teacherID from the frontend and returns
     the teacher's assigned class reults.
     """
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     def get(self,request,grade,className,subjectName):
 
         try:
@@ -270,7 +270,7 @@ class teacherClassResultView(APIView):
         #     return Response({"error": "You do not teach this subject"}, status=403)
                 
         marks_qs = SubjectwiseMark.objects.filter(
-            studentID__classID=class_obj,
+            studentID__enrolledClass=class_obj,
             subject=subject_obj,
             teacherID=teacher
         )
