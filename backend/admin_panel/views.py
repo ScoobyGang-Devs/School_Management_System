@@ -8,10 +8,8 @@ from .models import *
 from .permissions import IsStaffUser
 from attendence.models import *
 from term_test.models import *
-from datetime import date, timedelta
-from django.db.models import Count, Q, Avg
-from django.utils.timezone import now
 from admin_panel.models import *
+from django.db.models import Avg
 
 # Create your views here.
 class guardianListCreateView(generics.ListCreateAPIView):
@@ -236,66 +234,19 @@ class teacherClassView(APIView):
 
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
-
-class AdminDashboardView(APIView):
-    def get(self, request):
-        today = now().date()
-        five_days_ago = today - timedelta(days=5)
-
-        # 1. Total number of students
-        total_students = StudentDetail.objects.count()
-
-        # 2. Total number of staff
-        total_staff = TeacherDetail.objects.count()
-
-        # 3. Gradewise average results (from TermTest)
-        grade_averages = {}
-        for cls in Classroom.objects.all():
-            avg = (
-                TermTest.objects
-                .filter(student__enrolledClass=cls)
-                .aggregate(avg_score=Avg('average'))['avg_score']
-            )
-            grade_averages[str(cls)] = round(avg, 2) if avg is not None else None
-
-        # 4. Student attendance in last 5 days by class
-        attendance_qs = (
-            studentAttendence.objects
-            .filter(date__range=(five_days_ago, today - timedelta(days=1)))
-            .values('date', 'studentId__enrolledClass')
-            .annotate(present_count=Count('attendenceId', filter=Q(status='P')))
-            .order_by('date')
-        )
-
-        attendance_list = []
-        class_map = {cls.id: str(cls) for cls in Classroom.objects.all()}
-
-        for record in attendance_qs:
-            class_id = record['studentId__enrolledClass']
-            attendance_list.append({
-                "date": record['date'],
-                "class": class_map.get(class_id, "Unknown"),
-                "present_count": record['present_count']
-            })
-
-        return Response({
-            "total_students": total_students,
-            "total_staff": total_staff,
-            "grade_averages": grade_averages,
-            "attendance_last_5_days": attendance_list
-        })
-    
+   
 class UserListView(ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserListSerializer
+
 
 class teacherClassResultView(APIView):
     """
     This view receives a teacherID from the frontend and returns
     the teacher's assigned class reults.
     """
-    permission_classes = [IsAuthenticated]
-    def get(self,request,grade,className,subjectName ):
+    # permission_classes = [IsAuthenticated]
+    def get(self,request,grade,className,subjectName):
 
         try:
             teacher = TeacherDetail.objects.get(owner=request.user)
@@ -315,8 +266,8 @@ class teacherClassResultView(APIView):
         except Subject.DoesNotExist:
             return Response({"error": "Subject not found"}, status=404)
 
-        if subject_obj not in teacher.teachingSubjects.all():
-            return Response({"error": "You do not teach this subject"}, status=403)
+        # if subject_obj not in teacher.teachingSubjects.all():
+        #     return Response({"error": "You do not teach this subject"}, status=403)
                 
         marks_qs = SubjectwiseMark.objects.filter(
             studentID__classID=class_obj,
@@ -328,7 +279,7 @@ class teacherClassResultView(APIView):
         average_marks = marks_qs.aggregate(avg_marks=Avg('marksObtained'))['avg_marks']
 
         return Response({
-            "class": f"{grade}{className}",
+            "class": f"{grade} {className}",
             "subject": subjectName,
             "average_marks": round(average_marks or 0, 2)  # handle None
         })

@@ -1,9 +1,7 @@
 from django.urls import path
-from .views import aview
+from .views import AdminDashboardView
 
-# remove these after u add somthing to dashboard app
-###############
+
 urlpatterns = [
-    path('', aview.as_view(), name='a-view')
+    path('admin-dashboard/', AdminDashboardView.as_view(), name='admin-dashboard'),
 ]
-################

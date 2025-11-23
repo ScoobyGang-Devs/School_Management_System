@@ -128,13 +128,13 @@ class ClassSubjectAssignment(models.Model):
     
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE) 
     
-    subject = models.ForeignKey("term_test.Subject", on_delete=models.CASCADE) 
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE) 
     
     class Meta:
         unique_together = ('classroom', 'subject') 
 
     def __str__(self):
-        return f"{self.teacher.firstName} teaches {self.subject.subjectName} in {self.classroom}"
+        return f"{self.teacher.fullName} teaches {self.subject.subjectName} in {self.classroom}"
     
 class AdminProfile(models.Model):
     """
