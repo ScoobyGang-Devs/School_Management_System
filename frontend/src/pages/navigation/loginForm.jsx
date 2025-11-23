@@ -44,7 +44,14 @@ const LoginForm = () => {
           alert(`✅ Login successful!`);
           localStorage.setItem("access", response.access);
           localStorage.setItem("refresh", response.refresh);
+          localStorage.setItem("status",formData.userType);
+
+          const path = formData.userType === "teacher"? "teacherdetails":"admindetails";
+          const header = {"Authorization": `Bearer ${response.access}`}
+          const userDetails = await request.GET("http://127.0.0.1:8000", path, header);
+          localStorage.setItem("user",userDetails);
           navigate("/"); // Go to dashboard
+          
         } else {
           alert("❌ Username or password is wrong!");
         }
