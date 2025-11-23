@@ -44,13 +44,22 @@ const LoginForm = () => {
           alert(`✅ Login successful!`);
           localStorage.setItem("access", response.access);
           localStorage.setItem("refresh", response.refresh);
+          localStorage.setItem("status",formData.userType);
+
+          const path = formData.userType === "teacher"? "teacher-profile":"admin-profile";
+          const header = {"Authorization": `Bearer ${response.access}`}
+          const userDetails = await request.GET("http://127.0.0.1:8000", path, header);
+          localStorage.setItem("user",userDetails);
           navigate("/"); // Go to dashboard
+
         } else {
           alert("❌ Username or password is wrong!");
+          setFormData({username:"",password:"",userType:""});
         }
       } catch (error) {
         console.error("Error during login:", error);
         alert("⚠️ Network or server error. Please try again later.");
+        setFormData({username:"",password:"",userType:""});
       }
     }
   };
