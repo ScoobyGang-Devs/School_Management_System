@@ -1,29 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Briefcase, TrendingUp, BarChart2, CheckSquare } from 'lucide-react';
-
-// --- MOCK DATA & HELPERS ---
-const MOCK_SCHOOL_NAME = "Central High School";
-const MOCK_TOTAL_STUDENTS = 1250;
-const MOCK_TOTAL_STAFF = 85; 
-
-const mockGradeAverages = [
-  { grade: 6, avg: 67.7 },
-  { grade: 7, avg: 76.9 },
-  { grade: 8, avg: 65.2 },
-  { grade: 9, avg: 71.5 },
-  { grade: 10, avg: 78.8 },
-  { grade: 11, avg: 85.0 },
-  { grade: 12, avg: 77.1 },
-  { grade: 13, avg: 70.4 },
-];
-
-const mockSchoolAttendance = [
-  { date: "Oct 14", percentage: 95.2 },
-  { date: "Oct 15", percentage: 96.1 },
-  { date: "Oct 16", percentage: 94.8 },
-  { date: "Oct 17", percentage: 97.0 },
-  { date: "Oct 18", percentage: 93.5 },
-];
+import { fetchAdminDashboard } from '../api'; // Import API
 
 // --- COMMON COMPONENT: Dashboard Stat Card ---
 const StatCard = ({ title, value, icon: Icon, color, size }) => (
@@ -40,7 +17,46 @@ const StatCard = ({ title, value, icon: Icon, color, size }) => (
 
 // --- MAIN COMPONENT ---
 const AdminDashboard = () => {
-    
+  // State for API data
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+
+  // Fetch data on load
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const result = await fetchAdminDashboard();
+        setData(result);
+      } catch (err) {
+        console.error("Failed to load admin stats", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  if (loading) return <div className="p-8 text-center">Loading School Data...</div>;
+  if (!data) return <div className="p-8 text-center text-red-500">Error loading data.</div>;
+
+
+  // --- DATA TRANSFORMATIONS ---
+
+  // Transform Backend Dictionary to Array for the UI List
+  const gradeAverages = Object.entries(data.grade_averages || {}).map(([key, val]) => ({
+    grade: key.replace('Grade ', ''),
+    avg: val
+  }));
+
+  // Prepare Attendance Data (Backend returns "present_count", we need to scale it for the chart)
+  // find the maximum attendance count to calculate bar height relative to 100%
+  const attendanceData = data.attendance_last_5_days || [];
+  const maxAttendance = Math.max(...attendanceData.map(d => d.present_count || 0), 1);
+  
+  // --- SUB-COMPONENTS  ---
+
+
   const GradeAverageList = ({ averages }) => (
     <div className="bg-card p-6 rounded-xl shadow-lg h-full flex flex-col border border-border">
       <h2 className="text-2xl font-semibold text-foreground mb-6 flex items-center">
@@ -54,20 +70,21 @@ const AdminDashboard = () => {
               Grade {item.grade}
             </span>
             <span className="text-xl font-extrabold text-primary">
-              {item.avg.toFixed(1)}%
+              {item.avg ? item.avg.toFixed(1) : 0}%
             </span>
           </div>
         ))}
       </div>
       <p className="mt-4 text-sm text-muted-foreground">
         Overall School Average: **
-        {(averages.reduce((sum, item) => sum + item.avg, 0) / averages.length).toFixed(1)}%
+        {averages.length > 0
+          ? (averages.reduce((sum, item) => sum + (item.avg || 0)) / averages.length).toFixed(1) : 0}%
         **
       </p>
     </div>
   );
 
-  const SchoolAttendanceChart = ({ data }) => {
+  const SchoolAttendanceChart = ({ chartData }) => {
     return (
       <div className="bg-card p-6 rounded-xl shadow-lg h-full flex flex-col border border-border">
         <h2 className="text-2xl font-semibold text-foreground mb-6 flex items-center">
@@ -75,27 +92,36 @@ const AdminDashboard = () => {
           Last 5 Days School Attendance
         </h2>
         <div className="flex justify-around items-end h-40 border-b border-border pb-2">
-          {data.map((day, index) => (
-            <div key={index} className="flex flex-col items-center group relative w-1/5 mx-2">
-              {/* Bar for percentage */}
-              <div
-                style={{ height: `${day.percentage}%` }}
-                className={`w-10 rounded-t-lg transition-all duration-500 ease-out bg-[var(--chart-5)] hover:bg-[var(--chart-5)]/90`}
-              ></div>
-              {/* Tooltip on hover */}
-              <div className="absolute top-0 transform -translate-y-full mb-1 text-sm font-bold text-foreground bg-card p-2 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                {day.percentage.toFixed(1)}%
+          {chartData.map((day, index) => {
+            
+            const heightPercentage = (day.present_count / maxAttendance) * 100;
+
+            
+            return (
+              <div key={index} className="flex flex-col items-center group relative w-1/5 mx-2">
+                {/* Bar Height: Use the calculated percentage */}
+                <div
+                  style={{ height: `${heightPercentage}%` }}
+                  className="w-10 rounded-t-lg transition-all duration-500 ease-out bg-[var(--chart-5)] hover:bg-[var(--chart-5)]/90"
+                ></div>
+                
+                {/* Tooltip: Show actual count, not percentage */}
+                <div className="absolute top-0 transform -translate-y-full mb-1 text-sm font-bold text-foreground bg-card p-2 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  {day.present_count} Present
+                </div>
+                
+                <span className="mt-3 text-xs font-medium text-muted-foreground">{day.date}</span>
               </div>
-              <span className="mt-3 text-xs font-medium text-muted-foreground">{day.date}</span>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <p className="mt-6 text-sm text-muted-foreground text-center">
-          The school maintains a high attendance rate across all grades.
+          Displaying present counts for recent days.
         </p>
       </div>
     );
   };
+
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-8 font-sans">
@@ -104,7 +130,7 @@ const AdminDashboard = () => {
           Admin Dashboard
         </h1>
         <p className="text-xl text-primary">
-          Overview for {MOCK_SCHOOL_NAME}
+          Overview for Central Hight School
         </p>
       </header>
 
@@ -112,14 +138,14 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <StatCard
           title="Total Students (All Grades)"
-          value={MOCK_TOTAL_STUDENTS.toLocaleString()}
+          value={data.total_students?.toLocaleString() || "0"}
           icon={Users}
           color="bg-[var(--chart-1)]"
           size={28}
         />
         <StatCard
-          title="Total Staff (All Roles)"
-          value={MOCK_TOTAL_STAFF}
+          title="Total Staff"
+          value={data.total_staff || "0"}
           icon={Briefcase}
           color="bg-[var(--chart-3)]"
           size={28}
@@ -130,12 +156,12 @@ const AdminDashboard = () => {
 
         {/* Gradewise Average Results */}
         <div className="lg:col-span-1">
-          <GradeAverageList averages={mockGradeAverages} />
+          <GradeAverageList averages={gradeAverages} />
         </div>
 
         {/* School Attendance Chart */}
         <div className="lg:col-span-1">
-          <SchoolAttendanceChart data={mockSchoolAttendance} />
+          <SchoolAttendanceChart chartData={attendanceData} />
         </div>
       </div>
 
@@ -151,7 +177,7 @@ const AdminDashboard = () => {
       </div>
 
       <footer className="mt-10 text-center text-xs text-muted-foreground border-t border-border pt-4">
-        *Data displayed is mock data for front-end demonstration purposes.
+        *System Data.
       </footer>
     </div>
   );
