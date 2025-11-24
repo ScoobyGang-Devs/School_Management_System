@@ -1,10 +1,17 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 from .views import MessageViewSet
 
-router = DefaultRouter()
-router.register(r'messages', MessageViewSet, basename='messages')
-
 urlpatterns = [
-    path('', include(router.urls)),
+    
+    path('messages/inbox/', MessageViewSet.as_view({'get': 'inbox'}), name='messages-inbox'),
+
+    
+    path('messages/sent/', MessageViewSet.as_view({'get': 'sent'}), name='messages-sent'),
+
+    
+    path('messages/send/', MessageViewSet.as_view({'post': 'send_message'}), name='messages-send'),
+
+
+    path('messages/<int:pk>/mark-as-read/', MessageViewSet.as_view({'patch': 'mark_as_read'}), name='messages-mark-read'),
+
 ]
