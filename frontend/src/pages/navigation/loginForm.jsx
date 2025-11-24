@@ -41,7 +41,6 @@ const LoginForm = () => {
         );
 
         if (response && response.access) {
-          alert(`✅ Login successful!`);
           localStorage.setItem("access", response.access);
           localStorage.setItem("refresh", response.refresh);
           localStorage.setItem("status",formData.userType);
@@ -49,7 +48,7 @@ const LoginForm = () => {
           const path = formData.userType === "teacher"? "teacher-profile":"admin-profile";
           const header = {"Authorization": `Bearer ${response.access}`}
           const userDetails = await request.GET("http://127.0.0.1:8000", path, header);
-          localStorage.setItem("user",userDetails);
+          localStorage.setItem("user",JSON.stringify(userDetails));
           navigate("/"); // Go to dashboard
 
         } else {
@@ -58,7 +57,7 @@ const LoginForm = () => {
         }
       } catch (error) {
         console.error("Error during login:", error);
-        alert("⚠️ Network or server error. Please try again later.");
+        alert("❌ Username or Password is wrong!");
         setFormData({username:"",password:"",userType:""});
       }
     }

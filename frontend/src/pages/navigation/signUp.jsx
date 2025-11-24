@@ -67,12 +67,12 @@ const SignupForm = () => {
           alert("✅ Signup successful!");
           localStorage.setItem("status",isTeacher? "teacher":"admin");
           localStorage.setItem("access",responseData.access);
-          localStorage.setItem("refresh",responseData.responseData);
+          localStorage.setItem("refresh",responseData.refresh);
 
           const path = isTeacher? "teacher-profile":"admin-profile";
           const header = {"Authorization": `Bearer ${responseData.access}`}
           const userDetails = await request.GET("http://127.0.0.1:8000", path, header);
-          localStorage.setItem("user",userDetails);
+          localStorage.setItem("user",JSON.stringify(userDetails));
           navigate("/");
         } else {
           alert("❌ Signup failed. Try again.");
