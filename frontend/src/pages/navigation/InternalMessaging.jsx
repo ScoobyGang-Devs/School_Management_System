@@ -64,7 +64,11 @@ export default function InternalMessaging() {
     }
   ]);
 
-  const [recipientList, setRecipientList] = useState([{id:"1",name:"John",uName:"John"},{id:"2",name:"Sam",uName:"Sam"}]);
+  const [recipientList, setRecipientList] = useState([
+    {id:"1",name:"John",uName:"John"},
+    {id:"2",name:"Sam",uName:"Sam"},
+    {id:"3",name:null,uName:"Carter"}
+  ]);
 
   useEffect(() => {
     const fetchInbox = async () => {
@@ -401,7 +405,7 @@ export default function InternalMessaging() {
                       }));
                     }}
                   >
-                    {r.name}
+                    {r.name? r.name:r.uName}
                   </div>
                 ))}
               </div>
