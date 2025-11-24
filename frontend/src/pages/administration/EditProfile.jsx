@@ -1,25 +1,35 @@
 import { useState } from "react";
-import request from "../../reqMethods.jsx"
+import request from "../../reqMethods"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function EditProfile() {
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+  const status = localStorage.getItem("status");
+  const isAdmin = status === "admin";
+
   const [formData, setFormData] = useState({
-    nic_number: "",
-    title: "",
-    nameWithInitials: "",
-    fullName: "",
-    dateOfBirth: "",
-    gender: "",
-    email: "",
-    address: "",
-    enrollmentDate: "",
-    mobileNumber: "",
-    subClass: "",
-    grade: "",
-    assignToClass: false,
+    title: storedUser.title || "",
+    nameWithInitials: storedUser.nameWithInitials || "",
+    fullName: storedUser.fullName || "",
+    dateOfBirth: storedUser.dateOfBirth || "",
+    gender: storedUser.gender || "",
+    email: storedUser.email || "",
+    address: storedUser.address || "",
+    enrollmentDate: storedUser.enrollmentDate || "",
+    mobileNumber: storedUser.mobileNumber || "",
+    ...(isAdmin && {position: storedUser.position || ""})
   });
 
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -27,279 +37,245 @@ export default function EditProfile() {
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     });
-    
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
-    }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    // If checkbox is checked, Grade is required
-    if (formData.assignToClass && !formData.Grade) {
-      newErrors.Grade = "Grade is required when assigned to a class";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleSelectChange = (name, value) => {
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate form before submission
-    if (!validateForm()) {
-      alert("Please fill in all required fields");
-      return;
-    }
+    setIsLoading(true);
+    setShowSuccess(false);
     
     try {
+      const path = status === "teacher"? "teacher-profile":"admin-profile";
       const result = await request.POST(
-        "http://localhost:8000/teacherdetails/", formData
+        `http://localhost:8000/${path}/`, formData
       );
 
       console.log("Server Response:", result);
       if (result){
         localStorage.setItem("user", JSON.stringify(formData));
         console.log("Profile Updated:", formData);
-        alert("Profile saved successfully!");
+        setShowSuccess(true);
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("Failed to save profile.");
+      setErrors({ submit: "Failed to save profile. Please try again." });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleCancel = () => {
     setFormData(storedUser);
-    setErrors({}); // Clear errors on cancel
+    setErrors({});
+    setShowSuccess(false);
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-10 bg-white dark:bg-neutral-800 p-8 rounded-2xl shadow-lg">
-      <h2 className="text-2xl font-semibold mb-6 text-center">Edit Teacher Profile</h2>
+    <div className="max-w-4xl mx-auto mt-10">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl text-center">Edit Teacher Profile</CardTitle>
+          <CardDescription className="text-center">
+            Update your profile information below
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {showSuccess && (
+            <Alert className="mb-6 bg-green-50 border-green-200">
+              <AlertCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                Profile saved successfully!
+              </AlertDescription>
+            </Alert>
+          )}
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {errors.submit && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{errors.submit}</AlertDescription>
+            </Alert>
+          )}
 
-        {/* NIC Number */}
-        <div>
-          <label className="block text-sm font-medium mb-1">NIC Number</label>
-          <input
-            type="number"
-            name="nic_number"
-            value={formData.nic_number}
-            onChange={handleChange}
-            className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-            placeholder="Enter NIC number"
-          />
-        </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        {/* Title */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Title</label>
-          <select
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-          >
-            <option value="">Select title</option>
-            <option value="Ven.">Ven</option>
-            <option value="Mr.">Mr</option>
-            <option value="Mrs.">Mrs</option>
-            <option value="Miss.">Miss</option>
-          </select>
-        </div>
+              {/* Name With Initials */}
+              <div className="space-y-2">
+                <Label htmlFor="nameWithInitials">Name with initials</Label>
+                <Input
+                  id="nameWithInitials"
+                  name="nameWithInitials"
+                  type="text"
+                  value={formData.nameWithInitials}
+                  onChange={handleChange}
+                  placeholder="Ex: J.Smith"
+                />
+              </div>
 
-        {/* Name With Initials*/}
-        <div>
-          <label className="block text-sm font-medium mb-1">Name with initials</label>
-          <input
-            type="text"
-            name="nameWithInitials"
-            value={formData.nameWithInitials}
-            onChange={handleChange}
-            className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-            placeholder="Ex: J.Sinc"
-          />
-        </div>
+              {/* Full Name */}
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  placeholder="Ex: John Smith"
+                />
+              </div>
 
-        {/* Full Name */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Full Name</label>
-          <input
-            type="text"
-            name="fullName"
-            value={formData.fullName}
-            onChange={handleChange}
-            className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-            placeholder="Ex: Jonny sinc"
-          />
-        </div>
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Enter email"
+                />
+              </div>
 
-        {/* Date of Birth */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Date of Birth</label>
-          <input
-            type="date"
-            name="dateOfBirth"
-            value={formData.dateOfBirth}
-            onChange={handleChange}
-            className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-          />
-        </div>
+              {/* Mobile Number */}
+              <div className="space-y-2">
+                <Label htmlFor="mobileNumber">Mobile Number</Label>
+                <Input
+                  id="mobileNumber"
+                  name="mobileNumber"
+                  type="tel"
+                  value={formData.mobileNumber}
+                  onChange={handleChange}
+                  placeholder="Enter mobile number"
+                />
+              </div>
 
-        {/* Gender */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Gender</label>
-          <select
-            name="gender"
-            value={formData.gender}
-            onChange={handleChange}
-            className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-          >
-            <option value="">Select gender</option>
-            <option value="M">Male</option>
-            <option value="F">Female</option>
-          </select>
-        </div>
+              {/* Gender */}
+              <div className="space-y-2">
+                <Label htmlFor="gender">Gender</Label>
+                <Select 
+                  value={formData.gender} 
+                  onValueChange={(value) => handleSelectChange("gender", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="M">Male</SelectItem>
+                    <SelectItem value="F">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-        {/* Email */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Email</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-            placeholder="Enter email"
-          />
-        </div>
+              {/* Title */}
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Select 
+                  value={formData.title} 
+                  onValueChange={(value) => handleSelectChange("title", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select title" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Ven.">Ven.</SelectItem>
+                    <SelectItem value="Mr.">Mr.</SelectItem>
+                    <SelectItem value="Mrs.">Mrs.</SelectItem>
+                    <SelectItem value="Ms.">Ms.</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-        {/* Address */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-1">Address</label>
-          <textarea
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-            rows="2"
-            placeholder="Enter address"
-          ></textarea>
-        </div>
+              {/* Date of Birth */}
+              <div className="space-y-2">
+                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Input
+                  id="dateOfBirth"
+                  name="dateOfBirth"
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={handleChange}
+                />
+              </div>
 
-        {/* Enrollment Date */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Enrollment Date</label>
-          <input
-            type="date"
-            name="enrollmentDate"
-            value={formData.enrollmentDate}
-            onChange={handleChange}
-            className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-          />
-        </div>
+              {/* Enrollment Date */}
+              <div className="space-y-2">
+                <Label htmlFor="enrollmentDate">Enrollment Date</Label>
+                <Input
+                  id="enrollmentDate"
+                  name="enrollmentDate"
+                  type="date"
+                  value={formData.enrollmentDate}
+                  onChange={handleChange}
+                />
+              </div>
 
-        {/* Mobile Number */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Mobile Number</label>
-          <input
-            type="tel"
-            name="mobileNumber"
-            value={formData.mobileNumber}
-            onChange={handleChange}
-            className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-            placeholder="Enter mobile number"
-          />
-        </div>
-
-        {/* Checkbox for Class Assignment */}
-        <div className="md:col-span-2">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              name="assignToClass"
-              checked={formData.assignToClass}
-              onChange={handleChange}
-              className="mr-2"
-            />
-            <span className="text-sm font-medium">Assigned to a class?</span>
-          </label>
-        </div>
-
-        {/* Conditionally render Section and Assigned Class based on checkbox */}
-        {formData.assignToClass && (
-          <>
-            {/* Grade - Required */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Grade <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="grade"
-                value={formData.grade}
-                onChange={handleChange}
-                className={`w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring ${
-                  errors.grade ? 'border-red-500' : ''
-                }`}
-                required
-              >
-                <option value="">Select Grade</option>
-                <option value="Grade 1">Grade 1</option>
-                <option value="Grade 2">Grade 2</option>
-                <option value="Grade 3">Grade 3</option>
-                <option value="Grade 4">Grade 4</option>
-                <option value="Grade 5">Grade 5</option>
-                <option value="Grade 6">Grade 6</option>
-                <option value="Grade 7">Grade 7</option>
-                <option value="Grade 8">Grade 8</option>
-                <option value="Grade 9">Grade 9</option>
-                <option value="Grade 10">Grade 10</option>
-                <option value="Grade 11">Grade 11</option>
-                <option value="Grade 12">Grade 12</option>
-                <option value="Grade 13">Grade 13</option>
-              </select>
-              {errors.grade && (
-                <p className="text-red-500 text-xs mt-1">{errors.grade}</p>
-              )}
             </div>
 
-            {/* SubClass - Optional */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Sub Class (Optional)</label>
-              <input
-                type="text"
-                name="subClass"
-                value={formData.subClass}
+            {/* Address - Full Width */}
+            <div className="space-y-2">
+              <Label htmlFor="address">Address</Label>
+              <Textarea
+                id="address"
+                name="address"
+                value={formData.address}
                 onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2 bg-transparent focus:outline-none focus:ring"
-                placeholder="Ex: A"
+                placeholder="Enter address"
+                rows="3"
               />
             </div>
-          </>
-        )}
 
-        {/* Buttons */}
-        <div className="md:col-span-2 flex justify-end gap-4 mt-4">
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="w-1/2 md:w-40 bg-gray-300 text-black py-2 rounded-lg hover:bg-gray-400 transition"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="w-1/2 md:w-40 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-            Update Profile
-          </button>
-        </div>
-      </form>
+            {/* Position - Only for Admin */}
+            {isAdmin && (
+              <div className="space-y-2">
+                <Label htmlFor="position">Position</Label>
+                <Select 
+                  value={formData.position} 
+                  onValueChange={(value) => handleSelectChange("position", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select position" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Principal">Principal</SelectItem>
+                    <SelectItem value="Vice Principal">Vice Principal</SelectItem>
+                    <SelectItem value="Staff Admin">Staff Admin</SelectItem>
+                    <SelectItem value="Section Head">Section Head</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div className="flex justify-end gap-4 pt-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isLoading}
+                className="w-full md:w-40"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full md:w-40"
+              >
+                {isLoading ? "Updating..." : "Update Profile"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

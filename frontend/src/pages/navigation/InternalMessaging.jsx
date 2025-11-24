@@ -96,7 +96,7 @@ export default function InternalMessaging() {
 
         if (response) {
           const users = response.map(data => ({
-            id: data.userId,
+            id: data.id,
             name: data.nameWithInitials,
             uName: data.username
           }));
