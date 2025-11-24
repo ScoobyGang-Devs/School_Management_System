@@ -50,7 +50,7 @@ function App() {
   const location = useLocation()
 
   // ✅ Check if we are on the login or signup page
-  const isAuthPage = location.pathname === "/login" || location.pathname === "/signup"
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/signup";
 
   // --- STATE MANAGEMENT ---
   const [role, setRole] = useState(null);
