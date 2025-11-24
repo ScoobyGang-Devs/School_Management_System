@@ -3,5 +3,7 @@ from .views import *
 
 urlpatterns = [
     #used - gives and updates the settings data realted to school
-    path('schooldetail/',SchoolDetailListCreateView.as_view(),name = "School Detail")
+    path('schooldetail/',SchoolDetailListCreateView.as_view(),name = "School Detail"),
+    path('change-password/', ChangePasswordView.as_view(), name='change-password'),
+    path('academic-cycle/', AcademicCycleConfigView.as_view(), name='academic-cycle-config'),
 ]
