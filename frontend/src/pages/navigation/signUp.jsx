@@ -70,7 +70,7 @@ const SignupForm = () => {
           localStorage.setItem("refresh",responseData.responseData);
 
           const path = isTeacher? "teacher-profile":"admin-profile";
-          const header = {"Authorization": `Bearer ${response.access}`}
+          const header = {"Authorization": `Bearer ${responseData.access}`}
           const userDetails = await request.GET("http://127.0.0.1:8000", path, header);
           localStorage.setItem("user",userDetails);
           navigate("/");
