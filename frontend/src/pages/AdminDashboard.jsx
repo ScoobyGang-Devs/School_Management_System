@@ -130,7 +130,7 @@ const AdminDashboard = () => {
           Admin Dashboard
         </h1>
         <p className="text-xl text-primary">
-          Overview for Central Hight School
+          Overview for Central High School
         </p>
       </header>
 

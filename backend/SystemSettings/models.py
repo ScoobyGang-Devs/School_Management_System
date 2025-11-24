@@ -18,7 +18,7 @@ def validatePNG(value):
     except Exception:
         raise ValidationError("Invalid image file.")
 
-# Create your models here.
+
 class SchoolDetail(models.Model):
     schoolName = models.CharField(max_length=100,blank=True)
     motto = models.TextField()

@@ -10,7 +10,6 @@ from django.core.files.base import ContentFile
 from PIL import Image as PilImage
 
 # --- IMPORTS ---
-# Ensure these paths match your project structure
 from admin_panel.models import (
     Classroom, 
     StaffNIC, 
@@ -21,7 +20,6 @@ from admin_panel.models import (
     AdminProfile
 )
 
-# Try imports for apps that might not be migrated yet
 try:
     from attendence.models import teacherAttendence, studentAttendence
 except ImportError:
@@ -33,10 +31,12 @@ try:
 except ImportError:
     class Message: pass
 
+# --- UPDATED IMPORT HERE ---
 try:
-    from SystemSettings.models import SchoolDetail
+    from SystemSettings.models import SchoolDetail, AcademicCycleConfig
 except ImportError:
     class SchoolDetail: pass
+    class AcademicCycleConfig: pass
 
 try:
     from term_test.models import TermName, Subject, TermTest, SubjectwiseMark
@@ -48,7 +48,7 @@ except ImportError:
 
 # --- Configuration ---
 NUM_TEACHERS = 50
-NUM_ADMINS = 5 # Principal, VP, etc.
+NUM_ADMINS = 5 
 NUM_GUARDIANS = 200
 NUM_STUDENTS = 300
 NUM_SUBJECTS = 8 
@@ -90,9 +90,12 @@ class Command(BaseCommand):
         # Core Entities
         StudentDetail.objects.all().delete()
         TeacherDetail.objects.all().delete()
-        AdminProfile.objects.all().delete() # New
+        AdminProfile.objects.all().delete() 
         GuardianDetail.objects.all().delete()
-        if hasattr(SchoolDetail, 'objects'): SchoolDetail.objects.all().delete() # New
+        
+        # --- CLEANUP SYSTEM SETTINGS ---
+        if hasattr(SchoolDetail, 'objects'): SchoolDetail.objects.all().delete()
+        if hasattr(AcademicCycleConfig, 'objects'): AcademicCycleConfig.objects.all().delete()
         
         # Lookups
         Classroom.objects.all().delete()
@@ -105,7 +108,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING("Cleanup complete."))
 
         # --- 2. Seed Independent Entities ---
-        # Generate enough NICs for Teachers AND Admins
         nics = self._seed_staff_nics(NUM_TEACHERS + NUM_ADMINS) 
         classes = self._seed_classrooms()
         guardians = self._seed_guardians()
@@ -115,13 +117,17 @@ class Command(BaseCommand):
         
         if hasattr(SchoolDetail, 'objects'): self._seed_school_details()
 
+        # --- NEW: Seed Academic Cycle Config ---
+        # Only runs if we successfully created terms
+        if hasattr(AcademicCycleConfig, 'objects') and terms:
+            self._seed_academic_config(terms)
+
         # --- 3. Seed Core Entities ---
-        # Split NICs list
         teacher_nics = nics[:NUM_TEACHERS]
         admin_nics = nics[NUM_TEACHERS:]
 
         teachers = self._seed_teachers(teacher_nics, classes)
-        self._seed_admins(admin_nics) # New Admin Profile Seeder
+        self._seed_admins(admin_nics)
         
         students = self._seed_students(guardians, classes) 
 
@@ -199,7 +205,7 @@ class Command(BaseCommand):
     def _seed_teachers(self, nics, classes):
         self.stdout.write("Seeding Teachers...")
         teachers = []
-        assigned_classes = list(classes) # Copy list to pop from
+        assigned_classes = list(classes) 
         
         for nic_obj in nics:
             nic_obj.is_used = True
@@ -215,7 +221,6 @@ class Command(BaseCommand):
             first_name = FAKE.first_name()
             last_name = FAKE.last_name()
             
-            # Logic: Assign 1 class as "Class Teacher" if available
             assigned_class = None
             if assigned_classes:
                 assigned_class = assigned_classes.pop(random.randrange(len(assigned_classes)))
@@ -236,7 +241,6 @@ class Command(BaseCommand):
                 assignedClass=assigned_class
             )
             
-            # M2M teachingClasses
             teaching_classes = [assigned_class] if assigned_class else []
             other_classes = [c for c in classes if c not in teaching_classes]
             if other_classes:
@@ -249,8 +253,6 @@ class Command(BaseCommand):
     def _seed_admins(self, nics):
         self.stdout.write("Seeding Admin Profiles...")
         
-        positions = list(AdminProfile.POSITONS.keys()) # ['Principal', 'Vice Principal', etc.]
-        
         for i, nic_obj in enumerate(nics):
             nic_obj.is_used = True
             nic_obj.save()
@@ -262,7 +264,6 @@ class Command(BaseCommand):
                 password='password123'
             )
 
-            # Assign specific roles based on index
             if i == 0: position = 'Principal'
             elif i == 1: position = 'Vice Principal'
             else: position = 'Section Head'
@@ -307,7 +308,6 @@ class Command(BaseCommand):
     
     def _seed_school_details(self):
         self.stdout.write("Seeding School Details...")
-        # Create one active principal
         SchoolDetail.objects.create(
             schoolName="Moratuwa Central College",
             motto="Wisdom is Power",
@@ -315,6 +315,22 @@ class Command(BaseCommand):
             principlSignature=self._create_dummy_png(),
             isActive=True
         )
+
+    # --- NEW HELPER FOR ACADEMIC CONFIG ---
+    def _seed_academic_config(self, terms):
+        self.stdout.write("Seeding Academic Cycle Config...")
+        
+        # Pick current year
+        year = timezone.now().year
+        
+        # Pick the 1st available term, or random
+        selected_term = terms[0] if terms else None
+        
+        if selected_term:
+            AcademicCycleConfig.objects.create(
+                academic_year=year,
+                current_term=selected_term
+            )
 
     def _seed_terms(self):
         if not hasattr(TermName, 'objects'): return []
@@ -361,7 +377,7 @@ class Command(BaseCommand):
         today = timezone.now().date()
         
         # 1. Teacher Attendance
-        for i in range(14): # Past 2 weeks
+        for i in range(14): 
             date = today - timedelta(days=i)
             if date.weekday() >= 5: continue 
             for teacher in teachers:
@@ -388,7 +404,6 @@ class Command(BaseCommand):
                     total = len(c_students)
                     if total == 0: continue
 
-                    # Mark some absent
                     num_absent = random.randint(0, int(total * 0.1))
                     absent_students = random.sample(c_students, num_absent)
                     absent_ids = [s.indexNumber for s in absent_students]
@@ -410,7 +425,6 @@ class Command(BaseCommand):
         if not hasattr(Message, 'objects'): return
         self.stdout.write("Seeding Messages...")
         
-        # Collect emails
         teacher_emails = [t.email for t in teachers if t.email]
         student_emails = [s.email for s in students if s.email]
         all_emails = teacher_emails + student_emails
@@ -420,19 +434,17 @@ class Command(BaseCommand):
         for _ in range(30):
             sender = random.choice(teachers)
             
-            # Select random recipients (emails)
             num_recipients = random.randint(1, 4)
             recipients_list = random.sample(all_emails, min(num_recipients, len(all_emails)))
             
-            # Generate read status dictionary
             read_status = {}
             for email in recipients_list:
                 if random.choice([True, False]):
                     read_status[email] = timezone.now().isoformat()
 
             Message.objects.create(
-                sender_teacher=sender,  # Using ForeignKey now
-                recipients=recipients_list, # JSON field
+                sender_teacher=sender,
+                recipients=recipients_list, 
                 subject=FAKE.sentence(nb_words=4),
                 content=FAKE.paragraph(nb_sentences=2),
                 category=random.choice(categories),
@@ -463,7 +475,6 @@ class Command(BaseCommand):
         for student in students:
             for term in terms:
                 for subject in subjects:
-                    # Find assigned teacher or fallback
                     assignment = ClassSubjectAssignment.objects.filter(
                         classroom=student.enrolledClass, subject=subject
                     ).first()
