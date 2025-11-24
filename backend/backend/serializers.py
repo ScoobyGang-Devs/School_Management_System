@@ -1,5 +1,7 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth.models import update_last_login
 
 
 # --- Change User Password ---
@@ -106,3 +108,13 @@ class ResetPasswordSerializer(serializers.Serializer):
         user.set_password(self.validated_data["new_password"])
         user.save()
         return user
+    
+
+# ----- Update last login manually Since we are using JWT for authentication -----
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        # Update last_login manually
+        update_last_login(None, self.user)
+        return data
+    
