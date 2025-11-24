@@ -80,12 +80,6 @@ const TeacherDatabase = () => {
                     </p>
                 </div>
                 <div className="flex gap-3">
-                    <Button 
-                        className="flex items-center gap-2"
-                        onClick={() => navigate('/add-teacher')} // Update with your actual add route
-                    >
-                        <UserPlus className="w-4 h-4" /> Add Teacher
-                    </Button>
                 </div>
             </div>
 

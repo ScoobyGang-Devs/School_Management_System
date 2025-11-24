@@ -96,9 +96,7 @@ const UserManagementMain = () => {
                     </p>
                 </div>
                 <div className="flex gap-3">
-                    <Button className="gap-2">
-                        <Plus className="w-4 h-4" /> Add User
-                    </Button>
+
                 </div>
             </div>
 

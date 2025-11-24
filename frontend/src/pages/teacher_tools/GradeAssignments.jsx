@@ -3,30 +3,26 @@ import { useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Label } from "@/components/ui/label"; // Used for labels/dropdowns
+import { Label } from "@/components/ui/label"; 
 import {
     flexRender,
     getCoreRowModel,
     useReactTable,
 } from "@tanstack/react-table";
-// FIX: Changing path to a commonly successful absolute alias
 import api from '../../api.js'; 
 import GradeComboBox from '../GradeAssignments/GradeComboBox.jsx';
-import SubjectComboBox from '../GradeAssignments/SubjectComboBox.jsx';
+import SubjectPillSelector from '../GradeAssignments/SubjectComboBox.jsx';
 
 
 // --- 1. Editable Cell Component ---
-// This component renders the input field inside the table cell
 const EditableMarkCell = ({ getValue, row, column, table }) => {
     const initialValue = getValue();
     const [value, setValue] = useState(initialValue || '');
 
-    // Update state when the prop changes (e.g., if a new class is selected)
     useEffect(() => {
         setValue(initialValue || '');
     }, [initialValue]);
 
-    // When focus leaves the input, update the parent state (the marks data)
     const onBlur = () => {
         table.options.meta.updateData(row.index, column.id, value);
     };
@@ -47,19 +43,13 @@ const EditableMarkCell = ({ getValue, row, column, table }) => {
 
 // --- 2. Main Mark Entry Component ---
 function MarkEntryTable() {
-    // We assume the URL provides the necessary context: /admin/marks/6/A/Maths
-    // const { gradeLevel, className } = useParams(); 
 
     const [gradeLevel,setGradeLevel] = useState("6");
     const [className,setClassName] = useState("A");
-    // const className 
     
-    // Hardcoded for Teacher context and initial term
-    // NOTE: In a real app, TEACHER_ID would come from authentication context.
     const TEACHER_ID = 42; 
     const TERM_ID = 1; 
 
-    // Dynamic state for selected subject (would be controlled by a dropdown)
     const [selectedSubjectName, setSelectedSubjectName] = useState('Mathematics'); 
     
     const [marksData, setMarksData] = useState([]);
@@ -68,7 +58,6 @@ function MarkEntryTable() {
     const [submissionMessage, setSubmissionMessage] = useState('');
 
 
-    // Helper function to update the array state when a cell input changes
     const updateMarksData = (rowIndex, columnId, value) => {
         setMarksData(old =>
             old.map((row, index) => {
@@ -85,28 +74,19 @@ function MarkEntryTable() {
     
     // --- API Fetch: Get Class Roster ---
     useEffect(() => {
-        // You have a GradeRosterAPIView that returns students by grade/class.
-        // Assuming this endpoint exists: /roster/6/A/
         const fetchRoster = async () => {
             setIsLoading(true);
             try {
-                // API call to get the list of students in the class
-                // NOTE: The endpoint should return a list of students in the format: 
-                // [{indexNumber: 10001, fullName: 'Student X'}, ...]
                 const rosterUrl = `/roster/${gradeLevel}/${className}/`; 
                 const res = await api.get(rosterUrl);
                 
                 console.log(res)
-                // MOCK DATA Structure Assumption:
-                // If the backend returns an array of students directly:
                 const students = res.data.students || res.data || []; 
 
-                // Initialize marks state: each student gets a placeholder mark field
                 const initialMarks = students.map(student => ({
-                    // Ensure these keys match the student model keys
                     student_id: student.indexNumber || student.student_id, 
                     student_name: student.name || student.student_name,
-                    mark: '', // This will hold the mark input
+                    mark: '', 
                 }));
                 setMarksData(initialMarks);
 
@@ -136,8 +116,12 @@ function MarkEntryTable() {
         {
             accessorKey: 'mark',
             header: () => <div className="text-center text-primary font-semibold">{selectedSubjectName} Mark</div>,
-            cell: EditableMarkCell, // Renders the Input component
-            // Ensure the column ID matches the state field ('mark')
+            // UPDATED: Wrapped the cell in a flex container to center it
+            cell: (props) => (
+                <div className="flex justify-center">
+                    <EditableMarkCell {...props} />
+                </div>
+            ),
             id: 'mark', 
         },
     ], [selectedSubjectName]);
@@ -147,14 +131,12 @@ function MarkEntryTable() {
         setIsSubmitting(true);
         setSubmissionMessage('');
 
-        // 1. Map the state data into the required bulk JSON schema
         const bulkPayload = marksData
-            .filter(item => item.mark !== '' && item.mark !== null) // Only submit records with marks
+            .filter(item => item.mark !== '' && item.mark !== null) 
             .map(item => ({
                 subjectName: selectedSubjectName,
                 studentID: item.student_id,
                 term: TERM_ID,
-                // Ensure marks are valid numbers between 0 and 100 before conversion/submission
                 marksObtained: parseFloat(item.mark), 
                 teacherID: TEACHER_ID,
             }));
@@ -169,7 +151,6 @@ function MarkEntryTable() {
             const url = 'termtest/subject-wise-marks/create/';
             const res = await api.post(url, bulkPayload);
 
-            // Handle both HTTP 201 (full success) and HTTP 207 (partial success)
             if (res.status === 201) {
                  setSubmissionMessage(`Successfully submitted ${res.data.length || bulkPayload.length} marks!`);
             } else if (res.status === 207 && res.data.errors) {
@@ -181,7 +162,6 @@ function MarkEntryTable() {
 
         } catch (error) {
             console.error("Submission Error:", error.response?.data || error.message);
-            // Display serializer validation errors if available
             const errorMsg = error.response?.data?.errors?.[0]?.errors?.[0] || error.message;
             setSubmissionMessage(`Submission Failed: ${errorMsg}`);
         } finally {
@@ -195,83 +175,111 @@ function MarkEntryTable() {
         data: marksData,
         columns,
         getCoreRowModel: getCoreRowModel(),
-        // Pass the update function via table meta to the cell component
         meta: {
             updateData: updateMarksData,
         },
     });
 
-    // --- Render ---
     if (isLoading) {
         return <div className="p-8 text-center text-muted-foreground">Loading class roster...</div>;
     }
 
-    return (
-        <div className="p-4 space-y-6">
-          
-            <h3 className="text-2xl font-bold">Mark Entry: Grade {gradeLevel}{className} ({selectedSubjectName})</h3>
+return (
+    <div className="p-4 space-y-6">
+      
+        <div className="flex flex-col gap-2">
+            <h3 className="text-2xl font-bold tracking-tight">
+                Mark Entry: Grade {gradeLevel}{className} <span className="text-muted-foreground font-normal">({selectedSubjectName})</span>
+            </h3>
+            <p className="text-muted-foreground text-sm">
+                Select a grade and subject to begin entering marks.
+            </p>
+        </div>
 
-            <GradeComboBox  setGradeLevel={setGradeLevel} setClassName={setClassName}/>
+        <div>
+            <GradeComboBox 
+                setGradeLevel={setGradeLevel} 
+                setClassName={setClassName}
+            />
+        </div>
 
-            {/* Controls Row (Subject Selector & Submission) */}
-            <div className="flex justify-between items-end border-b pb-4">
-                <div className="space-y-1">
-                    <Label htmlFor="subject-select">Select Subject:</Label>
-                    {/* Placeholder for a dynamic Subject Select/Dropdown */}
-                    <SubjectComboBox  setSubjectName={setSelectedSubjectName}/>
-                </div>
-                
-                <div className="space-y-2">
-                    <Button 
-                        onClick={handleSubmit} 
-                        disabled={isSubmitting || marksData.length === 0}
-                        className="font-bold"
-                    >
-                        {isSubmitting ? "Submitting..." : `Submit ${marksData.length} Marks (Term ${TERM_ID})`}
-                    </Button>
-                    {submissionMessage && (
-                        <p className={`text-sm text-center ${submissionMessage.includes('Successfully') ? 'text-green-500' : 'text-red-500'}`}>
-                            {submissionMessage}
-                        </p>
-                    )}
-                </div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b pb-6 pt-2">
+            
+            <div className="flex-1 w-full overflow-hidden space-y-2">
+                <Label className="text-sm font-medium ml-1">Select Subject:</Label>
+                <SubjectPillSelector 
+                    selectedSubject={selectedSubjectName}
+                    setSubjectName={setSelectedSubjectName}
+                />
             </div>
+            
+            <div className="flex flex-col items-end gap-2 shrink-0">
+                <Button 
+                    onClick={handleSubmit} 
+                    disabled={isSubmitting || marksData.length === 0}
+                    className="font-bold min-w-[180px]"
+                    size="lg" 
+                >
+                    {isSubmitting ? (
+                        <>Submitting...</>
+                    ) : (
+                        <>Submit {marksData.length} Marks (Term {TERM_ID})</>
+                    )}
+                </Button>
+                
+                {submissionMessage && (
+                    <p className={`text-xs font-medium ${
+                        submissionMessage.includes('Successfully') ? 'text-green-600' : 'text-destructive'
+                    }`}>
+                        {submissionMessage}
+                    </p>
+                )}
+            </div>
+        </div>
 
-
-            {/* Data Table */}
-            <div className="overflow-hidden rounded-md border">
-                <Table>
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id}>
-                                        {flexRender(header.column.columnDef.header, header.getContext())}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-                    <TableBody>
-                        {table.getRowModel().rows.map((row) => (
-                            <TableRow key={row.id}>
+        <div className="overflow-hidden rounded-md border bg-card shadow-sm">
+            <Table>
+                <TableHeader>
+                    {table.getHeaderGroups().map((headerGroup) => (
+                        <TableRow key={headerGroup.id} className="bg-muted/50">
+                            {headerGroup.headers.map((header) => (
+                                <TableHead key={header.id} className="font-bold">
+                                    {flexRender(header.column.columnDef.header, header.getContext())}
+                                </TableHead>
+                            ))}
+                        </TableRow>
+                    ))}
+                </TableHeader>
+                <TableBody>
+                    {table.getRowModel().rows.length > 0 ? (
+                        table.getRowModel().rows.map((row) => (
+                            <TableRow key={row.id} className="hover:bg-muted/5">
                                 {row.getVisibleCells().map((cell) => (
-                                    <TableCell key={cell.id}>
+                                    <TableCell key={cell.id} className="py-3">
                                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                     </TableCell>
                                 ))}
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </div>
-            {marksData.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                    No students found in this class roster.
-                </div>
-            )}
+                        ))
+                    ) : (
+                        <TableRow>
+                            <TableCell colSpan={table.getAllColumns().length} className="h-24 text-center">
+                                {marksData.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center text-muted-foreground py-8">
+                                        <p>No students found for this class.</p>
+                                        <p className="text-xs">Try selecting a different Grade or Class.</p>
+                                    </div>
+                                ) : (
+                                    "No results."
+                                )}
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
         </div>
-    );
+    </div>
+);
 }
 
 export default MarkEntryTable;
