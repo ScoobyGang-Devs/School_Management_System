@@ -11,6 +11,7 @@ class SchoolDetailListCreateView(generics.ListCreateAPIView):
 
 class ChangePasswordView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         serializer = PasswordChangeSerializer(data=request.data, context={'request': request})
@@ -23,7 +24,8 @@ class ChangePasswordView(APIView):
 class AcademicCycleConfigView(generics.RetrieveUpdateAPIView):
     queryset = AcademicCycleConfig.objects.all()
     serializer_class = AcademicCycleConfigSerializer
-    permission_classes = [permissions.IsAdminUser]
+    # permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.AllowAny]
 
     def get_object(self):
         return AcademicCycleConfig.objects.first()  # Singleton pattern
