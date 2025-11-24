@@ -2,8 +2,10 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Message
-from .serializers import MessageSerializer
+from .serializers import MessageSerializer, UserListSerializerChat
 from admin_panel.models import TeacherDetail
+from django.contrib.auth.models import User
+from rest_framework.generics import ListAPIView
  
 
 class MessageViewSet(viewsets.ModelViewSet):
@@ -103,3 +105,9 @@ class MessageViewSet(viewsets.ModelViewSet):
         for msg in data:
             msg.pop('is_read', None) 
         return Response(data)
+
+
+# view for sending usernames and userids to frontend 
+class UserListViewChat(ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserListSerializerChat

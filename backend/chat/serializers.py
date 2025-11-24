@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Message
+from django.contrib.auth.models import User
 
 class MessageSerializer(serializers.ModelSerializer):
     sender_id = serializers.IntegerField(source='sender_teacher.teacherId', read_only=True)
@@ -20,3 +21,21 @@ class MessageSerializer(serializers.ModelSerializer):
         if not teacher:
             return False
         return obj.read_status.get(str(teacher.teacherId), False)
+    
+
+# serializer for sending usernames and userIds to frontend for messaging
+class UserListSerializerChat(serializers.ModelSerializer):
+
+    userName = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['userName', 'id']
+
+    def get_userName(self, obj):
+        if hasattr(obj, "teacher_profile"):
+            return obj.teacher_profile.nameWithInitials
+        elif hasattr(obj, "admin_profile"):
+            return obj.admin_profile.nameWithInitials
+        else:
+            return obj.get_username()
