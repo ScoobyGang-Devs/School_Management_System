@@ -7,6 +7,7 @@ from attendence.models import studentAttendence
 from datetime import timedelta
 from django.utils.timezone import now
 from django.db.models import Count, Q, Avg
+from rest_framework.permissions import IsAuthenticated
 
 
 
@@ -63,3 +64,36 @@ class AdminDashboardView(APIView):
             "grade_averages": grade_averages,
             "attendance_last_5_days": attendance_list
         })
+    
+class TeacherDashboardView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self,request):
+
+        user = request.user
+        teacher = TeacherDetail.objects.filter(user = user).first()
+
+        if not teacher:
+            return Response({"error": "Teacher profile not found"}, status=404)
+
+        # 1. Total number of teaching classes
+        toatal_teaching_classes = teacher.teachingClasses.count()
+
+        # 2. assigned_class
+        assigned_class = teacher.assignedClass()
+
+        # 3. Teacher's name
+        teacher_name = f"{teacher.TITLE_CHOICES} . {teacher.nameWithInitials}"
+
+        # 4. Student Count
+        students_count = StudentDetail.objects.filter(enrolledClaas = assigned_class).count()
+
+        
+
+        
+
+
+
+
+    
