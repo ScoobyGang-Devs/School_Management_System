@@ -32,13 +32,13 @@ class MessageSerializer(serializers.ModelSerializer):
 # serializer for sending usernames and userIds to frontend for messaging
 class UserListSerializerChat(serializers.ModelSerializer):
 
-    userName = serializers.SerializerMethodField()
+    nameWithInitials = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['userName', 'id']
+        fields = ['nameWithInitials', 'id', 'username']
 
-    def get_userName(self, obj):
+    def get_nameWithInitials(self, obj):
         if hasattr(obj, "teacher_profile"):
             return obj.teacher_profile.nameWithInitials
         elif hasattr(obj, "admin_profile"):

@@ -48,7 +48,7 @@ class StudentsCreateView(generics.CreateAPIView):
 
 class TeacherDetailsUpdateView(RetrieveUpdateAPIView):
     serializer_class = TeacherDetailsSerializer
-    permission_classes = [AllowAny] # passe wenas karanna meka IsAuthenticated widiyt
+    permission_classes = [IsAuthenticated]
     
     # to ensure teacher can edit only his/her profile
     def get_object(self):

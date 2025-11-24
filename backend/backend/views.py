@@ -1,15 +1,15 @@
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status, generics
-from .serializers import ChangePasswordSerializer, ResetPasswordSerializer, ForgotPasswordSerializer
-from django.contrib.auth import get_user_model
+from .serializers import ChangePasswordSerializer, ResetPasswordSerializer, ForgotPasswordSerializer, MyTokenObtainPairSerializer
+from django.contrib.auth.models import User
+from rest_framework_simplejwt.views import TokenObtainPairView
 
-User = get_user_model()
 
 # --- Change Password --- 
 class ChangePasswordView(generics.UpdateAPIView):
     serializer_class = ChangePasswordSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get_object(self):
         return self.request.user
@@ -43,3 +43,7 @@ class ResetPasswordView(generics.GenericAPIView):
         serializer.save()
         return Response({"detail": "Password has been reset successfully."})
     
+
+# ----- view for manual update last login -----
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer

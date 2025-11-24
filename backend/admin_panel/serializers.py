@@ -56,6 +56,7 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
 class TeacherDetailsSerializer(serializers.ModelSerializer):
     # Show NIC in GET responses but not editable
     nic_number = serializers.CharField(source='nic_number.nic_number', read_only=True)
+    userId = serializers.CharField(source='owner.id', read_only=True)
 
     # Returned to frontend as human-readable names
     assignedClass = serializers.SerializerMethodField()
@@ -224,6 +225,7 @@ class UserListSerializer(serializers.ModelSerializer):
 class AdminDetailsSerializer(serializers.ModelSerializer):
     # Show NIC in GET responses but not editable
     nic_number = serializers.CharField(source='nic_number.nic_number', read_only=True)
+    userId = serializers.CharField(source='owner.id', read_only=True)
 
     class Meta:
         model = AdminProfile
