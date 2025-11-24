@@ -64,13 +64,14 @@ export default function InternalMessaging() {
     }
   ]);
 
-  const [recipientList, setRecipientList] = useState([{id:"1",name:"John"},{id:"2",name:"sam"}]);
+  const [recipientList, setRecipientList] = useState([{id:"1",name:"John",uName:"John"},{id:"2",name:"Sam",uName:"Sam"}]);
 
   useEffect(() => {
     const fetchInbox = async () => {
       try {
-        const userID = localStorage.getItem("id");
-        const response = await request.GET(`http://127.0.0.1:8000/chat/inbox/${userID}`);
+        const allData = JSON.parse(localStorage.getItem("user"));
+        const userId = allData.userId;
+        const response = await request.GET(`http://127.0.0.1:8000/chat/messages/inbox`,userId);
 
         if (response) {
           setMessages(response);
@@ -92,7 +93,8 @@ export default function InternalMessaging() {
         if (response) {
           const users = response.map(data => ({
             id: data.userId,
-            name: data.nameWithInitials
+            name: data.nameWithInitials,
+            uName: data.username
           }));
           setRecipientList(users);
         }
