@@ -1,7 +1,10 @@
+# SystemSettings models.py
 from django.db import models
 from django.core.exceptions import ValidationError
 from PIL import Image
 import os
+from term_test.models import *
+
 
 def validatePNG(value):
     try:
@@ -15,7 +18,7 @@ def validatePNG(value):
     except Exception:
         raise ValidationError("Invalid image file.")
 
-# Create your models here.
+
 class SchoolDetail(models.Model):
     schoolName = models.CharField(max_length=100,blank=True)
     motto = models.TextField()
@@ -41,3 +44,12 @@ class SchoolDetail(models.Model):
 
     def __str__(self):
         return f"{self.schoolName} - Principal: {self.principalName}"
+
+
+class AcademicCycleConfig(models.Model):
+    academic_year = models.PositiveIntegerField()
+    current_term = models.ForeignKey(TermName, on_delete=models.PROTECT)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.academic_year} - {self.current_term.get_termName_display()}"

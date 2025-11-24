@@ -7,58 +7,82 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen } from "lucide-react"; // Assuming you use lucide-react for icons
+import { BookOpen } from "lucide-react";
 import { Link } from 'react-router-dom';
-import {useState,useEffect} from 'react';
+import React, { useState, useEffect } from 'react'; // Added React import
 import api from "../api.js"
 
+// --- Loading Placeholder Component (Skeleton) ---
+// Copied exactly from ResultGradeCard for consistency
+const LoadingSkeleton = () => (
+    <div className="animate-pulse space-y-2 mt-4">
+        <div className="h-6 bg-muted rounded w-1/3"></div> {/* Adjusted sizes slightly for this card's layout */}
+        <div className="h-4 bg-muted rounded w-2/3"></div>
+    </div>
+);
 
 
-function GradeCard({gradeLevel,studentCount}) { 
+function GradeCard({ gradeLevel }) { // Removed unused studentCount prop
 
   const [length, setLength] = useState(0);
+  // 1. Add isLoading state, initialized to true
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     getStudentsByGrade();
-  }, []
-  );
-  
-  
-  // Changed to a functional component
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Added dependency warning suppression, or add gradeLevel if it can change dynamically
+
   const getStudentsByGrade = () => {
-        api
-            .get(`api/students/grade/${gradeLevel}/`)
-            .then((res) => res.data)
-            .then((data) => {
-                console.log(data.length);
-                setLength(data.length);
-            })
-            .catch((err) => alert(err));
-    };
+    // Ensure loading is true before starting fetch
+    setIsLoading(true);
+    api
+        .get(`api/students/grade/${gradeLevel}/`)
+        .then((res) => res.data)
+        .then((data) => {
+            setLength(data.length);
+        })
+        .catch((err) => {
+            console.error("Error fetching student count:", err);
+        })
+        // 2. Add .finally() to ensure loading stops upon success or failure
+        .finally(() => {
+            setIsLoading(false);
+        });
+  };
 
 
   return (
     <Card className="w-[300px] hover:shadow-lg hover:border-primary transition-all duration-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-3xl font-bold">Grade {gradeLevel}</CardTitle>
-        <BookOpen className="h-6 w-6 text-muted-foreground" /> {/* Icon */}
+        <BookOpen className="h-6 w-6 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         <CardDescription className="text-sm text-muted-foreground">
           View all students and classes for Grade {gradeLevel}.
         </CardDescription>
-        <div className="text-2xl font-bold mt-4">
-          {length} Students
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Currently enrolled in this grade.
-        </p>
+
+        {/* 3. Conditional Rendering based on isLoading */}
+        {isLoading ? (
+            <LoadingSkeleton />
+        ) : (
+            <>
+                <div className="text-2xl font-bold mt-4">
+                  {length} Students
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Currently enrolled in this grade.
+                </p>
+            </>
+        )}
+
       </CardContent>
       <CardFooter>
-        {/* The Button acts as the primary "action" for this card */}
         <Link to={`/admin/students/classes/${gradeLevel}`} className="w-full">
-        <Button className="w-full">
-          View Classes
+        {/* 4. Update button state during loading */}
+        <Button className="w-full" disabled={isLoading}>
+          {isLoading ? "Loading..." : "View Classes"}
         </Button>
         </Link>
       </CardFooter>

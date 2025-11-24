@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Message
@@ -58,40 +58,21 @@ class MessageViewSet(viewsets.ModelViewSet):
 
         return Response({"id": message.id}, status=201)
 
-    @action(detail=True, methods=['post'])
-    def mark_as_read(self, request, pk=None):
-        teacher = getattr(request.user, 'teacher_profile', None)
-        if not teacher:
-            return Response({"error": "Only teachers can mark messages as read"}, status=403)
-
-        message = self.get_object()
-        tid = str(teacher.teacherId)
-
-        if tid in message.read_status:
-            message.read_status[tid] = True
-            message.save()
-            return Response({tid: True})
-        return Response({"error": "You are not a recipient"}, status=403)
-
     @action(detail=False, methods=['get'])
     def inbox(self, request):
         teacher = getattr(request.user, 'teacher_profile', None)
         if not teacher:
             return Response({"error": "Only teachers can access inbox"}, status=403)
 
-        messages = [msg for msg in Message.objects.all().order_by('-timestamp') 
-                    if teacher.teacherId in msg.recipients]
+        teacher_id = teacher.teacherId
+
+        messages = [
+            msg for msg in Message.objects.all().order_by('-timestamp')
+            if teacher_id in msg.recipients
+        ]
 
         serializer = MessageSerializer(messages, many=True, context={'request': request})
-        data = serializer.data
-
-        tid = str(teacher.teacherId)
-        for msg, message_obj in zip(data, messages):
-            msg.pop('recipients', None)
-            msg['is_read'] = {tid: message_obj.read_status.get(tid, False)}
-
-        return Response(data)
-
+        return Response(serializer.data)  
 
     @action(detail=False, methods=['get'])
     def sent(self, request):
@@ -105,6 +86,28 @@ class MessageViewSet(viewsets.ModelViewSet):
         for msg in data:
             msg.pop('is_read', None) 
         return Response(data)
+
+    @action(detail=True, methods=['patch'])
+    def mark_as_read(self, request, pk=None):
+        
+        teacher = getattr(request.user, 'teacher_profile', None)
+        if not teacher:
+            return Response({"error": "Only teachers can mark messages as read"}, status=403)
+
+        try:
+            message = self.get_object()
+        except Message.DoesNotExist:
+            return Response({"error": "Message not found"}, status=404)
+
+        teacher_id = str(teacher.teacherId)
+        if teacher_id not in message.read_status:
+            return Response({"error": "You are not a recipient of this message"}, status=403)
+
+        message.read_status[teacher_id] = True
+        message.save(update_fields=['read_status'])
+
+        serializer = MessageSerializer(message, context={'request': request})
+        return Response(serializer.data)
 
 
 # view for sending usernames and userids to frontend 

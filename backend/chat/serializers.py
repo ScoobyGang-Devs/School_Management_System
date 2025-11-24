@@ -17,11 +17,17 @@ class MessageSerializer(serializers.ModelSerializer):
         ]
 
     def get_is_read(self, obj):
-        teacher = getattr(self.context.get('request').user, 'teacher_profile', None)
+        request = self.context.get('request', None)
+        if not request:
+            return False
+
+        teacher = getattr(request.user, 'teacher_profile', None)
         if not teacher:
             return False
-        return obj.read_status.get(str(teacher.teacherId), False)
-    
+
+        tid = str(teacher.teacherId)
+        return obj.read_status.get(tid, False)
+
 
 # serializer for sending usernames and userIds to frontend for messaging
 class UserListSerializerChat(serializers.ModelSerializer):

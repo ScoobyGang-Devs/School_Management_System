@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AdminDashboardView
+from .views import AdminDashboardView,TeacherDashboardView
 
 
 urlpatterns = [
@@ -7,4 +7,5 @@ urlpatterns = [
     path('admin_dashboard/', AdminDashboardView.as_view(), name='admin-dashboard'),
 
     # --> teacher_dashboard ...
+    path('teacher_dashboard/', TeacherDashboardView.as_view(), name='teacher-dashboard'),
 ]

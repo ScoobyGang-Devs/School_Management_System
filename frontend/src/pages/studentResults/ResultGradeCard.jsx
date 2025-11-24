@@ -92,10 +92,7 @@ function ResultGradeCard({ gradeLevel }) {
                             <p className="text-card-foreground">
                                 {studentCount} Students
                             </p>
-                            <p>
-                                {/* text-primary for emphasis */}
-                                <span className="font-semibold text-primary">Avg. Pass Rate:</span> 76% 
-                            </p>
+
                             <p className="text-lg">
                                 {/* text-primary for emphasis */}
                                 <span className="font-bold text-primary">Avg. Mark:</span> {averageMark}%
