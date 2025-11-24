@@ -13,7 +13,8 @@ class SchoolDetailListCreateView(generics.ListCreateAPIView):
 class AcademicCycleConfigView(generics.RetrieveUpdateAPIView):
     queryset = AcademicCycleConfig.objects.all()
     serializer_class = AcademicCycleConfigSerializer
-    permission_classes = [permissions.IsAdminUser]
+    # permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.AllowAny]
 
     def get_object(self):
         return AcademicCycleConfig.objects.first()  # Singleton pattern

@@ -3,7 +3,7 @@ import {
     School, BookOpen, Save, 
     Loader2, LockKeyhole, Upload
 } from 'lucide-react';
-import api from '../../api.js'; // Importing your custom axios instance
+import api from '../../api.js'; 
 
 // --- Shadcn Components ---
 import { 
@@ -23,52 +23,48 @@ import { toast } from "sonner";
 const SettingsPage = () => {
     const [isLoading, setIsLoading] = useState(false);
 
-    // 1. Security Settings (Mock Data)
+    // 1. Security Settings
     const [security, setSecurity] = useState({
         currentPassword: "",
         newPassword: "",
         confirmPassword: ""
     });
 
-    // 2. School Configuration (Real Data from Django)
+    // 2. School Configuration
     const [schoolConfig, setSchoolConfig] = useState({
         schoolName: "",
         motto: "",
         principalName: "",
         currentSignatureUrl: null 
     });
-    
-    // State for the new file upload
     const [signatureFile, setSignatureFile] = useState(null);
 
-    // 3. Academic Management (Mock Data)
+    // 3. Academic Management
     const [academicConfig, setAcademicConfig] = useState({
-        currentYear: "2025",
-        currentTerm: "1"
+        currentYear: "",
+        currentTerm: ""
     });
 
-    // --- Fetch Data on Load using API ---
+    // --- Fetch Data on Load ---
     useEffect(() => {
         getSchoolData();
+        getAcademicData();
     }, []);
 
     const getSchoolData = () => {
+        // Updated URL to match new prefix
         api.get('settings/schooldetail/')
             .then((res) => res.data)
             .then((data) => {
-                // Logic to find the active config (or the last one created)
                 const activeConfig = data.find(item => item.isActive) || data[data.length - 1];
-                
                 if (activeConfig) {
                     setSchoolConfig({
                         schoolName: activeConfig.schoolName || "",
                         motto: activeConfig.motto || "",
                         principalName: activeConfig.principalName || "",
-                        currentSignatureUrl: activeConfig.principlSignature // URL from Django
+                        currentSignatureUrl: activeConfig.principlSignature 
                     });
                 }
-
-                console.log(schoolConfig)
             })
             .catch((err) => {
                 console.error(err);
@@ -76,19 +72,62 @@ const SettingsPage = () => {
             });
     };
 
+    const getAcademicData = () => {
+        api.get('settings/academic-cycle/')
+            .then((res) => {
+                // Assuming the backend returns the singleton object directly
+                setAcademicConfig({
+                    currentYear: res.data.academic_year.toString(), // Ensure string for Select component
+                    currentTerm: res.data.current_term.toString()
+                });
+            })
+            .catch((err) => {
+                console.error("Academic fetch error:", err);
+                // Don't show error toast on 404 if it's just empty, but good for debugging
+            });
+    };
+
     // --- Handlers ---
 
     const handleSavePassword = () => {
+        // Frontend validation
+        if (!security.currentPassword || !security.newPassword || !security.confirmPassword) {
+            toast.error("Missing Fields", { description: "Please fill in all password fields." });
+            return;
+        }
+
         if (security.newPassword !== security.confirmPassword) {
             toast.error("Password Mismatch", { description: "New passwords do not match." });
             return;
         }
+
         setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
-            setSecurity(prev => ({ ...prev, currentPassword: "", newPassword: "", confirmPassword: "" }));
-            toast.success("Password Changed", { description: "Your account security has been updated." });
-        }, 1000);
+
+        const payload = {
+            current_password: security.currentPassword,
+            new_password: security.newPassword,
+            confirm_password: security.confirmPassword
+        };
+
+        api.post('settings/change-password/', payload)
+            .then((res) => {
+                toast.success("Password Changed", { description: "Your account security has been updated." });
+                // Clear fields on success
+                setSecurity({ currentPassword: "", newPassword: "", confirmPassword: "" });
+            })
+            .catch((err) => {
+                const errorData = err.response?.data;
+                if (errorData) {
+                    // Check for specific field errors from Django serializer
+                    if (errorData.current_password) toast.error("Error", { description: errorData.current_password[0] });
+                    else if (errorData.confirm_password) toast.error("Error", { description: errorData.confirm_password[0] });
+                    else if (errorData.new_password) toast.error("Error", { description: errorData.new_password[0] });
+                    else toast.error("Update Failed", { description: "Something went wrong." });
+                } else {
+                    toast.error("Server Error", { description: "Could not update password." });
+                }
+            })
+            .finally(() => setIsLoading(false));
     };
 
     const handleFileChange = (e) => {
@@ -111,45 +150,49 @@ const SettingsPage = () => {
         formData.append('motto', schoolConfig.motto);
         formData.append('principalName', schoolConfig.principalName);
         
-        // Only append file if user selected a new one
         if (signatureFile) {
             formData.append('principlSignature', signatureFile);
         }
 
-        // Axios handles the Content-Type for FormData automatically
+        // Updated URL
         api.post('settings/schooldetail/', formData)
             .then((res) => {
                 toast.success("System Updated", { description: "School configuration saved successfully." });
-                
-                // Update state with the new data from server response
                 setSchoolConfig(prev => ({
                     ...prev,
                     currentSignatureUrl: res.data.principlSignature
                 }));
-                setSignatureFile(null); // Clear file input state
+                setSignatureFile(null); 
             })
             .catch((err) => {
-                console.error(err);
                 const errData = err.response?.data;
-                
-                // Display specific error if signature failed validation on backend
                 if(errData && errData.principlSignature) {
                     toast.error("Signature Error", { description: errData.principlSignature[0] });
                 } else {
                     toast.error("Update Failed", { description: "Please check your inputs." });
                 }
             })
-            .finally(() => {
-                setIsLoading(false);
-            });
+            .finally(() => setIsLoading(false));
     };
 
     const handleSaveAcademic = () => {
         setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
-            toast.success("Academic Settings Saved", { description: "Current academic year and term updated." });
-        }, 800);
+        
+        const payload = {
+            academic_year: academicConfig.currentYear,
+            current_term: academicConfig.currentTerm
+        };
+
+        // Using PUT or PATCH since it's a RetrieveUpdateAPIView
+        api.patch('settings/academic-cycle/', payload)
+            .then((res) => {
+                toast.success("Academic Settings Saved", { description: `Updated to ${res.data.academic_year} - ${res.data.current_term_display || 'Term ' + res.data.current_term}` });
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("Update Failed", { description: "Could not update academic cycle." });
+            })
+            .finally(() => setIsLoading(false));
     };
 
     return (
@@ -168,7 +211,7 @@ const SettingsPage = () => {
                     <TabsTrigger value="academic">Academic</TabsTrigger>
                 </TabsList>
 
-                {/* ================= SECURITY TAB (MOCK) ================= */}
+                {/* ================= SECURITY TAB ================= */}
                 <TabsContent value="security">
                     <div className="max-w-2xl">
                         <Card>
@@ -213,7 +256,7 @@ const SettingsPage = () => {
                     </div>
                 </TabsContent>
 
-                {/* ================= SCHOOL CONFIG (REAL DATA) ================= */}
+                {/* ================= SCHOOL CONFIG ================= */}
                 <TabsContent value="school">
                     <Card>
                         <CardHeader>
@@ -266,11 +309,9 @@ const SettingsPage = () => {
                                         />
                                     </div>
                                     
-                                    {/* Preview Existing Signature */}
                                     {schoolConfig.currentSignatureUrl && (
                                         <div className="mt-4 p-4 border rounded-md bg-gray-50 w-fit">
                                             <p className="text-xs text-muted-foreground mb-2">Current Signature:</p>
-                                            {/* Note: Adjust the base URL if your API doesn't return absolute URLs for media */}
                                             <img 
                                                 src={`http://127.0.0.1:8000${schoolConfig.currentSignatureUrl}`} 
                                                 alt="Principal Signature" 
@@ -290,7 +331,7 @@ const SettingsPage = () => {
                     </Card>
                 </TabsContent>
 
-                {/* ================= ACADEMIC MANAGEMENT (MOCK) ================= */}
+                {/* ================= ACADEMIC MANAGEMENT ================= */}
                 <TabsContent value="academic">
                     <div className="max-w-3xl">
                         <Card>
@@ -330,6 +371,7 @@ const SettingsPage = () => {
                                                 <SelectValue placeholder="Select Term" />
                                             </SelectTrigger>
                                             <SelectContent>
+                                                {/* Ensure these values match what your Backend DB expects (IDs vs Values) */}
                                                 <SelectItem value="1">Term 1</SelectItem>
                                                 <SelectItem value="2">Term 2</SelectItem>
                                                 <SelectItem value="3">Term 3</SelectItem>
