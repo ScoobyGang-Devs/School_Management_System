@@ -1,12 +1,11 @@
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.contrib.auth.models import User
 from .models import Message
 from .serializers import MessageSerializer, UserListSerializerChat
-from admin_panel.models import TeacherDetail
-from django.contrib.auth.models import User
 from rest_framework.generics import ListAPIView
- 
+
 
 class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all().order_by('-timestamp')
@@ -15,39 +14,36 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def send_message(self, request):
-        sender_teacher = getattr(request.user, 'teacher_profile', None)
-        if not sender_teacher:
-            return Response({"error": "Only teachers can send messages"}, status=403)
+        sender = request.user
 
         subject = request.data.get('subject')
         content = request.data.get('content')
         category = request.data.get('category')
         recipients = request.data.get('recipients', [])
-        reply_to_id = request.data.get('reply_to_id', None)
+        reply_to_id = request.data.get('reply_to_id')
 
         if category not in ['personal', 'urgent', 'announcement']:
             return Response({"error": "Invalid category"}, status=400)
 
-        if category == 'announcement' or recipients == "ALL":
-            recipients = list(TeacherDetail.objects.all().values_list('teacherId', flat=True))
-        else:
-            recipients = list(TeacherDetail.objects.filter(teacherId__in=recipients).values_list('teacherId', flat=True))
+        if category == "announcement":
+            recipients = list(User.objects.all().values_list("id", flat=True))
 
-        if not recipients:
-            return Response({"error": "No valid teacher recipients"}, status=400)
+        valid_recips = list(
+            User.objects.filter(id__in=recipients).values_list("id", flat=True)
+        )
 
-        read_status = {str(tid): False for tid in recipients}
+        if not valid_recips:
+            return Response({"error": "No valid recipients"}, status=400)
+
+        read_status = {str(uid): False for uid in valid_recips}
 
         reply_to = None
         if reply_to_id:
-            try:
-                reply_to = Message.objects.get(id=reply_to_id)
-            except Message.DoesNotExist:
-                return Response({"error": "Reply-to message not found"}, status=404)
+            reply_to = Message.objects.filter(id=reply_to_id).first()
 
         message = Message.objects.create(
-            sender_teacher=sender_teacher,
-            recipients=recipients,
+            sender=sender,
+            recipients=valid_recips,
             subject=subject,
             content=content,
             category=category,
@@ -60,57 +56,48 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def inbox(self, request):
-        teacher = getattr(request.user, 'teacher_profile', None)
-        if not teacher:
-            return Response({"error": "Only teachers can access inbox"}, status=403)
-
-        teacher_id = teacher.teacherId
+        user_id = request.user.id
 
         messages = [
             msg for msg in Message.objects.all().order_by('-timestamp')
-            if teacher_id in msg.recipients
+            if user_id in msg.recipients
         ]
 
         serializer = MessageSerializer(messages, many=True, context={'request': request})
-        return Response(serializer.data)  
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def sent(self, request):
-        teacher = getattr(request.user, 'teacher_profile', None)
-        if not teacher:
-            return Response({"error": "Only teachers can access sent messages"}, status=403)
+        sender = request.user
+        messages = Message.objects.filter(sender=sender).order_by('-timestamp')
 
-        messages = Message.objects.filter(sender_teacher=teacher).order_by('-timestamp')
         serializer = MessageSerializer(messages, many=True, context={'request': request})
         data = serializer.data
+
         for msg in data:
-            msg.pop('is_read', None) 
+            msg.pop('is_read', None)
+
         return Response(data)
 
     @action(detail=True, methods=['patch'])
     def mark_as_read(self, request, pk=None):
-        
-        teacher = getattr(request.user, 'teacher_profile', None)
-        if not teacher:
-            return Response({"error": "Only teachers can mark messages as read"}, status=403)
+        user_id = str(request.user.id)
 
         try:
             message = self.get_object()
         except Message.DoesNotExist:
             return Response({"error": "Message not found"}, status=404)
 
-        teacher_id = str(teacher.teacherId)
-        if teacher_id not in message.read_status:
-            return Response({"error": "You are not a recipient of this message"}, status=403)
+        if user_id not in message.read_status:
+            return Response({"error": "You are not a recipient"}, status=403)
 
-        message.read_status[teacher_id] = True
+        message.read_status[user_id] = True
         message.save(update_fields=['read_status'])
 
         serializer = MessageSerializer(message, context={'request': request})
         return Response(serializer.data)
 
 
-# view for sending usernames and userids to frontend 
 class UserListViewChat(ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserListSerializerChat
