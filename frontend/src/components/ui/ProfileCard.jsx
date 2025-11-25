@@ -7,17 +7,22 @@ export default function ProfileCard({ onClose }) {
   const user = JSON.parse(localStorage.getItem("user"));
 
   // Create combined fields
-  const combinedName =
-    user.nameWithInitials
-      ? `${user.title} ${user.nameWithInitials}`.trim()
-      : null;
+  let combinedName = null;
+  if(!user.nameWithInitials){
+    if(user.fullName) combinedName = user.title? `${user.title}. ${user.fullName}`:user.fullName;
+    else combinedName = null;
+  }
+  else{
+    if(user.title) combinedName = `${user.title}. ${user.nameWithInitials}`;
+    else combinedName = user.nameWithInitials;
+  }
 
   let visibleFields = {
       combinedName: combinedName,
       nic_number: user.nic_number,
       address: user.address,
       dateOfBirth: user.dateOfBirth,
-      gender: user.gender,
+      gender: (user.gender && user.gender==="M"? 'Male':"Female"),
       mobileNumber: user.mobileNumber,
       email: user.email,
       enrollmentDate: user.enrollmentDate

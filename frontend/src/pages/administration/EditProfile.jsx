@@ -8,11 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function EditProfile() {
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const status = localStorage.getItem("status");
   const isAdmin = status === "admin";
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     title: storedUser.title || "",
@@ -53,15 +55,17 @@ export default function EditProfile() {
     
     try {
       const path = status === "teacher"? "teacher-profile":"admin-profile";
-      const result = await request.POST(
-        `http://localhost:8000/${path}/`, formData
+      const header = {"Authorization": `Bearer ${localStorage.getItem("access")}`};
+      const result = await request.PATCH(
+        `http://localhost:8000/${path}/`, formData, header
       );
 
       console.log("Server Response:", result);
       if (result){
-        localStorage.setItem("user", JSON.stringify(formData));
+        localStorage.setItem("user", JSON.stringify(result));
         console.log("Profile Updated:", formData);
         setShowSuccess(true);
+        setTimeout(() => {navigate("/");}, 1500); 
       }
     } catch (error) {
       console.error("Error:", error);
@@ -88,15 +92,14 @@ export default function EditProfile() {
         </CardHeader>
         <CardContent>
           {showSuccess && (
-            <Alert className="mb-6 bg-green-50 border-green-200">
-              <AlertCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-800">
-                Profile saved successfully!
+            <Alert className="mb-6 bg-green-50 border-green-300">
+              <AlertCircle className="h-4 w-4 text-green-400" />
+              <AlertDescription className="text-green-600 font-medium">
+                ✓ Profile saved successfully! Redirecting to dashboard...
               </AlertDescription>
             </Alert>
           )}
-
-          {errors.submit && (
+                    {errors.submit && (
             <Alert variant="destructive" className="mb-6">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{errors.submit}</AlertDescription>
@@ -186,10 +189,10 @@ export default function EditProfile() {
                     <SelectValue placeholder="Select title" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Ven.">Ven.</SelectItem>
-                    <SelectItem value="Mr.">Mr.</SelectItem>
-                    <SelectItem value="Mrs.">Mrs.</SelectItem>
-                    <SelectItem value="Ms.">Ms.</SelectItem>
+                    <SelectItem value="Ven">Ven.</SelectItem>
+                    <SelectItem value="Mr">Mr.</SelectItem>
+                    <SelectItem value="Mrs">Mrs.</SelectItem>
+                    <SelectItem value="Ms">Ms.</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
