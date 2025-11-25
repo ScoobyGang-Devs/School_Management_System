@@ -1,11 +1,11 @@
 from rest_framework import serializers
-from .models import Message
 from django.contrib.auth.models import User
+from .models import Message
+
 
 class MessageSerializer(serializers.ModelSerializer):
-    sender_id = serializers.IntegerField(source='sender_teacher.teacherId', read_only=True)
-    sender_name = serializers.CharField(source='sender_teacher.fullName', read_only=True)
-    recipients = serializers.ListField(child=serializers.IntegerField(), read_only=True)
+    sender_id = serializers.IntegerField(source='sender.id', read_only=True)
+    sender_name = serializers.SerializerMethodField()
     is_read = serializers.SerializerMethodField()
     reply_to_id = serializers.IntegerField(source='reply_to.id', read_only=True)
 
@@ -16,32 +16,34 @@ class MessageSerializer(serializers.ModelSerializer):
             'recipients', 'timestamp', 'category', 'is_read', 'reply_to_id'
         ]
 
+    def get_sender_name(self, obj):
+        user = obj.sender
+        if hasattr(user, "teacher_profile"):
+            return user.teacher_profile.nameWithInitials
+        elif hasattr(user, "admin_profile"):
+            return user.admin_profile.nameWithInitials
+        return user.username
+
     def get_is_read(self, obj):
-        request = self.context.get('request', None)
+        request = self.context.get('request')
         if not request:
             return False
 
-        teacher = getattr(request.user, 'teacher_profile', None)
-        if not teacher:
-            return False
-
-        tid = str(teacher.teacherId)
-        return obj.read_status.get(tid, False)
+        user_id = str(request.user.id)
+        return obj.read_status.get(user_id, False)
 
 
-# serializer for sending usernames and userIds to frontend for messaging
 class UserListSerializerChat(serializers.ModelSerializer):
 
     nameWithInitials = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['nameWithInitials', 'id', 'username']
+        fields = ['id', 'username', 'nameWithInitials']
 
     def get_nameWithInitials(self, obj):
         if hasattr(obj, "teacher_profile"):
             return obj.teacher_profile.nameWithInitials
-        elif hasattr(obj, "admin_profile"):
+        if hasattr(obj, "admin_profile"):
             return obj.admin_profile.nameWithInitials
-        else:
-            return obj.get_username()
+        return obj.username
