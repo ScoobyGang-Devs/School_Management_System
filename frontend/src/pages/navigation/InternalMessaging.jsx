@@ -45,10 +45,10 @@ export default function InternalMessaging() {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [activeTab, setActiveTab] = useState("inbox");
   const [newMessage, setNewMessage] = useState({
-    recipients: [],
     subject: "",
     content: "",
   });
+  const [recipientsList,setRecipientList] = useState([]);
   const [messageCategory, setMessageCategory] = useState("personal");
   const [actionType, setActionType] = useState(null); // NEW: 'reply' or 'forward'
   const [sentMessages, setSentMessages] = useState([
@@ -66,7 +66,7 @@ export default function InternalMessaging() {
     }
   ]);
 
-  const [recipientList, setRecipientList] = useState([
+  const [recipientNameList, setRecipientNameList] = useState([
     {id:"1",name:"John",uName:"John"},
     {id:"2",name:"Sam",uName:"Sam"},
     {id:"3",name:null,uName:"Carter"}
@@ -102,7 +102,7 @@ export default function InternalMessaging() {
             name: data.nameWithInitials,
             uName: data.username
           }));
-          setRecipientList(users);
+          setRecipientNameList(users);
         }
       } catch (error) {
         console.error("Failed to load users", error);
@@ -126,7 +126,7 @@ export default function InternalMessaging() {
     if (messageCategory === "announcement") {
       recipients = "ALL";
     } else {
-      recipients = newMessage.recieverName.join(", ");
+      recipients = newMessage.recipients;
     }
 
     const body = {
@@ -395,7 +395,7 @@ export default function InternalMessaging() {
                   <h2 className="font-medium">Select Recipients</h2>
                 </div>
 
-                {recipientList.map((r) => (
+                {recipientNameList.map((r) => (
                   <div
                     key={r.id}
                     className="m-2 px-4 py-2 rounded-full bg-muted cursor-pointer hover:bg-accent inline-block"
