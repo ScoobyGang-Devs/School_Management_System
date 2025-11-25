@@ -78,7 +78,7 @@ const SignupForm = () => {
           alert("❌ Signup failed. Try again.");
         }
       } catch (error) {
-        alert("⚠️ Server error. Please try again later.");
+        alert("⚠️ Server Error or Unauthorized NIC number!");
       }
     }
   };
