@@ -1,8 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from admin_panel.models import StudentDetail, TeacherDetail, Classroom, AdminProfile
-from term_test.models import TermTest
+from admin_panel.models import StudentDetail, TeacherDetail, Classroom, AdminProfile, ClassSubjectAssignment
+from term_test.models import TermTest, SubjectwiseMark
 from attendence.models import studentAttendence
 from datetime import timedelta
 from django.utils.timezone import now
@@ -72,22 +72,59 @@ class TeacherDashboardView(APIView):
     def get(self,request):
 
         user = request.user
-        teacher = TeacherDetail.objects.filter(user = user).first()
+        teacher = TeacherDetail.objects.filter(owner = user).first()
 
         if not teacher:
             return Response({"error": "Teacher profile not found"}, status=404)
 
         # 1. Total number of teaching classes
-        toatal_teaching_classes = teacher.teachingClasses.count()
+        toatalTeachingClasses = teacher.teachingClasses.count()
 
         # 2. assigned_class
-        assigned_class = teacher.assignedClass()
+        assignedClass = teacher.assignedClass
 
         # 3. Teacher's name
-        teacher_name = f"{teacher.TITLE_CHOICES} . {teacher.nameWithInitials}"
+        teacherName = f"{teacher.title} . {teacher.nameWithInitials}"
 
-        # 4. Student Count
-        students_count = StudentDetail.objects.filter(enrolledClaas = assigned_class).count()
+        teachingClasses = teacher.teachingClasses.all()
+
+        classData = []
+
+        for clz in teachingClasses:
+
+            studentCount = StudentDetail.objects.filter(enrolledClass = clz).count()
+
+            subjectAssign = ClassSubjectAssignment.objects.filter(teacher = teacher ,classroom = clz).first()
+
+            if not subjectAssign:
+                classData.append({
+                    "Classroom": clz.className,
+                    "Subject": None,
+                    "studentCount": studentCount,
+                    "averageMark": 0
+                })
+                continue
+
+            marks_qs = SubjectwiseMark.objects.filter(
+            studentID__enrolledClass=clz,
+            subject=subjectAssign.subject,
+            teacherID=teacher)
+
+            average_marks = marks_qs.aggregate(avg_marks=Avg('marksObtained'))['avg_marks']
+
+            classData.append({
+                "Classroom":clz,
+                "Subject": subjectAssign.subject,
+                "studentCount":studentCount,
+                "avg_marks":average_marks if average_marks else 0
+            })
+
+        return Response({
+            "teacherName":teacherName,
+            "totalClasses":toatalTeachingClasses,
+            "teacher'sClassData":classData
+        })
+        
 
         
 

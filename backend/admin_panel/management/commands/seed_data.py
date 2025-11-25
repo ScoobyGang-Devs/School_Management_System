@@ -29,7 +29,9 @@ except ImportError:
 try:
     from chat.models import Message
 except ImportError:
-    class Message: pass
+    class Message:
+        # Placeholder needs CHOICES defined for the seeder
+        CATEGORY_CHOICES = [('personal', 'Personal'), ('official', 'Official'), ('school', 'School News')]
 
 # --- UPDATED IMPORT HERE ---
 try:
@@ -41,7 +43,9 @@ except ImportError:
 try:
     from term_test.models import TermName, Subject, TermTest, SubjectwiseMark
 except ImportError:
-    class TermName: pass
+    class TermName: 
+        # Placeholder needs CHOICES defined for the seeder
+        TERM_CHOICES = [('1', 'Term 1'), ('2', 'Term 2'), ('3', 'Term 3')]
     class Subject: pass
     class TermTest: pass
     class SubjectwiseMark: pass
@@ -77,7 +81,7 @@ class Command(BaseCommand):
         # --- 1. Cleanup Old Data ---
         self.stdout.write(self.style.WARNING("Clearing existing data..."))
         
-        # Transactional
+        # Cleanup should only run if the model has 'objects' manager
         if hasattr(SubjectwiseMark, 'objects'): SubjectwiseMark.objects.all().delete()
         if hasattr(TermTest, 'objects'): TermTest.objects.all().delete()
         if hasattr(teacherAttendence, 'objects'): teacherAttendence.objects.all().delete()
@@ -112,13 +116,14 @@ class Command(BaseCommand):
         classes = self._seed_classrooms()
         guardians = self._seed_guardians()
         
+        # SIMPLE CHECK: If model manager exists, try to seed, otherwise pass []
         terms = self._seed_terms() if hasattr(TermName, 'objects') else []
         subjects = self._seed_subjects() if hasattr(Subject, 'objects') else []
         
         if hasattr(SchoolDetail, 'objects'): self._seed_school_details()
 
         # --- NEW: Seed Academic Cycle Config ---
-        # Only runs if we successfully created terms
+        # Only runs if AcademicConfig exists AND terms were created
         if hasattr(AcademicCycleConfig, 'objects') and terms:
             self._seed_academic_config(terms)
 
@@ -136,13 +141,20 @@ class Command(BaseCommand):
             self._seed_class_subject_assignments(teachers, classes, subjects)
 
         # --- 5. Seed Transactional Data ---
-        self._seed_attendance(teachers, students, classes) 
-        self._seed_messages(teachers, students)
+        # Check if Attendance models are present before running
+        if hasattr(teacherAttendence, 'objects'):
+             self._seed_attendance(teachers, students, classes) 
         
-        if terms: 
+        # Check if Message model is present before running (to seed replies)
+        if hasattr(Message, 'objects'):
+            self._seed_messages(teachers, students)
+        
+        # Check if Terms and TermTest models are present before running
+        if terms and hasattr(TermTest, 'objects'): 
             self._seed_term_tests(students, terms)
 
-        if terms and subjects: 
+        # Check if Terms, Subjects, and SubjectwiseMark models are present before running
+        if terms and subjects and hasattr(SubjectwiseMark, 'objects'): 
             self._seed_subjectwise_marks(students, teachers, terms, subjects)
 
         self.stdout.write(self.style.SUCCESS('--- Database Seeding Complete! ---'))
@@ -232,7 +244,8 @@ class Command(BaseCommand):
                 nameWithInitials=f"{first_name} {last_name[0]}.",
                 fullName=f"{first_name} {last_name}",
                 dateOfBirth=FAKE.date_of_birth(minimum_age=25, maximum_age=55),
-                gender=random.choice([c[0] for c in TeacherDetail.GENDER.items()]),
+                # Fixed to use TeacherDetail.GENDER correctly
+                gender=random.choice([c[0] for c in TeacherDetail.GENDER]), 
                 email=user.email,
                 address=FAKE.address(),
                 enrollmentDate=FAKE.date_this_decade(),
@@ -323,7 +336,6 @@ class Command(BaseCommand):
         # Pick current year
         year = timezone.now().year
         
-        # Pick the 1st available term, or random
         selected_term = terms[0] if terms else None
         
         if selected_term:
@@ -335,6 +347,7 @@ class Command(BaseCommand):
     def _seed_terms(self):
         if not hasattr(TermName, 'objects'): return []
         terms = []
+        # Access TermName.TERM_CHOICES from the actual model or placeholder
         for choice in [c[0] for c in TermName.TERM_CHOICES]:
             t = TermName.objects.create(termName=choice)
             terms.append(t)
@@ -343,7 +356,7 @@ class Command(BaseCommand):
     def _seed_subjects(self):
         if not hasattr(Subject, 'objects'): return []
         subjects = []
-        names = ['Maths', 'Science', 'English', 'History', 'ICT', 'Religion']
+        names = ['Maths', 'Science', 'English', 'History', 'ICT', 'Religion', 'Sinhala', 'Tamil'] 
         for name in names:
             s = Subject.objects.create(subjectName=name)
             subjects.append(s)
@@ -371,7 +384,7 @@ class Command(BaseCommand):
                     pass 
 
     def _seed_attendance(self, teachers, students, classes):
-        if not hasattr(teacherAttendence, 'objects'): return
+        # Already checked in handle()
         self.stdout.write("Seeding Attendance...")
         
         today = timezone.now().date()
@@ -422,28 +435,33 @@ class Command(BaseCommand):
                         pass
     
     def _seed_messages(self, teachers, students):
-        if not hasattr(Message, 'objects'): return
+        # Already checked in handle()
         self.stdout.write("Seeding Messages...")
+        
+        all_users = list(User.objects.filter(is_superuser=False))
         
         teacher_emails = [t.email for t in teachers if t.email]
         student_emails = [s.email for s in students if s.email]
         all_emails = teacher_emails + student_emails
         
         categories = [c[0] for c in Message.CATEGORY_CHOICES]
-
+        
+        # 1. Seed Initial Messages
+        initial_messages = []
         for _ in range(30):
-            sender = random.choice(teachers)
+            sender_detail = random.choice(teachers)
             
             num_recipients = random.randint(1, 4)
             recipients_list = random.sample(all_emails, min(num_recipients, len(all_emails)))
             
             read_status = {}
             for email in recipients_list:
-                if random.choice([True, False]):
+                if random.random() < 0.3:
                     read_status[email] = timezone.now().isoformat()
 
-            Message.objects.create(
-                sender_teacher=sender,
+            msg = Message.objects.create(
+                # Use the User object linked to TeacherDetail (sender_detail.owner)
+                sender=sender_detail.owner, 
                 recipients=recipients_list, 
                 subject=FAKE.sentence(nb_words=4),
                 content=FAKE.paragraph(nb_sentences=2),
@@ -451,17 +469,52 @@ class Command(BaseCommand):
                 urgent=FAKE.boolean(chance_of_getting_true=15),
                 read_status=read_status
             )
+            initial_messages.append(msg)
+
+        # 2. Seed Reply Messages (handles the reply_to self-referencing FK)
+        for _ in range(5):
+            if not initial_messages: break
+            
+            original_message = random.choice(initial_messages)
+            
+            potential_repliers = [
+                user for user in all_users 
+                if user.email in original_message.recipients
+            ]
+            
+            if not potential_repliers: continue
+            
+            reply_sender = random.choice(potential_repliers)
+            
+            reply_recipients = [original_message.sender.email]
+            
+            Message.objects.create(
+                sender=reply_sender,
+                recipients=reply_recipients, 
+                subject=f"RE: {original_message.subject[:20]}...",
+                content=FAKE.sentence(nb_words=5),
+                category='personal',
+                urgent=False,
+                read_status={},
+                reply_to=original_message # Set the reply_to foreign key
+            )
+        
+        self.stdout.write(f"Seeded {len(initial_messages) + 5} messages, including replies.")
 
     def _seed_term_tests(self, students, terms):
-        if not hasattr(TermTest, 'objects'): return []
+        # Already checked in handle()
         self.stdout.write("Seeding Term Tests...")
         termtests = []
+        
+        max_rank = len(students)
+        
         for student in students:
             for term in terms:
                 total = random.randint(200, 800)
                 tt = TermTest.objects.create(
                     student=student,
                     term=term,
+                    rank=random.randint(1, max_rank), # ADDED RANK FOR TERMTEST MODEL
                     total=total,
                     average=round(total / NUM_SUBJECTS, 2),
                 )
@@ -469,7 +522,7 @@ class Command(BaseCommand):
         return termtests
 
     def _seed_subjectwise_marks(self, students, teachers, terms, subjects):
-        if not hasattr(SubjectwiseMark, 'objects'): return
+        # Already checked in handle()
         self.stdout.write("Seeding Marks...")
 
         for student in students:
