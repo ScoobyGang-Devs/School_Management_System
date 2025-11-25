@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import request from "@/reqMethods";
 
 export default function InternalMessaging() {
+  const user = JSON.parse(localStorage.getItem("user"));
+
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -43,7 +45,7 @@ export default function InternalMessaging() {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [activeTab, setActiveTab] = useState("inbox");
   const [newMessage, setNewMessage] = useState({
-    recieverName: [],
+    recipients: [],
     subject: "",
     content: "",
   });
@@ -73,8 +75,7 @@ export default function InternalMessaging() {
   useEffect(() => {
     const fetchInbox = async () => {
       try {
-        const allData = JSON.parse(localStorage.getItem("user"));
-        const userId = allData.userId;
+        const userId = user.userId;
         const response = await request.GET(`http://127.0.0.1:8000/chat/messages/inbox`,userId);
 
         if (response) {
@@ -92,10 +93,11 @@ export default function InternalMessaging() {
   useEffect(() => {
     const allUsers = async () => {
       try {
-        const response = await request.GET(`http://127.0.0.1:8000/users`);
+        const response = await request.GET(`http://127.0.0.1:8000/chat`,"userlist-chat");
 
         if (response) {
-          const users = response.map(data => ({
+          const users = response.filter(data => data.id != user.userId)
+          .map(data => ({
             id: data.id,
             name: data.nameWithInitials,
             uName: data.username
@@ -128,13 +130,12 @@ export default function InternalMessaging() {
     }
 
     const body = {
-      sender: "You",
-      senderEmail: "you@school.edu",
+      sender_id: user.userId,
+      sender_name: user.nameWithInitials? user.nameWithInitials:user.username,
       subject: newMessage.subject,
       content: newMessage.content,
-      recieverName: recipients,
+      recipients: recipients,
       timestamp: new Date().toLocaleString(),
-      isRead: true,
       category: messageCategory,
     };
 
@@ -142,10 +143,11 @@ export default function InternalMessaging() {
       const response = await request.POST("http://127.0.0.1:8000/chat/", body);
 
       if (response) {
+        const responseData = JSON.stringify(response);
         alert("✅ Mail sent");
 
         const savedMessage = {
-          id: response.id,
+          id: responseData.id,
           ...body,
         };
 
@@ -153,7 +155,7 @@ export default function InternalMessaging() {
         setSentMessages((prev) => [savedMessage, ...prev]);
 
         // Reset UI
-        setNewMessage({ recieverName: [], subject: "", content: "" });
+        setNewMessage({ recipients: [], subject: "", content: "" });
         setActiveTab("inbox");
         setMessageCategory("personal");
         setActionType(null);
@@ -169,11 +171,12 @@ export default function InternalMessaging() {
 
   const loadSentMessages = async () => {
     try {
-      const userID = localStorage.getItem("UserID");
-      const response = await request.GET(`http://127.0.0.1:8000/chat/sent/${userID}`);
+      const userId = user.userId;
+      const response = await request.GET(`http://127.0.0.1:8000/chat/messages/sent`,userId);
 
       if (response) {
-        setSentMessages(response);
+        const sentbox = JSON.stringify(response);
+        setSentMessages(sentbox);
       } else {
         console.warn("No sent messages received");
       }
@@ -397,11 +400,12 @@ export default function InternalMessaging() {
                     key={r.id}
                     className="m-2 px-4 py-2 rounded-full bg-muted cursor-pointer hover:bg-accent inline-block"
                     onClick={() => {
+                      const selectedName = r.name? r.name:r.uName;
                       setNewMessage((prev) => ({
                         ...prev,
-                        recieverName: prev.recieverName.includes(r.name)
+                        recieverName: prev.recieverName.includes(selectedName)
                           ? prev.recieverName
-                          : [...prev.recieverName, r.name],
+                          : [...prev.recieverName, selectedName],
                       }));
                     }}
                   >
