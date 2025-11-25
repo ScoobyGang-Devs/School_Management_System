@@ -2,18 +2,16 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Message
 
-
 class MessageSerializer(serializers.ModelSerializer):
     sender_id = serializers.IntegerField(source='sender.id', read_only=True)
     sender_name = serializers.SerializerMethodField()
     is_read = serializers.SerializerMethodField()
-    reply_to_id = serializers.IntegerField(source='reply_to.id', read_only=True)
 
     class Meta:
         model = Message
         fields = [
             'id', 'sender_id', 'sender_name', 'subject', 'content',
-            'recipients', 'timestamp', 'category', 'is_read', 'reply_to_id'
+            'recipients', 'timestamp', 'category', 'is_read'
         ]
 
     def get_sender_name(self, obj):
@@ -28,13 +26,17 @@ class MessageSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if not request:
             return False
-
         user_id = str(request.user.id)
         return obj.read_status.get(user_id, False)
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if isinstance(instance.recipients, list) and instance.recipients == ["ALL"]:
+            rep['recipients'] = "ALL"
+        return rep
+
 
 class UserListSerializerChat(serializers.ModelSerializer):
-
     nameWithInitials = serializers.SerializerMethodField()
 
     class Meta:
