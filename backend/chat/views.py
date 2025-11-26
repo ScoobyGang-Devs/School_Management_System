@@ -59,10 +59,21 @@ class MessageViewSet(viewsets.ModelViewSet):
             read_status=read_status
         )
 
-        return Response({"message_id": message.id}, status=201)
+        return Response({
+            "message_id": message.id,
+            "sender_id": sender.id,
+            "sender_name": (
+                sender.teacher_profile.nameWithInitials
+                if hasattr(sender, "teacher_profile") else
+                sender.admin_profile.nameWithInitials
+                if hasattr(sender, "admin_profile") else
+                sender.username
+            ),
+            "timestamp": MessageSerializer(message, context={'request': request}).data['timestamp']
+        }, status=201)
 
 
-    
+
     @action(detail=False, methods=['get'])
     def inbox(self, request):
         user_id = request.user.id
@@ -91,21 +102,31 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Response(data)
 
     
-    @action(detail=True, methods=['patch'])
-    def mark_as_read(self, request, pk=None):
-        user_id = str(request.user.id)
-        message = self.get_object()
+    @action(detail=False, methods=['patch'])
+    def mark_as_read(self, request):
+    
+        message_id = request.data.get('message_id')
+        recipient_id = str(request.data.get('recipient_id'))
 
-        if user_id not in message.read_status:
+        if not message_id or not recipient_id:
+            return Response({"error": "message_id and recipient_id are required"}, status=400)
+
+        try:
+            message = Message.objects.get(id=message_id)
+        except Message.DoesNotExist:
+            return Response({"error": "Message not found"}, status=404)
+
+        if recipient_id not in message.read_status:
             return Response({"error": "You are not a recipient"}, status=403)
 
-        message.read_status[user_id] = True
+        message.read_status[recipient_id] = True
         message.save(update_fields=['read_status'])
 
         return Response({
             "message_id": message.id,
             "read_status": message.read_status
         })
+
 
 class UserListViewChat(ListAPIView):
     queryset = User.objects.all()

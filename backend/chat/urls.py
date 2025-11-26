@@ -12,7 +12,8 @@ urlpatterns = [
     path('messages/send/', MessageViewSet.as_view({'post': 'send_message'}), name='messages-send'),
 
 
-    path('messages/<int:pk>/mark-as-read/', MessageViewSet.as_view({'patch': 'mark_as_read'}), name='messages-mark-read'),
+    path('messages/mark-as-read/', MessageViewSet.as_view({'patch': 'mark_as_read'}), name='messages-mark-read'),
+    
 
     path('userlist-chat/', UserListViewChat.as_view(), name='user-list-view-chat'),
 ]
