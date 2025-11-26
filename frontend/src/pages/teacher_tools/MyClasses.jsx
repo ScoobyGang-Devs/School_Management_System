@@ -11,9 +11,10 @@ const MyClasses = () => {
   return (
     <div className="flex gap-6 flex-wrap">
       {classes.map((clz,index) => {
-        return <MyClassCard Grade={clz.Grade} Class={clz.Class}/>
+        return <MyClassCard Grade={clz.Grade} Class={clz.Class} key={index}/>
       })} 
     </div>
+    
         
     
   )

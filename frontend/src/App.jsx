@@ -44,6 +44,7 @@ import TeacherAttendancePage from './pages/Attendance/TeacherAttendancePage.jsx'
 import StudentProfilePage from './pages/studentDatabase/StudentCard'
 import AddStudentPage from './pages/administration/AddStudentPage'
 import TeacherProfilePage from './pages/TeacherDatabase/TeacherProfileCard'
+import MyclassAttendance from './pages/teacher_tools/MyClassAttendancePage';
 
 
 function App() {
@@ -150,13 +151,20 @@ function App() {
 
                     </Route>
                   </Route>
+
                   <Route path="/admin/users" element={<UserManagement />} />
                   <Route path="/admin/teachers" element={<TeacherDatabase />} />
 
                   
 
-                  {/* TEACHER TOOLS */}
-                  <Route path="/teacher/classes" element={<MyClasses />} />
+                  
+
+                  <Route path="/teacher/classes">
+                    <Route index element={<MyClasses />} />
+                    <Route path="attendance/:grade/:classId" element={<MyclassAttendance />} />
+                  </Route>
+
+
                   <Route path="/teacher/attendance" element={<TakeAttendance />} />
                   <Route path="/teacher/grades" element={<GradeAssignments />} />
                   <Route path="/student-profile/:id" element={<StudentProfilePage />} />

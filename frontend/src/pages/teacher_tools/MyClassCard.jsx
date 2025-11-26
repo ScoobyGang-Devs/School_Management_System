@@ -20,14 +20,14 @@ function MyClassCard({Grade, Class}) {
             <LayoutList className="h-6 w-6 text-muted-foreground" /> 
         </CardHeader>
         <CardFooter>
-            <Link  className="w-full">
+            <Link to={`/teacher/classes/attendance/${Grade}/${Class}`} className="w-full">
                 <Button className="w-full" variant="secondary">
                     View Attendance
                  </Button>
             </Link>
         </CardFooter>
         <CardFooter>
-            <Link  className="w-full">
+            <Link className="w-full">
                 <Button className="w-full" variant="secondary">
                     View Results
                 </Button>
