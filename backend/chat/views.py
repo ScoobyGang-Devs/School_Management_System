@@ -61,15 +61,8 @@ class MessageViewSet(viewsets.ModelViewSet):
 
         return Response({
             "message_id": message.id,
-            "sender_id": sender.id,
-            "sender_name": (
-                sender.teacher_profile.nameWithInitials
-                if hasattr(sender, "teacher_profile") else
-                sender.admin_profile.nameWithInitials
-                if hasattr(sender, "admin_profile") else
-                sender.username
-            )
         }, status=201)
+
 
     
     @action(detail=False, methods=['get'])
