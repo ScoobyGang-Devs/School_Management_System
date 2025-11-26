@@ -59,9 +59,7 @@ class MessageViewSet(viewsets.ModelViewSet):
             read_status=read_status
         )
 
-        return Response({
-            "message_id": message.id,
-        }, status=201)
+        return Response({"message_id": message.id}, status=201)
 
 
     
