@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useParams } from 'react-router-dom'; // 1. Import this to read URL
+import { useParams } from 'react-router-dom'; 
 import StudentAttendanceTable from '../Attendance/StudentAttendanceTable.jsx';
 import { Button } from '@/components/ui/button';
-import AttendanceDatePicker from '../Attendance/AttedanceDatePicker.jsx'; // Check spelling!
+import AttendanceDatePicker from '../Attendance/AttedanceDatePicker.jsx'; 
 import { Input } from '@/components/ui/input';
 import api from "../../api.js";
 
@@ -39,16 +39,15 @@ const MyclassAttendance = () => {
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                // Example API call - ADJUST URL TO MATCH YOUR BACKEND
-                // We need both the list of students (roster) and today's attendance
+                
                 const rosterRes = await api.get(`/api/students/class/${grade}/${classId}/`);
                 const attendanceRes = await api.get(`/api/attendance/${grade}/${classId}?date=${dateString}`);
 
                 setRoster(rosterRes.data);
-                setAggregateAttendance(attendanceRes.data); // Might be null or empty if not taken yet
+                setAggregateAttendance(attendanceRes.data); 
             } catch (error) {
                 console.error("Error fetching data:", error);
-                // Optional: Handle error (e.g., setRoster([]) if 404)
+                
             } finally {
                 setIsLoading(false);
             }
@@ -57,21 +56,21 @@ const MyclassAttendance = () => {
         if (grade && classId && dateString) {
             fetchData();
         }
-    }, [grade, classId, dateString]); // Re-run if date or class changes
+    }, [grade, classId, dateString]); 
 
 
     const attendanceData = useMemo(() => { 
-        if (!roster || roster.length === 0) return []; // Safety check
+        if (!roster || roster.length === 0) return []; 
 
         // Step 1: Initialize the data based on the full class roster
         const mergedData = roster.map(student => {
-            const studentIndex = student.student_id || student.id; // Ensure we get the ID
+            const studentIndex = student.student_id || student.id; 
             
             return {
                 ...student, 
                 status: 'Not Marked', 
                 indexNumber: studentIndex, 
-                date: dateString, // NOW THIS WORKS because dateString is defined
+                date: dateString, 
             };
         });
 
@@ -101,7 +100,7 @@ const MyclassAttendance = () => {
     }, [roster, aggregateAttendance, dateString, search]); 
 
     return (
-        <div className="p-6"> {/* Added padding so it's not stuck to edge */}
+        <div className="p-6"> 
             <h1 className="text-2xl font-bold mb-4">Class {grade} - {classId} Attendance</h1>
             
             <div className="flex items-center gap-4 mb-4">
