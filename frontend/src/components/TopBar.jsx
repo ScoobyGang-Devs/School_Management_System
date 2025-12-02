@@ -24,7 +24,10 @@ export default function TopBar() {
     "/teacher/grades": "Grade Assignments",
   }
 
-  const currentPage = pageTitles[location.pathname] || "Dashboard"
+  const currentPage = pageTitles[location.pathname] || "Dashboard";
+  const user = JSON.parse(localStorage.getItem("user"));
+  const firstLetter = user?.nameWithInitials?.charAt(0)?.toUpperCase() || user.username?.charAt(0)?.toUpperCase() || "U";
+
 
 return (
   <div
@@ -62,12 +65,12 @@ return (
         title="Profile"
         onClick={() => console.log('Open profile panel')}
       >
-        <img
-          src="/images/profile.jpg"
-          alt="Profile"
-          className="w-8 h-8 rounded-full object-cover"
+        <div
           onClick={() => setShowProfile(true)}
-        />
+          className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold cursor-pointer"
+        >
+          {firstLetter}
+        </div>
       </button>
     </div>
     

@@ -8,47 +8,18 @@ import request from "@/reqMethods";
 
 export default function InternalMessaging() {
   const user = JSON.parse(localStorage.getItem("user"));
+  const header = {"Authorization": `Bearer ${localStorage.getItem("access")}`};
 
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      senderID: "John Smith",
-      senderName: "john.smith@school.edu",
-      subject: "Meeting Agenda for Friday",
-      content: "Hi team, please review the meeting agenda attached for our Friday session.",
-      timestamp: "2024-01-15 10:30 AM",
-      isRead: true,
-      category: "personal",
-    },
-    {
-      id: 2,
-      senderID: "Sarah Johnson",
-      senderName: "sarah.j@school.edu",
-      subject: "Project Deadline Extension",
-      content: "The project deadline has been extended by one week.",
-      timestamp: "2024-01-15 09:15 AM",
-      isRead: false,
-      category: "urgent",
-    },
-    {
-      id: 3,
-      senderID: "IT Department",
-      senderName: "it@school.edu",
-      subject: "System Maintenance Notice",
-      content: "There will be scheduled maintenance this weekend.",
-      timestamp: "2024-01-14 03:45 PM",
-      isRead: true,
-      category: "announcement",
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
 
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [activeTab, setActiveTab] = useState("inbox");
   const [newMessage, setNewMessage] = useState({
+    recipientId:[],
+    recieverName:[],
     subject: "",
     content: "",
   });
-  const [recipientsList,setRecipientList] = useState([]);
   const [messageCategory, setMessageCategory] = useState("personal");
   const [actionType, setActionType] = useState(null); // NEW: 'reply' or 'forward'
   const [sentMessages, setSentMessages] = useState([
@@ -61,34 +32,13 @@ export default function InternalMessaging() {
       recieverID: "team",
       recieverName: "team@school.edu",
       timestamp: "2024-01-16 09:00 AM",
-      isRead: true,
       category: "personal",
     }
   ]);
 
-  const [recipientNameList, setRecipientNameList] = useState([
-    {id:"1",name:"John",uName:"John"},
-    {id:"2",name:"Sam",uName:"Sam"},
-    {id:"3",name:null,uName:"Carter"}
-  ]);
+  const [recipientList, setRecipientList] = useState([]);
+  const [loadingRecipients, setLoadingRecipients] = useState(true);
 
-  useEffect(() => {
-    const fetchInbox = async () => {
-      try {
-        const userId = user.userId;
-        const response = await request.GET(`http://127.0.0.1:8000/chat/messages/inbox`,userId);
-
-        if (response) {
-          setMessages(response);
-        }
-      } catch (error) {
-        console.error("Failed to load inbox", error);
-        alert("Failed to load!");
-      }
-    };
-
-    fetchInbox();
-  }, []);
 
   useEffect(() => {
     const allUsers = async () => {
@@ -102,60 +52,103 @@ export default function InternalMessaging() {
             name: data.nameWithInitials,
             uName: data.username
           }));
-          setRecipientNameList(users);
+          setRecipientList(users);
         }
       } catch (error) {
         console.error("Failed to load users", error);
+      }
+      finally{
+        setLoadingRecipients(false);
       }
     };
     allUsers();
   }, []);
 
-  const handleSelectMessage = (message) => {
+  useEffect(() => {
+    if (loadingRecipients) return;
+    const fetchInbox = async () => {
+      try {
+        const userId = user.userId;
+        const response = await request.GET(`http://127.0.0.1:8000/chat/messages`,"inbox",header);
+
+        if (response) {
+          const mappedMessages = response.map(msg => {
+            let senderName = msg.sender_name;
+            if (!senderName) {
+              const sender = recipientList.find(r => r.id == msg.sender_id);
+              senderName = sender?.uName || "Unknown";
+            }
+
+            return {
+              id: msg.id,
+              senderID: msg.sender_id,
+              senderName,
+              subject: msg.subject,
+              content: msg.content,
+              timestamp: msg.timestamp,
+              isRead: msg.is_read,
+              category: msg.category,
+            };
+          });
+          setMessages(mappedMessages);
+        }
+      } catch (error) {
+        console.error("Failed to load inbox", error);
+        alert("Failed to load!");
+      }
+    };
+
+    fetchInbox();
+  }, [loadingRecipients, recipientList]);
+
+  const handleSelectMessage = async (message) => {
     setSelectedMessage(message);
     setMessages((prev) =>
       prev.map((m) => (m.id === message.id ? { ...m, isRead: true } : m))
     );
+    const response = await request.PATCH()
   };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
+
+    if (messageCategory !== "announcement" && newMessage.recipientId.length === 0) {
+      alert("Please select at least one recipient");
+      return;
+    }
 
     // Handle recipients
     let recipients;
     if (messageCategory === "announcement") {
       recipients = "ALL";
     } else {
-      recipients = newMessage.recipients;
+      recipients = newMessage.recipientId;
     }
 
     const body = {
-      sender_id: user.userId,
-      sender_name: user.nameWithInitials? user.nameWithInitials:user.username,
       subject: newMessage.subject,
       content: newMessage.content,
       recipients: recipients,
-      timestamp: new Date().toLocaleString(),
       category: messageCategory,
     };
 
     try {
-      const response = await request.POST("http://127.0.0.1:8000/chat/", body);
+      const response = await request.POST("http://127.0.0.1:8000/chat/messages/send/", body, header);
 
       if (response) {
         const responseData = JSON.stringify(response);
         alert("✅ Mail sent");
 
         const savedMessage = {
-          id: responseData.id,
+          id: responseData.message_id,
+          senderID: responseData.sender_id,
+          senderName: responseData.sender_name,
+          timestamp: responseData.timestamp,
           ...body,
         };
 
-        // Update sent messages WITH backend ID
         setSentMessages((prev) => [savedMessage, ...prev]);
-
-        // Reset UI
-        setNewMessage({ recipients: [], subject: "", content: "" });
+        setNewMessage({recipientId: [] , recieverName:[],subject: "", content: "" });
         setActiveTab("inbox");
         setMessageCategory("personal");
         setActionType(null);
@@ -193,7 +186,8 @@ export default function InternalMessaging() {
     
     // Pre-fill the form for reply
     setNewMessage({
-      recieverName: [message.senderEmail],
+      recipientId: [message.sender_id],
+      recieverName: [message.sender_name],
       subject: `Re: ${message.subject}`,
       content: ""
     });
@@ -212,6 +206,7 @@ export default function InternalMessaging() {
     if (isMyOwnMessage) {
       // For your own messages - send as new (no forwarding headers)
       setNewMessage({
+        recipientId: [],
         recieverName: [], // Empty for new recipients
         subject: message.subject, // Keep original subject (no "Fwd:")
         content: message.content // Keep original content (no forwarding headers)
@@ -219,6 +214,7 @@ export default function InternalMessaging() {
     } else {
       // For others' messages - use forwarding format
       setNewMessage({
+        recipientId: [],
         recieverName: [], // Empty for forward
         subject: `Fwd: ${message.subject}`,
         content: `\n\n--- Forwarded Message ---\nFrom: ${message.sender}\nDate: ${message.timestamp}\nSubject: ${message.subject}\n\n${message.content}`
@@ -230,7 +226,7 @@ export default function InternalMessaging() {
   // Handle cancel compose
   const handleCancelCompose = () => {
     setActiveTab("inbox");
-    setNewMessage({ recieverName: [], subject: "", content: "" });
+    setNewMessage({ recipientId: [], recieverName: [], subject: "", content: "" });
     setMessageCategory("personal");
     setActionType(null);
   };
@@ -286,7 +282,7 @@ export default function InternalMessaging() {
               onClick={() => {
                 setActiveTab("compose");
                 setActionType(null);
-                setNewMessage({ recieverName: [], subject: "", content: "" });
+                setNewMessage({ recipientId: [] , recieverName: [], subject: "", content: "" });
               }}
             >
               ✏️ Compose
@@ -311,18 +307,20 @@ export default function InternalMessaging() {
                       key={msg.id}
                       onClick={() => handleSelectMessage(msg)}
                       className={`p-4 border-b cursor-pointer hover:bg-accent flex flex-col gap-1
-                        ${!msg.isRead ? "bg-muted/40 font-medium" : "bg-card"}
+                        ${!msg.isRead
+                          ? "bg-yellow-50 dark:bg-yellow-900/30 font-semibold shadow-inner border-l-4 border-yellow-500"
+                          : "bg-card opacity-80"
+                        }
                         ${selectedMessage?.id === msg.id ? "ring-2 ring-primary/30" : ""}
                       `}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-sm">
-                            {msg.senderID[0]}
+                            {msg.senderName[0].toUpperCase()}
                           </div>
                           <div>
-                            <div className="text-sm">{msg.senderID}</div>
-                            <div className="text-xs text-muted-foreground">{msg.senderName}</div>
+                            <div className={`text-sm ${!msg.isRead ? "font-bold" : ""}`}>{msg.senderName}</div>
                           </div>
                         </div>
 
@@ -331,7 +329,7 @@ export default function InternalMessaging() {
 
                       <div className="flex items-center justify-between mt-2">
                         <div>
-                          <div className="text-sm">{msg.subject}</div>
+                          <div className={`text-sm ${!msg.isRead ? "font-bold" : ""}`}>{msg.subject}</div>
                           <div className="text-xs text-muted-foreground truncate w-40">{msg.content}</div>
                         </div>
 
@@ -395,18 +393,30 @@ export default function InternalMessaging() {
                   <h2 className="font-medium">Select Recipients</h2>
                 </div>
 
-                {recipientNameList.map((r) => (
+                {recipientList.map((r) => (
                   <div
                     key={r.id}
                     className="m-2 px-4 py-2 rounded-full bg-muted cursor-pointer hover:bg-accent inline-block"
                     onClick={() => {
-                      const selectedName = r.name? r.name:r.uName;
-                      setNewMessage((prev) => ({
-                        ...prev,
-                        recieverName: prev.recieverName.includes(selectedName)
-                          ? prev.recieverName
-                          : [...prev.recieverName, selectedName],
-                      }));
+                      const selectedName = r.name ? r.name : r.uName;
+                      setNewMessage((prev) => {
+                        const alreadySelected = prev.recipientId.includes(r.id);
+                        if (alreadySelected) {
+                          // remove
+                          return {
+                            ...prev,
+                            recipientId: prev.recipientId.filter((id) => id !== r.id),
+                            recieverName: prev.recieverName.filter((n) => n !== selectedName),
+                          };
+                        } else {
+                          // add
+                          return {
+                            ...prev,
+                            recipientId: [...prev.recipientId, r.id],
+                            recieverName: [...prev.recieverName, selectedName],
+                          };
+                        }
+                      });
                     }}
                   >
                     {r.name? r.name:r.uName}
@@ -480,9 +490,17 @@ export default function InternalMessaging() {
                                 <button
                                   type="button"
                                   onClick={() => {
+                                    const found = recipientList.find(
+                                      (item) => (item.name ? item.name : item.uName) === name
+                                    );
+                                    const idToRemove = found ? found.id : null;
+
                                     setNewMessage((prev) => ({
                                       ...prev,
                                       recieverName: prev.recieverName.filter((x) => x !== name),
+                                      recipientId: idToRemove
+                                        ? prev.recipientId.filter((id) => id !== idToRemove)
+                                        : prev.recipientId,
                                     }));
                                   }}
                                   className="text-red-500 ml-2 hover:text-red-700"
@@ -587,7 +605,7 @@ export default function InternalMessaging() {
         onClick={() => {
           setActiveTab("compose");
           setActionType(null);
-          setNewMessage({ recieverName: [], subject: "", content: "" });
+          setNewMessage({ recipientId: [], recieverName: [], subject: "", content: "" });
         }}
       >
         + Compose

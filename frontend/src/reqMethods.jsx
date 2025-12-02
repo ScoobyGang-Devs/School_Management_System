@@ -121,4 +121,28 @@ async function DELETE(destination, customHeaders = {}) {
       throw error;
     }
 }
-export default {GET,POST,PUT,PATCH,DELETE};
+
+async function Refresh(){
+  try{
+    const token = localStorage.getItem("refresh")? localStorage.getItem("refresh"):null;
+    const path = "tokenrefresh";
+    const newToken = await fetch("http://127.0.0.1:8000/tokenrefresh/" ,{
+       method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    if(newToken.ok){
+      localStorage.setItem("access",newToken.json());
+    }
+    else{
+      alert("⚠️ Please Login Again!");
+      throw new Error("Token is expired!");
+    }
+
+  } catch(error){
+    throw error;
+  }
+}
+export default {GET,POST,PUT,PATCH,DELETE,Refresh};
