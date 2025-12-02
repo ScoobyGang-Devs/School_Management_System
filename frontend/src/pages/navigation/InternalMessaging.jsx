@@ -46,7 +46,7 @@ export default function InternalMessaging() {
         const response = await request.GET(`http://127.0.0.1:8000/chat`,"userlist-chat");
 
         if (response) {
-          const users = response.filter(data => data.id != user.userId)
+          const users = response.filter(data => data.id != user.userId && data.id != 1)
           .map(data => ({
             id: data.id,
             name: data.nameWithInitials,
@@ -69,10 +69,10 @@ export default function InternalMessaging() {
     const fetchInbox = async () => {
       try {
         const userId = user.userId;
-        const response = await request.GET(`http://127.0.0.1:8000/chat/messages`,"inbox",header);
+        const inboxResponse = await request.GET(`http://127.0.0.1:8000/chat/messages`,"inbox",header);
 
-        if (response) {
-          const mappedMessages = response.map(msg => {
+        if (inboxResponse) {
+          const mappedMessages = inboxResponse.map(msg => {
             let senderName = msg.sender_name;
             if (!senderName) {
               const sender = recipientList.find(r => r.id == msg.sender_id);
@@ -92,9 +92,38 @@ export default function InternalMessaging() {
           });
           setMessages(mappedMessages);
         }
+        
+        const sentboxResponse = await request.GET("http://127.0.0.1:8000/chat/messages","sent",header);
+        if (sentboxResponse){
+          const mappedMessages = inboxResponse.map(msg => {
+            let senderName = msg.sender_name;
+            const recipientsNames = msg.recipients.map(id => {
+              const user = recipientList.find(r => r.id == id);
+              return user?.uName || "Unknown";
+            });
+
+            if (!senderName) {
+              const sender = recipientList.find(r => r.id == msg.sender_id);
+              senderName = sender?.uName || "Unknown";
+            }
+            
+            return {
+              id: msg.id,
+              senderID: msg.sender_id,
+              senderName,
+              recipients: recipientsNames,
+              subject: msg.subject,
+              content: msg.content,
+              timestamp: msg.timestamp,
+              category: msg.category,
+            };
+          });
+          setSentMessages(mappedMessages);
+        }
+
       } catch (error) {
-        console.error("Failed to load inbox", error);
-        alert("Failed to load!");
+        console.error("Failed to load", error);
+        alert("Failed to load! Please Try Again or Login Again.");
       }
     };
 
@@ -158,23 +187,6 @@ export default function InternalMessaging() {
       }
     } catch (error) {
       console.error("Network Error", error);
-      alert("⚠️ Network or server error. Please try again later.");
-    }
-  };
-
-  const loadSentMessages = async () => {
-    try {
-      const userId = user.userId;
-      const response = await request.GET(`http://127.0.0.1:8000/chat/messages/sent`,userId);
-
-      if (response) {
-        const sentbox = JSON.stringify(response);
-        setSentMessages(sentbox);
-      } else {
-        console.warn("No sent messages received");
-      }
-    } catch (error) {
-      console.error("Error loading sent messages:", error);
       alert("⚠️ Network or server error. Please try again later.");
     }
   };
@@ -563,7 +575,7 @@ export default function InternalMessaging() {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm">
-                            Y
+                            You
                           </div>
                           <div>
                             <div className="text-sm font-medium">To: {Array.isArray(msg.to) ? msg.to.join(', ') : msg.to}</div>
