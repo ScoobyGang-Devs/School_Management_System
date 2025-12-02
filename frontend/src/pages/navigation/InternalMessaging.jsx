@@ -69,15 +69,26 @@ export default function InternalMessaging() {
     const fetchInbox = async () => {
       try {
         const userId = user.userId;
+        const tempRecipientList = recipientList;
         const inboxResponse = await request.GET(`http://127.0.0.1:8000/chat/messages`,"inbox",header);
 
         if (inboxResponse) {
-          const mappedMessages = inboxResponse.map(msg => {
+          const mappedMessages = inboxResponse.filter(msg => msg.sender_id != userId).map(msg => {
             let senderName = msg.sender_name;
             if (!senderName) {
-              const sender = recipientList.find(r => r.id == msg.sender_id);
+              const sender = tempRecipientList.find(r => r.id == msg.sender_id);
               senderName = sender?.uName || "Unknown";
             }
+            const date = new Date(msg.timestamp);
+            const options = { 
+              day: '2-digit', 
+              month: 'short', 
+              year: 'numeric', 
+              hour: '2-digit', 
+              minute: '2-digit', 
+              hour12: true 
+            };
+            const formattedTimestamp = date.toLocaleString('en-GB', options);
 
             return {
               id: msg.id,
@@ -85,7 +96,7 @@ export default function InternalMessaging() {
               senderName,
               subject: msg.subject,
               content: msg.content,
-              timestamp: msg.timestamp,
+              timestamp: formattedTimestamp,
               isRead: msg.is_read,
               category: msg.category,
             };
@@ -95,22 +106,21 @@ export default function InternalMessaging() {
         
         const sentboxResponse = await request.GET("http://127.0.0.1:8000/chat/messages","sent",header);
         if (sentboxResponse){
-          const mappedMessages = inboxResponse.map(msg => {
-            let senderName = msg.sender_name;
-            const recipientsNames = msg.recipients.map(id => {
-              const user = recipientList.find(r => r.id == id);
-              return user?.uName || "Unknown";
-            });
-
-            if (!senderName) {
-              const sender = recipientList.find(r => r.id == msg.sender_id);
-              senderName = sender?.uName || "Unknown";
+          const mappedMessages = sentboxResponse.map(msg => {
+            let recipientsNames;
+            if(msg.category == "announcement"){
+              recipientsNames = ["Everyone"];
+            } else{
+              recipientsNames = msg.recipients.map(id => {
+                const user = tempRecipientList.find(r => r.id == id);
+                return user?.uName || "Unknown";
+              });
             }
             
             return {
               id: msg.id,
               senderID: msg.sender_id,
-              senderName,
+              senderName: msg.sender_name,
               recipients: recipientsNames,
               subject: msg.subject,
               content: msg.content,
@@ -128,14 +138,24 @@ export default function InternalMessaging() {
     };
 
     fetchInbox();
-  }, [loadingRecipients, recipientList]);
+  }, [loadingRecipients]);
 
   const handleSelectMessage = async (message) => {
     setSelectedMessage(message);
+    if(!message.isRead){
+      const userId = Number(user.userId);
+      try{
+        const isReadResponse = await request.PATCH("http://127.0.0.1:8000/chat/messages/mark-as-read/",{
+          message_id: message.id,
+          recipient_id: userId
+        }, header)
+      } catch (error){
+        console.log(error)
+      }
+    }
     setMessages((prev) =>
       prev.map((m) => (m.id === message.id ? { ...m, isRead: true } : m))
     );
-    const response = await request.PATCH()
   };
 
   const handleSendMessage = async (e) => {
@@ -174,6 +194,7 @@ export default function InternalMessaging() {
           senderName: responseData.sender_name,
           timestamp: responseData.timestamp,
           ...body,
+          recipients: body.recipients == "ALL"? "Everyone": body.recipients,
         };
 
         setSentMessages((prev) => [savedMessage, ...prev]);
@@ -198,8 +219,8 @@ export default function InternalMessaging() {
     
     // Pre-fill the form for reply
     setNewMessage({
-      recipientId: [message.sender_id],
-      recieverName: [message.sender_name],
+      recipientId: [message.senderId],
+      recieverName: [message.senderName],
       subject: `Re: ${message.subject}`,
       content: ""
     });
@@ -229,7 +250,7 @@ export default function InternalMessaging() {
         recipientId: [],
         recieverName: [], // Empty for forward
         subject: `Fwd: ${message.subject}`,
-        content: `\n\n--- Forwarded Message ---\nFrom: ${message.sender}\nDate: ${message.timestamp}\nSubject: ${message.subject}\n\n${message.content}`
+        content: `--- Forwarded Message ---\nFrom: ${message.senderName}\nDate: ${message.timestamp}\nSubject: ${message.subject}\n\n${message.content}`
       });
     }
     setMessageCategory("personal");
@@ -283,7 +304,6 @@ export default function InternalMessaging() {
               variant={activeTab === "sent" ? "default" : "secondary"}
               onClick={() => {
                 setActiveTab("sent");
-                loadSentMessages();
               }}
             >
               📤 Sent
@@ -578,8 +598,7 @@ export default function InternalMessaging() {
                             You
                           </div>
                           <div>
-                            <div className="text-sm font-medium">To: {Array.isArray(msg.to) ? msg.to.join(', ') : msg.to}</div>
-                            <div className="text-xs text-muted-foreground">{msg.senderName}</div>
+                            <div className="text-sm font-medium">To: {Array.isArray(msg.recipients) ? msg.recipients.join(', ') : msg.recipients}</div>
                           </div>
                         </div>
                         <div className="text-xs text-muted-foreground">{msg.timestamp}</div>
