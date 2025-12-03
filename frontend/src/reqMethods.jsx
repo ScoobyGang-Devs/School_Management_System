@@ -1,148 +1,108 @@
-// GET - Retrieve data
-async function GET(destination, data, customHeaders = {}) {
-    try {
-      const response = await fetch(`${destination}/${data}/`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...customHeaders
-        }
-      });
+async function refreshToken() {
+  const refresh = localStorage.getItem("refresh");
+  if (!refresh) return null;
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+  try {
+    const response = await fetch("http://127.0.0.1:8000/tokenrefresh/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refresh }),
+    });
 
-      const result = await response.json();
-      return result;
-      
-    } catch (error) {
-      throw error;
+    if (!response.ok) {
+      // Refresh token expired or invalid
+      return null;
     }
-};
 
-// POST - Create new resource
-async function POST(destination, data, customHeaders={}){
-    try {
-      const response = await fetch(`${destination}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...customHeaders
-        },
-        body: JSON.stringify(data)
-      });
+    const data = await response.json();
+    localStorage.setItem("access", data.access);
+    return data.access;
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result;
-      
-    } catch (error) {
-      throw error;
-    }
-};
-
-// PUT - Update entire resource
-async function PUT(destination, data, customHeaders = {}) {
-    try {
-      const response = await fetch(`${destination}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...customHeaders
-        },
-        body: JSON.stringify(data)
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result;
-      
-    } catch (error) {
-      throw error;
-    }
+  } catch (err) {
+    return null;
+  }
 }
 
-// PATCH - Partial update
-async function PATCH(destination, data, customHeaders = {}) {
-    try {
-      const response = await fetch(`${destination}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...customHeaders
-        },
-        body: JSON.stringify(data)
-      });
+// -----------------------------
+// BASE REQUEST FUNCTION
+// Handles retry logic
+// -----------------------------
+async function request(method, url, body = null, customHeaders = {}, retry = true) {
+  try {
+    const access = localStorage.getItem("access");
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: access ? `Bearer ${access}` : "",
+        ...customHeaders,
+      },
+      body: body ? JSON.stringify(body) : null,
+    });
+
+    // Access token expired → backend returns 401
+    if (response.status === 401 && retry) {
+      const newAccess = await refreshToken();
+
+      if (newAccess) {
+        // Retry once with new token
+        return request(method, url, body, customHeaders, false);
+      } else {
+        // Refresh token also expired → force logout
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+
+        // Optional: redirect to login
+        window.location.href = "/login";
+
+        throw new Error("Session expired. Please log in again.");
       }
-
-      const result = await response.json();
-      return result;
-      
-    } catch (error) {
-      throw error;
-    }
-}
-
-// DELETE - Remove resource
-async function DELETE(destination, customHeaders = {}) {
-    try {
-      const response = await fetch(`${destination}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          ...customHeaders
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Some DELETE requests return data, others return empty
-      const contentLength = response.headers.get('content-length');
-      if (contentLength && parseInt(contentLength) > 0) {
-        const result = await response.json();
-        return result;
-      }
-      
-      return { success: true, message: 'Deleted successfully' };
-      
-    } catch (error) {
-      throw error;
-    }
-}
-
-async function Refresh(){
-  try{
-    const token = localStorage.getItem("refresh")? localStorage.getItem("refresh"):null;
-    const path = "tokenrefresh";
-    const newToken = await fetch("http://127.0.0.1:8000/tokenrefresh/" ,{
-       method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-    if(newToken.ok){
-      localStorage.setItem("access",newToken.json());
-    }
-    else{
-      alert("⚠️ Please Login Again!");
-      throw new Error("Token is expired!");
     }
 
-  } catch(error){
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Some responses have empty body
+    const contentLength = response.headers.get("content-length");
+    if (contentLength && parseInt(contentLength) > 0) {
+      return await response.json();
+    }
+
+    return { success: true };
+
+  } catch (error) {
     throw error;
   }
 }
-export default {GET,POST,PUT,PATCH,DELETE,Refresh};
+
+// -----------------------------
+// PUBLIC METHODS
+// -----------------------------
+
+const GET = (destination, data, headers = {}) =>
+  request("GET", `${destination}/${data}/`, null, headers);
+
+const POST = (destination, data, headers = {}) =>
+  request("POST", destination, data, headers);
+
+const PUT = (destination, data, headers = {}) =>
+  request("PUT", destination, data, headers);
+
+const PATCH = (destination, data, headers = {}) =>
+  request("PATCH", destination, data, headers);
+
+const DELETE = (destination, headers = {}) =>
+  request("DELETE", destination, null, headers);
+
+export default {
+  GET,
+  POST,
+  PUT,
+  PATCH,
+  DELETE,
+  refreshToken,
+};

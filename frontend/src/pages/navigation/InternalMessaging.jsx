@@ -116,6 +116,16 @@ export default function InternalMessaging() {
                 return user?.uName || "Unknown";
               });
             }
+            const date = new Date(msg.timestamp);
+            const options = { 
+              day: '2-digit', 
+              month: 'short', 
+              year: 'numeric', 
+              hour: '2-digit', 
+              minute: '2-digit', 
+              hour12: true 
+            };
+            const formattedTimestamp = date.toLocaleString('en-GB', options);
             
             return {
               id: msg.id,
@@ -124,7 +134,7 @@ export default function InternalMessaging() {
               recipients: recipientsNames,
               subject: msg.subject,
               content: msg.content,
-              timestamp: msg.timestamp,
+              timestamp: formattedTimestamp,
               category: msg.category,
             };
           });
@@ -382,7 +392,7 @@ export default function InternalMessaging() {
                       <div>
                         <h3 className="text-xl font-semibold">{selectedMessage.subject}</h3>
                         <div className="text-sm text-muted-foreground">
-                          From: {selectedMessage.sender} • {selectedMessage.senderEmail}
+                          From: {selectedMessage.senderName}
                         </div>
                       </div>
                       <div className="text-sm text-muted-foreground">{selectedMessage.timestamp}</div>
