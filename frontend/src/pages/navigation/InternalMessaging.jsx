@@ -43,7 +43,7 @@ export default function InternalMessaging() {
   useEffect(() => {
     const allUsers = async () => {
       try {
-        const response = await request.GET(`http://127.0.0.1:8000/chat`,"userlist-chat");
+        const response = await request.GET(`http://127.0.0.1:8000/chat`,"userlist-chat",header);
 
         if (response) {
           const users = response.filter(data => data.id != user.userId && data.id != 1)

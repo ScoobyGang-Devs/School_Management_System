@@ -46,7 +46,7 @@ import AddStudentPage from './pages/administration/AddStudentPage'
 import TeacherProfilePage from './pages/TeacherDatabase/TeacherProfileCard'
 import MyclassAttendance from './pages/teacher_tools/MyClassAttendancePage';
 
-
+import ProtectedRoute from './components/ProtectedRoute';
 function App() {
   const location = useLocation()
 
@@ -127,7 +127,7 @@ function App() {
                   {/* ----------------------------------------------- */}
 
                   <Route path="/settings" element={<Settings />} />
-                  <Route path="/messaging" element={<InternalMessaging />} />
+                  <Route path="/messaging" element={<ProtectedRoute><InternalMessaging /></ProtectedRoute>} /> 
                   <Route path="/edit-profile" element={<EditProfile />} />
 
                   <Route path="/admin/attendance/*" element={<SchoolWideAttendance />}> 
