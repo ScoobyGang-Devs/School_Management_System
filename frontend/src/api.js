@@ -10,11 +10,11 @@ const api = axios.create({
 // 2. INTERCEPTOR: I uncommented this so the Token is actually sent!
 api.interceptors.request.use(
   (config) => {
-    // const token = localStorage.getItem(ACCESS_TOKEN); 
-    // if (token) {
-    //    // Django SimpleJWT expects 'Bearer <token>'
-    //    config.headers.Authorization = `Bearer ${token}`; 
-    // }
+    const token = localStorage.getItem(ACCESS_TOKEN); 
+    if (token) {
+       // Django SimpleJWT expects 'Bearer <token>'
+       config.headers.Authorization = `Bearer ${token}`; 
+    }
     return config;
   },
   (error) => {

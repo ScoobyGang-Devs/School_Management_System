@@ -42,7 +42,7 @@ const MyclassAttendance = () => {
                 
                 const rosterRes = await api.get(`/api/students/class/${grade}/${classId}/`);
                 const attendanceRes = await api.get(`/api/attendance/${grade}/${classId}?date=${dateString}`);
-
+                
                 setRoster(rosterRes.data);
                 setAggregateAttendance(attendanceRes.data); 
             } catch (error) {

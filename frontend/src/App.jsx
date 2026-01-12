@@ -161,11 +161,11 @@ function App() {
 
                   <Route path="/teacher/classes">
                     <Route index element={<MyClasses />} />
-                    <Route path="attendance/:grade/:classId" element={<MyclassAttendance />} />
+                    <Route path="attendance/:grade/:classId" element={<ProtectedRoute><MyclassAttendance /></ProtectedRoute>} />
                   </Route>
 
 
-                  <Route path="/teacher/attendance" element={<TakeAttendance />} />
+                  <Route path="/teacher/attendance" element={<ProtectedRoute><TakeAttendance /></ProtectedRoute>} />
                   <Route path="/teacher/grades" element={<GradeAssignments />} />
                   <Route path="/student-profile/:id" element={<StudentProfilePage />} />
                   <Route path="/teacher-profile/:id" element={<TeacherProfilePage />} />

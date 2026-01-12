@@ -5,13 +5,28 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import request from "@/reqMethods";
 import AttendanceResult from "../../components/ui/attendenceResult";
-
+import api from "../../api.js";
 export default function StudentAttendance() {
   const user =
     JSON.parse(localStorage.getItem("user")) || {
       grade: "",
       subClass: "",
     };
+
+    let derivedGrade = "";
+  let derivedSubClass = "";
+
+  if (user?.assignedClass) {
+    // Splits by space. "9 C" becomes grade="9", subClass="C"
+    const parts = user.assignedClass.split(" ");
+    if (parts.length >= 2) {
+      derivedGrade = parts[0];
+      derivedSubClass = parts[1];
+    }
+  }
+
+console.log("Full User Object:", user);
+console.log("Assigned Class:", user?.assignedClass); // Use ?. to avoid crash during log
 
   const [date, setDate] = useState("");
   const [resultData, setResultData] = useState(null); // <--- NEW STATE
@@ -24,9 +39,11 @@ export default function StudentAttendance() {
 
     const fetchStudents = async () => {
       try {
-        const res = await request.GET(
-          `http://localhost:8000/attendence/student-list/${grade}`,subclass
+        const response = await api.get(
+          `/attendence/student-list/${derivedGrade}/${derivedSubClass}/`
         );
+
+        const res = response.data;
 
         if (!res) {
           console.error("Backend returned unexpected data:", res);
@@ -122,7 +139,7 @@ export default function StudentAttendance() {
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium">Class</span>
               <Input
-                value={`${user.grade} ${user.subClass}`}
+                value={`${derivedGrade} ${derivedSubClass}`}
                 readOnly
                 className="bg-muted/40"
               />
