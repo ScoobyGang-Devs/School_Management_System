@@ -119,64 +119,64 @@ function App() {
 
               <main className="flex-1 overflow-y-auto overflow-x-hidden p-8">
                 <Routes>
-                  <Route path="/" element={<Dashboard user={userProfile} />} />
-                  {/* --- NEW DASHBOARD ROUTES (CONNECTED TO API) --- */}
-                  <Route path="/admin-dashboard" element={<AdminDashboard user={userProfile} />} /> 
-                  {/* PASS userProfile PROP TO TEACHER DASHBOARD */}
-                  <Route path="/teacher-dashboard" element={<TeacherDashboard user={userProfile} />} />
-                  {/* ----------------------------------------------- */}
+                    <Route path="/" element={<ProtectedRoute><Dashboard user={userProfile} /></ProtectedRoute>} />
+                    {/* --- NEW DASHBOARD ROUTES (CONNECTED TO API) --- */}
+                    <Route path="/admin-dashboard" element={<ProtectedRoute><AdminDashboard user={userProfile} /></ProtectedRoute>} /> 
+                    {/* PASS userProfile PROP TO TEACHER DASHBOARD */}
+                    <Route path="/teacher-dashboard" element={<ProtectedRoute><TeacherDashboard user={userProfile} /></ProtectedRoute>} />
+                    {/* ----------------------------------------------- */}
 
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/messaging" element={<ProtectedRoute><InternalMessaging /></ProtectedRoute>} /> 
-                  <Route path="/edit-profile" element={<EditProfile />} />
+                    <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                    <Route path="/messaging" element={<ProtectedRoute><InternalMessaging /></ProtectedRoute>} /> 
+                    <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
 
-                  <Route path="/admin/attendance/*" element={<SchoolWideAttendance />}> 
-                    <Route index element={<AttendanceMainPage />} />
-                    <Route path="students/" element={<StudentAttendancePage />} />
-                    <Route path="teachers/" element={<TeacherAttendancePage />} />
-                  </Route>
-
-                  <Route path="/admin/results/*" element={<SchoolWideResults />} >
-                    <Route index element={<ResultGradePage />} />
-                    <Route path="classes/:gradeLevel" element={<RelaventClassResultsForGrade />} >
-                      <Route path=":classId" element={<ResultClassPage />} />
+                    <Route path="/admin/attendance/*" element={<ProtectedRoute><SchoolWideAttendance /></ProtectedRoute>}> 
+                      <Route index element={<AttendanceMainPage />} />
+                      <Route path="students/" element={<StudentAttendancePage />} />
+                      <Route path="teachers/" element={<TeacherAttendancePage />} />
                     </Route>
-                  </Route>
-                  
 
-                  <Route path="/admin/students/*" element={<StudentDatabase />} >
-                    <Route index element={<GradesPage />} /> 
-                    <Route path="classes/:gradeLevel" element={<RelaventClassesForGrade />} >
-                      <Route path=":classId" element={<ClassPage />} /> 
-
+                    <Route path="/admin/results/*" element={<ProtectedRoute><SchoolWideResults /></ProtectedRoute>} >
+                      <Route index element={<ResultGradePage />} />
+                      <Route path="classes/:gradeLevel" element={<RelaventClassResultsForGrade />} >
+                        <Route path=":classId" element={<ResultClassPage />} />
+                      </Route>
                     </Route>
-                  </Route>
+                    
 
-                  <Route path="/admin/users" element={<UserManagement />} />
-                  <Route path="/admin/teachers" element={<TeacherDatabase />} />
+                    <Route path="/admin/students/*" element={<ProtectedRoute><StudentDatabase /></ProtectedRoute>} >
+                      <Route index element={<GradesPage />} /> 
+                      <Route path="classes/:gradeLevel" element={<RelaventClassesForGrade />} >
+                        <Route path=":classId" element={<ClassPage />} /> 
 
-                  
+                      </Route>
+                    </Route>
 
-                  
+                    <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+                    <Route path="/admin/teachers" element={<ProtectedRoute><TeacherDatabase /></ProtectedRoute>} />
 
-                  <Route path="/teacher/classes">
-                    <Route index element={<MyClasses />} />
-                    <Route path="attendance/:grade/:classId" element={<ProtectedRoute><MyclassAttendance /></ProtectedRoute>} />
-                  </Route>
+                    
 
+                    
 
-                  <Route path="/teacher/attendance" element={<ProtectedRoute><TakeAttendance /></ProtectedRoute>} />
-                  <Route path="/teacher/grades" element={<GradeAssignments />} />
-                  <Route path="/student-profile/:id" element={<StudentProfilePage />} />
-                  <Route path="/teacher-profile/:id" element={<TeacherProfilePage />} />
-
-                  <Route path="/add-student/:id" element={<AddStudentPage />} />
+                    <Route path="/teacher/classes">
+                      <Route index element={<ProtectedRoute><MyClasses /></ProtectedRoute>} />
+                      <Route path="attendance/:grade/:classId" element={<ProtectedRoute><MyclassAttendance /></ProtectedRoute>} />
+                    </Route>
 
 
+                    <Route path="/teacher/attendance" element={<ProtectedRoute><TakeAttendance /></ProtectedRoute>} />
+                    <Route path="/teacher/grades" element={<ProtectedRoute><GradeAssignments /></ProtectedRoute>} />
+                    <Route path="/student-profile/:id" element={<ProtectedRoute><StudentProfilePage /></ProtectedRoute>} />
+                    <Route path="/teacher-profile/:id" element={<ProtectedRoute><TeacherProfilePage /></ProtectedRoute>} />
 
-                  {/* 404 */}
-                  <Route path="*" element={<h1 className="text-center text-lg font-semibold">404 | Page Not Found</h1>} />
-                </Routes>
+                    <Route path="/add-student/:id" element={<ProtectedRoute><AddStudentPage /></ProtectedRoute>} />
+
+
+
+                    {/* 404 */}
+                    <Route path="*" element={<h1 className="text-center text-lg font-semibold">404 | Page Not Found</h1>} />
+                  </Routes>
               </main>
             </div>
           </div>
