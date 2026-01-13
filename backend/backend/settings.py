@@ -12,7 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from  datetime import timedelta
-
+import dj_database_url
+import os 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +28,7 @@ SECRET_KEY = 'django-insecure-no&&*2l#4&y(!qu(vb7of6*23w0459eg7ns(i@qxqq4l%f87b_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -91,6 +92,9 @@ DATABASES = {
     }
 }
 
+# If we are on Render, use the cloud database instead
+db_from_env = dj_database_url.config(conn_max_age=600)
+DATABASES['default'].update(db_from_env)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -179,3 +183,6 @@ SIMPLE_JWT = {
 
 # During development, print emails to console instead of sending real emails
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
