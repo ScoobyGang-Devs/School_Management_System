@@ -9,7 +9,7 @@ const Dashboard =({ user }) => {
   if (!user) {
     return <div className="p-8 text-center text-muted-foreground">Loading Dashboard...</div>;
   }
-
+  console.log(user)
   // Admin View
   if (user.role === 'admin') {
     return <AdminDashboard />;

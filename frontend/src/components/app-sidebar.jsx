@@ -57,14 +57,7 @@ const navData = {
         { title: "Teacher Database", url: "/admin/teachers"}
       ],
     },
-        {
-      title: "TEACHER TOOLS",
-      items: [
-        { title: "My Classes", url: "/teacher/classes" },
-        { title: "Take Attendance", url: "/teacher/attendance" },
-        { title: "Grade Assignments", url: "/teacher/grades" },
-      ],
-    },
+        
   ],
 };
 
