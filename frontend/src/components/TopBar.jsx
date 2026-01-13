@@ -26,7 +26,7 @@ export default function TopBar() {
 
   const currentPage = pageTitles[location.pathname] || "Dashboard";
   const user = JSON.parse(localStorage.getItem("user"));
-  const firstLetter = user?.nameWithInitials?.charAt(0)?.toUpperCase() || user.username?.charAt(0)?.toUpperCase() || "U";
+  const firstLetter = user?.nameWithInitials?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || "U";
 
 
 return (

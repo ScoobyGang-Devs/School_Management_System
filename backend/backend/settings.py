@@ -152,6 +152,7 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 
 CORS_ALLOWED_CREDENTIALS = True
@@ -166,7 +167,8 @@ CORS_ALLOWED_METHODS = [
 ]
 
 CORS_ALLOWED_HEADERS = [
-    'accept', 'user-agent', 'x-csrftoken', 'content-type'
+    'accept', 'user-agent', 'x-csrftoken', 'content-type',
+    'authorization'
 ]
 
 SIMPLE_JWT = {

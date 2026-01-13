@@ -1,5 +1,5 @@
 import React from 'react'
-import MyClassCard from './MyclassCard'
+import MyClassCard from './MyClassCard'
 
 const MyClasses = () => {
   const classes = [
