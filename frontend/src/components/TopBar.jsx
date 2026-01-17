@@ -31,7 +31,7 @@ export default function TopBar() {
 
 return (
   <div
-    className="flex items-center justify-end w-full px-6 py-4 border-b bg-background text-foreground border-border"
+    className="relative z-30 flex items-center justify-end w-full px-6 py-4 border-b bg-background text-foreground border-border"
   >
     {/* ✅ Left side: current page name */}
     <h1 className="text-lg font-semibold hidden sm:block">{currentPage}</h1>

@@ -86,7 +86,7 @@ export function AppSidebar({ ...props }) {
 
   return (
       <div
-        className={`transition-all duration-300 ease-in-out 
+        className={`relative z-50 transition-all duration-300 ease-in-out 
           ${collapsed ? "w-14" : "w-64"} 
           border-r overflow-hidden h-screen`}
         style={{
