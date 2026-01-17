@@ -34,7 +34,7 @@ return (
     className="flex items-center justify-end w-full px-6 py-4 border-b bg-background text-foreground border-border"
   >
     {/* ✅ Left side: current page name */}
-    <h1 className="text-lg font-semibold">{currentPage}</h1>
+    <h1 className="text-lg font-semibold hidden sm:block">{currentPage}</h1>
 
     {/* ✅ Right side: icons */}
     <div className="flex items-center gap-5 ml-auto">
@@ -47,7 +47,7 @@ return (
         title="Notifications"
         onClick={() => console.log('Open notifications panel')}
       >
-        <Bell className="w-5 h-5 text-primary" />
+        <Bell className=" text-primary" />
       </button>
 
       {/* Messages */}
@@ -56,7 +56,7 @@ return (
         className="p-2 rounded-full transition hover:bg-muted"
         title="Messages"
       >
-        <Mail className="w-5 h-5 text-primary" />
+        <Mail className="text-primary" />
       </Link>
 
       {/* Profile */}
@@ -67,7 +67,7 @@ return (
       >
         <div
           onClick={() => setShowProfile(true)}
-          className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold cursor-pointer"
+          className=" rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold cursor-pointer"
         >
           {firstLetter}
         </div>
