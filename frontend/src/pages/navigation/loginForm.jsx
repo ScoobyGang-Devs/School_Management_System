@@ -35,7 +35,7 @@ const LoginForm = () => {
     if (validateForm()) {
       try {
         const response = await request.POST(
-          "http://localhost:8000/login/",
+          `${API_BASE}/login/`,
           {
             username: formData.username,
             password: formData.password,
