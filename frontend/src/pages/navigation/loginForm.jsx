@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import request from "../../reqMethods.jsx";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+
 const LoginForm = () => {
   const [formData, setFormData] = useState({
     username: "",
@@ -47,7 +49,7 @@ const LoginForm = () => {
 
           const path = formData.userType === "teacher"? "teacher-profile":"admin-profile";
           const header = {"Authorization": `Bearer ${response.access}`}
-          const userDetails = await request.GET("http://127.0.0.1:8000", path, header);
+          const userDetails = await request.GET(`${API_BASE}`, path, header);
           localStorage.setItem("user",JSON.stringify(userDetails));
           navigate("/"); // Go to dashboard
 

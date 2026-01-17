@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import request from "../../reqMethods.jsx";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+
 const SignupForm = () => {
 
   const [isTeacher, setIsTeacher] = useState(true);
@@ -52,7 +54,7 @@ const SignupForm = () => {
     if (validateForm()) {
       try {
         const responseData = await request.POST(
-          "http://127.0.0.1:8000/signup/",
+          `${API_BASE}/signup/`,
           {
             username: formData.username,
             password1: formData.password1,
@@ -71,7 +73,7 @@ const SignupForm = () => {
 
           const path = isTeacher? "teacher-profile":"admin-profile";
           const header = {"Authorization": `Bearer ${responseData.access}`}
-          const userDetails = await request.GET("http://127.0.0.1:8000", path, header);
+          const userDetails = await request.GET(`${API_BASE}`, path, header);
           localStorage.setItem("user",JSON.stringify(userDetails));
           navigate("/");
         } else {

@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import request from "@/reqMethods";
 
+const API_BASE = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+
 export default function InternalMessaging() {
   const user = JSON.parse(localStorage.getItem("user"));
   const header = {"Authorization": `Bearer ${localStorage.getItem("access")}`};
@@ -43,7 +45,7 @@ export default function InternalMessaging() {
   useEffect(() => {
     const allUsers = async () => {
       try {
-        const response = await request.GET(`http://127.0.0.1:8000/chat`,"userlist-chat",header);
+        const response = await request.GET(`${API_BASE}/chat`,"userlist-chat",header);
 
         if (response) {
           const users = response.filter(data => data.id != user.userId && data.id != 1)
@@ -70,7 +72,7 @@ export default function InternalMessaging() {
       try {
         const userId = user.userId;
         const tempRecipientList = recipientList;
-        const inboxResponse = await request.GET(`http://127.0.0.1:8000/chat/messages`,"inbox",header);
+        const inboxResponse = await request.GET(`${API_BASE}/chat/messages`,"inbox",header);
 
         if (inboxResponse) {
           const mappedMessages = inboxResponse.filter(msg => msg.sender_id != userId).map(msg => {
@@ -103,8 +105,8 @@ export default function InternalMessaging() {
           });
           setMessages(mappedMessages);
         }
-        
-        const sentboxResponse = await request.GET("http://127.0.0.1:8000/chat/messages","sent",header);
+
+        const sentboxResponse = await request.GET(`${API_BASE}/chat/messages`,"sent",header);
         if (sentboxResponse){
           const mappedMessages = sentboxResponse.map(msg => {
             let recipientsNames;
@@ -155,7 +157,7 @@ export default function InternalMessaging() {
     if(!message.isRead){
       const userId = Number(user.userId);
       try{
-        const isReadResponse = await request.PATCH("http://127.0.0.1:8000/chat/messages/mark-as-read/",{
+        const isReadResponse = await request.PATCH(`${API_BASE}/chat/messages/mark-as-read/`,{
           message_id: message.id,
           recipient_id: userId
         }, header)
@@ -192,7 +194,7 @@ export default function InternalMessaging() {
     };
 
     try {
-      const response = await request.POST("http://127.0.0.1:8000/chat/messages/send/", body, header);
+      const response = await request.POST(`${API_BASE}/chat/messages/send/`, body, header);
 
       if (response) {
         const responseData = JSON.stringify(response);
