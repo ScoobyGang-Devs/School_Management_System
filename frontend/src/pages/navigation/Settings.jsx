@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import api from '../../api.js'; 
 
+const API_BASE = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+
 // --- Shadcn Components ---
 import { 
     Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 

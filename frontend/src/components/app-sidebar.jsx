@@ -57,14 +57,7 @@ const navData = {
         { title: "Teacher Database", url: "/admin/teachers"}
       ],
     },
-        {
-      title: "TEACHER TOOLS",
-      items: [
-        { title: "My Classes", url: "/teacher/classes" },
-        { title: "Take Attendance", url: "/teacher/attendance" },
-        { title: "Grade Assignments", url: "/teacher/grades" },
-      ],
-    },
+        
   ],
 };
 
@@ -93,7 +86,7 @@ export function AppSidebar({ ...props }) {
 
   return (
       <div
-        className={`transition-all duration-300 ease-in-out 
+        className={`relative z-50 transition-all duration-300 ease-in-out 
           ${collapsed ? "w-14" : "w-64"} 
           border-r overflow-hidden h-screen`}
         style={{
