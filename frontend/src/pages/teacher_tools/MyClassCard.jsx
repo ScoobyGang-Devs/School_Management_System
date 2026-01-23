@@ -27,7 +27,7 @@ function MyClassCard({Grade, Class}) {
             </Link>
         </CardFooter>
         <CardFooter>
-            <Link className="w-full">
+            <Link to={`/teacher/classes/results/${Grade}/${Class}`} className="w-full">
                 <Button className="w-full" variant="secondary">
                     View Results
                 </Button>

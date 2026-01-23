@@ -46,6 +46,7 @@ import AddStudentPage from './pages/administration/AddStudentPage'
 import TeacherProfilePage from './pages/TeacherDatabase/TeacherProfileCard'
 import MyclassAttendance from './pages/teacher_tools/MyClassAttendancePage';
 
+import TeacherClassMarks from './pages/teacher_tools/TeacherClassMarks.jsx';
 import ProtectedRoute from './components/ProtectedRoute';
 function App() {
   const location = useLocation()
@@ -162,6 +163,7 @@ function App() {
                     <Route path="/teacher/classes">
                       <Route index element={<ProtectedRoute><MyClasses /></ProtectedRoute>} />
                       <Route path="attendance/:grade/:classId" element={<ProtectedRoute><MyclassAttendance /></ProtectedRoute>} />
+                      <Route path="results/:grade/:classId" element={<ProtectedRoute><TeacherClassMarks /></ProtectedRoute>} />
                     </Route>
 
 
