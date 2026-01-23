@@ -35,39 +35,35 @@ function ResultGradeCard({ gradeLevel }) {
 
     const TERM_ID = 1; // Fixed to Term 1 as requested
 
-    useEffect(() => {
+useEffect(() => {
         setIsLoading(true);
 
-        // 1. Fetch Student Count (based on array length)
+        // 1. Fetch Student Count (Optimized)
+        // Uses the new 'SingleGradeCountView' that returns { "grade": 6, "count": 45 }
         const fetchStudentCount = api
-            .get(`api/students/grade/${gradeLevel}/`)
-            .then(res => res.data.length);
+            .get(`api/students/count/grade/${gradeLevel}/`) 
+            .then(res => res.data.count); // Direct access to count, no array calculation
 
         // 2. Fetch Grade Average (using the specific term ID)
         const fetchAverageMark = api
             .get(`termtest/average/grade/${gradeLevel}/term/${TERM_ID}`)
             .then(res => {
-              console.log(res)
                 // The API returns data like: {"grade 7": 76.8}
                 const key = `grade ${gradeLevel}`;
                 const avg = res.data[key];
                 return avg ? parseFloat(avg).toFixed(1) : 'N/A';
             });
 
-        // Run both promises concurrently
+        // Use Promise.all to run both requests in parallel
         Promise.all([fetchStudentCount, fetchAverageMark])
-            .then(([count, avg]) => {
+            .then(([count, average]) => {
                 setStudentCount(count);
-                setAverageMark(avg);
+                setAverageMark(average); // Assuming you have a setAverageMark state
             })
-            .catch(err => {
-                console.error("Error fetching grade data:", err);
-                // Optionally set error state here
-            })
-            .finally(() => {
-                setIsLoading(false);
-            });
-    }, [gradeLevel]);
+            .catch(err => console.error("Error loading grade data:", err))
+            .finally(() => setIsLoading(false));
+
+    }, [gradeLevel]); // Add dependency array
 
 
     // Determine the route for the "View Results" button
