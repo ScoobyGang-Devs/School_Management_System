@@ -177,13 +177,13 @@ const AdminDashboard = () => {
                   <BarChart data={grade_averages}>
                     <XAxis 
                       dataKey="className" 
-                      stroke="#888888" 
+                      stroke="#ffffff" 
                       fontSize={12} 
                       tickLine={false} 
                       axisLine={false} 
                     />
                     <YAxis 
-                      stroke="#888888" 
+                      stroke="#ffffff" 
                       fontSize={12} 
                       tickLine={false} 
                       axisLine={false} 
@@ -193,10 +193,14 @@ const AdminDashboard = () => {
                         contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))' }}
                         itemStyle={{ color: 'hsl(var(--foreground))' }}
                     />
-                    <Bar dataKey="average" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}>
-                        {grade_averages.map((entry, index) => (
-                             <Cell key={`cell-${index}`} fill={entry.average < 50 ? 'hsl(var(--destructive))' : 'hsl(var(--primary))'} />
-                        ))}
+                    <Bar dataKey="average" radius={[4, 4, 0, 0]}>
+                          {grade_averages.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              // If average < 50, make it RED (#ef4444). Otherwise, make it BLUE (#3b82f6).
+                              fill={entry.average < 50 ? '#ef4444' : '#3b82f6'} 
+                            />
+                          ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>

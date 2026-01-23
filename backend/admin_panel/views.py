@@ -1,3 +1,4 @@
+from django.http import Http404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView,RetrieveUpdateAPIView
@@ -52,7 +53,13 @@ class TeacherDetailsUpdateView(RetrieveUpdateAPIView):
     
     # to ensure teacher can edit only his/her profile
     def get_object(self):
-        return self.request.user.teacher_profile
+        user = self.request.user
+        # SAFETY CHECK: Does this user actually have a teacher profile?
+        if hasattr(user, 'teacher_profile'):
+            return user.teacher_profile
+        else:
+            # Return a generic 404 instead of crashing the server
+            raise Http404("No teacher profile found for this user.")
 
 class ClassroomListCreateView(generics.ListCreateAPIView):
     queryset = Classroom.objects.all()
@@ -312,4 +319,10 @@ class AdminProfileUpdateView(RetrieveUpdateAPIView):
     
     # to ensure teacher can edit only his/her profile
     def get_object(self):
-        return self.request.user.admin_profile
+        user = self.request.user
+        # SAFETY CHECK: Does this user actually have an admin profile?
+        if hasattr(user, 'admin_profile'):
+            return user.admin_profile
+        else:
+            raise Http404("No admin profile found for this user.")
+        
