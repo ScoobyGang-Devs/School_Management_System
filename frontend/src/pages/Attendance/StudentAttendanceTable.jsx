@@ -43,7 +43,7 @@ const StudentAttendanceTable = ({attendanceData, userSearch}) => {
                             <TableHead className="w-[100px]">ID</TableHead>
                             <TableHead>Student Name</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -58,9 +58,7 @@ const StudentAttendanceTable = ({attendanceData, userSearch}) => {
                                         {student.status}
                                     </span>
                                 </TableCell>
-                                <TableCell className="text-right">
-                                    <Button variant="ghost" size="sm">View Details</Button>
-                                </TableCell>
+                                
                             </TableRow>
                         )}
                     </TableBody>
