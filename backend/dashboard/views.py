@@ -78,7 +78,7 @@ class TeacherDashboardView(APIView):
             return Response({"error": "Teacher profile not found"}, status=404)
 
         # 1. Total number of teaching classes
-        toatalTeachingClasses = teacher.teachingClasses.count()
+        totalTeachingClasses = teacher.teachingClasses.count()
 
         # 2. assigned_class
         assignedClass = teacher.assignedClass
@@ -98,10 +98,10 @@ class TeacherDashboardView(APIView):
 
             if not subjectAssign:
                 classData.append({
-                    "Classroom": clz.className,
-                    "Subject": None,
+                    "Classroom": str(clz),   # <--- CHANGE 2: Use str() or clz.className
+                    "Subject": "Not Assigned",
                     "studentCount": studentCount,
-                    "averageMark": 0
+                    "avg_marks": 0
                 })
                 continue
 
@@ -113,15 +113,15 @@ class TeacherDashboardView(APIView):
             average_marks = marks_qs.aggregate(avg_marks=Avg('marksObtained'))['avg_marks']
 
             classData.append({
-                "Classroom":clz,
-                "Subject": subjectAssign.subject,
+                "Classroom":str(clz),
+                "Subject": str(subjectAssign.subject),
                 "studentCount":studentCount,
                 "avg_marks":average_marks if average_marks else 0
             })
 
         return Response({
             "teacherName":teacherName,
-            "totalClasses":toatalTeachingClasses,
+            "totalClasses":totalTeachingClasses,
             "teacher'sClassData":classData
         })
         
