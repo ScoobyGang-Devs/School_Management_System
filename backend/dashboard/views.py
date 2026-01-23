@@ -108,7 +108,7 @@ class TeacherDashboardView(APIView):
             marks_qs = SubjectwiseMark.objects.filter(
             studentID__enrolledClass=clz,
             subject=subjectAssign.subject,
-            teacherID=teacher)
+            )
 
             average_marks = marks_qs.aggregate(avg_marks=Avg('marksObtained'))['avg_marks']
 
