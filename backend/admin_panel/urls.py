@@ -58,4 +58,10 @@ urlpatterns = [
 
     #used - when the id is given ... this gives the teacherID
     path('teacherdetails/<int:teacherId>/', TeacherRetrieveView.as_view(), name='teacher-detail-by-id'),
+
+    # NEW: Instant count for a specific grade (Replaces the heavy list call)
+    path('api/students/count/grade/<int:grade>/', SingleGradeCountView.as_view(), name='single_grade_count'),
+
+    # NEW: Breakdown of counts by class for a specific grade
+    path('api/students/count/classes/<int:grade>/', ClassCountByGradeView.as_view(), name='class_count_by_grade'),
 ]

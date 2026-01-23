@@ -326,3 +326,39 @@ class AdminProfileUpdateView(RetrieveUpdateAPIView):
         else:
             raise Http404("No admin profile found for this user.")
         
+
+from django.db.models import Count
+
+
+# 1. Get ONLY the count for a specific grade (Fastest way)
+class SingleGradeCountView(APIView):
+    def get(self, request, grade):
+        # This performs a "SELECT COUNT(*)" in SQL. Instant result.
+        count = StudentDetail.objects.filter(enrolledClass__grade=grade).count()
+        return Response({"grade": grade, "count": count}, status=status.HTTP_200_OK)
+
+# 2. Get student count for each CLASS in a specific grade
+class ClassCountByGradeView(APIView):
+    def get(self, request, grade):
+        # This fetches classes and counts students in one go
+        # Returns: [{"className": "6 A", "count": 35}, {"className": "6 B", "count": 32}]
+        
+        data = Classroom.objects.filter(grade=grade).annotate(
+            student_count=Count('student_set') # Assuming related_name='student_set' or default
+        ).values('className', 'student_count')
+        
+        # If your related_name in StudentDetail.enrolledClass is 'students', change 'student_set' to 'students'
+        # Fallback manual loop if annotation is tricky with your specific model structure:
+        if not data:
+            classes = Classroom.objects.filter(grade=grade)
+            response_data = []
+            for cls in classes:
+                 # Count is still fast here
+                c = StudentDetail.objects.filter(enrolledClass=cls).count()
+                response_data.append({
+                    "className": cls.className,
+                    "count": c
+                })
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        return Response(list(data), status=status.HTTP_200_OK)

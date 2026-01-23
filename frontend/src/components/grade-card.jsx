@@ -33,19 +33,20 @@ function GradeCard({ gradeLevel }) { // Removed unused studentCount prop
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Added dependency warning suppression, or add gradeLevel if it can change dynamically
 
-  const getStudentsByGrade = () => {
-    // Ensure loading is true before starting fetch
+const getStudentsByGrade = () => {
     setIsLoading(true);
+    
+    // CHANGED URL: Point to the new 'count' endpoint
     api
-        .get(`api/students/grade/${gradeLevel}/`)
-        .then((res) => res.data)
-        .then((data) => {
-            setLength(data.length);
+        .get(`api/students/count/grade/${gradeLevel}/`) 
+        .then((res) => {
+            // The API now returns an object: { grade: 6, count: 120 }
+            // So we set length directly from res.data.count
+            setLength(res.data.count); 
         })
         .catch((err) => {
             console.error("Error fetching student count:", err);
         })
-        // 2. Add .finally() to ensure loading stops upon success or failure
         .finally(() => {
             setIsLoading(false);
         });
