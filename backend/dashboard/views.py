@@ -114,7 +114,7 @@ class AdminDashboardView(APIView):
 
             # <--- THIS IS THE FIX: Indented INSIDE the loop
             attendance_list.append({
-                "id": record.id, 
+                "id": record.pk, 
                 "date": record.date,
                 "class": str(classroom),
                 "present_count": present_count,

@@ -134,7 +134,11 @@ export function AppSidebar({ ...props }) {
                         <SidebarMenuSubItem key={subItem.title}>
                           <SidebarMenuSubButton
                             asChild
-                            isActive={location.pathname.startsWith(subItem.url)} // Using startsWith for nested routes
+                            isActive={
+                                subItem.url === "/" 
+                                  ? location.pathname === "/" 
+                                  : location.pathname.startsWith(subItem.url)
+                              }// Using startsWith for nested routes
                           >
                             <Link to={subItem.url}>{subItem.title}</Link>
                           </SidebarMenuSubButton>

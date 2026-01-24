@@ -198,7 +198,7 @@ const AdminDashboard = () => {
                             <Cell 
                               key={`cell-${index}`} 
                               // If average < 50, make it RED (#ef4444). Otherwise, make it BLUE (#3b82f6).
-                              fill={entry.average < 50 ? '#ef4444' : '#3b82f6'} 
+                              fill={entry.average < 50 ? '#ef4444' : '#f9cb7c'} 
                             />
                           ))}
                     </Bar>
