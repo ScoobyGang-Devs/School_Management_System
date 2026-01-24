@@ -14,7 +14,7 @@ import GradeComboBox from '../GradeAssignments/GradeComboBox.jsx';
 import SubjectPillSelector from '../GradeAssignments/SubjectComboBox.jsx';
 
 
-// --- 1. Editable Cell Component ---
+// --- 1. Editable Cell Component (Unchanged) ---
 const EditableMarkCell = ({ getValue, row, column, table }) => {
     const initialValue = getValue();
     const [value, setValue] = useState(initialValue || '');
@@ -44,11 +44,14 @@ const EditableMarkCell = ({ getValue, row, column, table }) => {
 // --- 2. Main Mark Entry Component ---
 function MarkEntryTable() {
 
-    const [gradeLevel,setGradeLevel] = useState("6");
-    const [className,setClassName] = useState("A");
+    const [gradeLevel, setGradeLevel] = useState("6");
+    const [className, setClassName] = useState("A");
     
+    // --- NEW: Dynamic Term State ---
+    const [selectedTerm, setSelectedTerm] = useState(1); 
+
     const TEACHER_ID = 42; 
-    const TERM_ID = 1; 
+    // const TERM_ID = 1; // REMOVED: No longer hardcoded
 
     const [selectedSubjectName, setSelectedSubjectName] = useState('Mathematics'); 
     
@@ -80,7 +83,7 @@ function MarkEntryTable() {
                 const rosterUrl = `/roster/${gradeLevel}/${className}/`; 
                 const res = await api.get(rosterUrl);
                 
-                console.log(res)
+                // console.log(res)
                 const students = res.data.students || res.data || []; 
 
                 const initialMarks = students.map(student => ({
@@ -101,7 +104,7 @@ function MarkEntryTable() {
         if (gradeLevel && className) {
              fetchRoster();
         }
-    }, [gradeLevel, className]);
+    }, [gradeLevel, className]); // Note: If you want to refetch *existing marks* when term changes, add selectedTerm here.
 
     // --- Column Definition ---
     const columns = React.useMemo(() => [
@@ -116,7 +119,6 @@ function MarkEntryTable() {
         {
             accessorKey: 'mark',
             header: () => <div className="text-center text-primary font-semibold">{selectedSubjectName} Mark</div>,
-            // UPDATED: Wrapped the cell in a flex container to center it
             cell: (props) => (
                 <div className="flex justify-center">
                     <EditableMarkCell {...props} />
@@ -136,7 +138,7 @@ function MarkEntryTable() {
             .map(item => ({
                 subjectName: selectedSubjectName,
                 studentID: item.student_id,
-                term: TERM_ID,
+                term: selectedTerm, // --- UPDATED: Uses state variable ---
                 marksObtained: parseFloat(item.mark), 
                 teacherID: TEACHER_ID,
             }));
@@ -152,13 +154,12 @@ function MarkEntryTable() {
             const res = await api.post(url, bulkPayload);
 
             if (res.status === 201) {
-                 setSubmissionMessage(`Successfully submitted ${res.data.length || bulkPayload.length} marks!`);
+                 setSubmissionMessage(`Successfully submitted ${res.data.length || bulkPayload.length} marks for Term ${selectedTerm}!`);
             } else if (res.status === 207 && res.data.errors) {
                  setSubmissionMessage(`Partial success: ${res.data.created.length} created. ${res.data.errors.length} failed. See console.`);
             } else {
                  setSubmissionMessage(`Submission received, but check server logs (Status ${res.status}).`);
             }
-
 
         } catch (error) {
             console.error("Submission Error:", error.response?.data || error.message);
@@ -192,7 +193,7 @@ return (
                 Mark Entry: Grade {gradeLevel}{className} <span className="text-muted-foreground font-normal">({selectedSubjectName})</span>
             </h3>
             <p className="text-muted-foreground text-sm">
-                Select a grade and subject to begin entering marks.
+                Select a grade, term, and subject to begin entering marks.
             </p>
         </div>
 
@@ -203,14 +204,36 @@ return (
             />
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b pb-6 pt-2">
+        {/* --- Control Bar: Term & Subject Selection --- */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b pb-6 pt-2">
             
-            <div className="flex-1 w-full overflow-hidden space-y-2">
-                <Label className="text-sm font-medium ml-1">Select Subject:</Label>
-                <SubjectPillSelector 
-                    selectedSubject={selectedSubjectName}
-                    setSubjectName={setSelectedSubjectName}
-                />
+            <div className="flex flex-col md:flex-row gap-6 w-full">
+                
+                {/* --- NEW: Term Selector --- */}
+                <div className="space-y-2 shrink-0">
+                    <Label className="text-sm font-medium ml-1">Select Term:</Label>
+                    <div className="flex gap-2">
+                        {[1, 2, 3].map((term) => (
+                            <Button
+                                key={term}
+                                variant={selectedTerm === term ? "default" : "outline"}
+                                onClick={() => setSelectedTerm(term)}
+                                size="sm"
+                                className={`w-12 transition-all ${selectedTerm === term ? "ring-2 ring-primary ring-offset-1" : ""}`}
+                            >
+                                {term}
+                            </Button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="flex-1 w-full overflow-hidden space-y-2">
+                    <Label className="text-sm font-medium ml-1">Select Subject:</Label>
+                    <SubjectPillSelector 
+                        selectedSubject={selectedSubjectName}
+                        setSubjectName={setSelectedSubjectName}
+                    />
+                </div>
             </div>
             
             <div className="flex flex-col items-end gap-2 shrink-0">
@@ -223,7 +246,8 @@ return (
                     {isSubmitting ? (
                         <>Submitting...</>
                     ) : (
-                        <>Submit  Marks (Term {TERM_ID})</>
+                        // --- UPDATED: Dynamic Button Text ---
+                        <>Submit Marks (Term {selectedTerm})</>
                     )}
                 </Button>
                 
@@ -237,6 +261,7 @@ return (
             </div>
         </div>
 
+        {/* --- Table Section (Unchanged) --- */}
         <div className="overflow-hidden rounded-md border bg-card shadow-sm">
             <Table>
                 <TableHeader>
