@@ -183,7 +183,7 @@ export default function InternalMessaging() {
     if (messageCategory === "announcement") {
       recipients = "ALL";
     } else {
-      recipients = newMessage.recipientId;
+      recipients = newMessage.recipientId.map(id => Number(id));
     }
 
     const body = {
@@ -231,7 +231,7 @@ export default function InternalMessaging() {
     
     // Pre-fill the form for reply
     setNewMessage({
-      recipientId: [message.senderId],
+      recipientId: [message.senderID],
       recieverName: [message.senderName],
       subject: `Re: ${message.subject}`,
       content: ""
