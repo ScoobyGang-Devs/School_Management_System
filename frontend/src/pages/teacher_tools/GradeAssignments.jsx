@@ -223,7 +223,7 @@ return (
                     {isSubmitting ? (
                         <>Submitting...</>
                     ) : (
-                        <>Submit {marksData.length} Marks (Term {TERM_ID})</>
+                        <>Submit  Marks (Term {TERM_ID})</>
                     )}
                 </Button>
                 

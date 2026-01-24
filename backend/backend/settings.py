@@ -165,6 +165,10 @@ CORS_ALLOWED_ORIGINS = [
     "https://school-management-system-frontend-zczt.onrender.com",
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://school-management-system-frontend-zczt.onrender.com", # <--- ADD THIS
+]
+
 CORS_ALLOWED_CREDENTIALS = True
 
 CORS_ALLOWED_METHODS = [

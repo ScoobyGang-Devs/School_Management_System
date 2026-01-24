@@ -6,6 +6,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import request from "@/reqMethods";
 import AttendanceResult from "../../components/ui/attendenceResult";
 import api from "../../api.js";
+
+const API_BASE = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000")
+
 export default function StudentAttendance() {
   const user =
     JSON.parse(localStorage.getItem("user")) || {
@@ -106,7 +109,7 @@ console.log("Assigned Class:", user?.assignedClass); // Use ?. to avoid crash du
       const payload = [headerObj, ...attendanceArray];
 
       const response = await request.POST(
-        "http://localhost:8000/attendence/students/bulk-create/",
+        `${API_BASE}/attendence/students/bulk-create/`,
         payload
       );
 
