@@ -45,28 +45,28 @@ const LoginForm = () => {
         if (response && response.access) {
           localStorage.setItem("access", response.access);
           localStorage.setItem("refresh", response.refresh);
-          localStorage.setItem("status",formData.userType);
+          localStorage.setItem("status", formData.userType);
 
-          const path = formData.userType === "teacher"? "teacher-profile":"admin-profile";
-          const header = {"Authorization": `Bearer ${response.access}`}
+          const path = formData.userType === "teacher" ? "teacher-profile" : "admin-profile";
+          const header = { "Authorization": `Bearer ${response.access}` }
           const userDetails = await request.GET(`${API_BASE}`, path, header);
-          localStorage.setItem("user",JSON.stringify(userDetails));
+          localStorage.setItem("user", JSON.stringify(userDetails));
           navigate("/"); // Go to dashboard
 
         } else {
           alert("❌ Username or password is wrong!");
-          setFormData({username:"",password:"",userType:""});
+          setFormData({ username: "", password: "", userType: "" });
         }
       } catch (error) {
         console.error("Error during login:", error);
         alert("❌ Username or Password is wrong!");
-        setFormData({username:"",password:"",userType:""});
+        setFormData({ username: "", password: "", userType: "" });
       }
     }
   };
 
   const handleSignupClick = () => {
-    navigate("/signup"); // Navigate to signup page
+    navigate("/signup");
   };
 
   const styles = {
@@ -136,6 +136,17 @@ const LoginForm = () => {
       color: "#f87171",
       fontSize: "0.8rem",
     },
+    // NEW STYLE FOR THE DEMO BOX
+    demoBox: {
+      backgroundColor: "rgba(16, 185, 129, 0.15)", // Greenish background with opacity
+      border: "1px solid rgba(16, 185, 129, 0.4)", // Green border
+      borderRadius: "8px",
+      padding: "12px",
+      marginBottom: "20px",
+      fontSize: "0.85rem",
+      color: "#d1fae5", // Light green text
+      lineHeight: "1.5",
+    }
   };
 
   return (
@@ -144,7 +155,26 @@ const LoginForm = () => {
         style={styles.formWrapper}
         className="hover:[transform:perspective(1000px)_rotateY(4deg)] hover:shadow-2xl"
       >
-        <h2 className="text-center text-2xl font-semibold mb-6">Login</h2>
+        <h2 className="text-center text-2xl font-semibold mb-4">Login</h2>
+
+        {/* --- DEMO CREDENTIALS BOX --- */}
+        <div style={styles.demoBox}>
+          <p className="font-semibold mb-1 text-green-400 text-center uppercase tracking-wide text-xs">
+            ✨ Demo Access Credentials
+          </p>
+          <div className="flex flex-col gap-1 mt-2">
+            <div className="flex justify-between border-b border-green-500/20 pb-1">
+              <span className="font-bold text-green-300">Teacher:</span>
+              <span className="font-mono text-xs opacity-90">teacherDemo / teacherpw123</span>
+            </div>
+            <div className="flex justify-between pt-1">
+              <span className="font-bold text-green-300">Admin:</span>
+              <span className="font-mono text-xs opacity-90">adminDemo / adminpw123</span>
+            </div>
+          </div>
+        </div>
+        {/* --------------------------- */}
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {/* Username */}
           <div>
@@ -188,23 +218,25 @@ const LoginForm = () => {
           <div>
             <label className="block mb-1 text-sm font-medium">Login As</label>
             <div style={{ display: "flex", justifyContent: "space-around" }}>
-              <label className="flex items-center gap-1">
+              <label className="flex items-center gap-1 cursor-pointer">
                 <input
                   type="radio"
                   name="userType"
                   value="teacher"
                   checked={formData.userType === "teacher"}
                   onChange={handleInputChange}
+                  className="cursor-pointer accent-blue-500"
                 />
                 Teacher
               </label>
-              <label className="flex items-center gap-1">
+              <label className="flex items-center gap-1 cursor-pointer">
                 <input
                   type="radio"
                   name="userType"
                   value="admin"
                   checked={formData.userType === "admin"}
                   onChange={handleInputChange}
+                  className="cursor-pointer accent-blue-500"
                 />
                 Admin
               </label>
