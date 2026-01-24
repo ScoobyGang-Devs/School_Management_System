@@ -94,7 +94,7 @@ console.log("Assigned Class:", user?.assignedClass); // Use ?. to avoid crash du
 
     try {
       const headerObj = {
-        className: `${user.grade} ${user.subClass}`,
+        className: `${derivedGrade} ${derivedSubClass}`,
         date: date,
       };
 
@@ -106,7 +106,7 @@ console.log("Assigned Class:", user?.assignedClass); // Use ?. to avoid crash du
       const payload = [headerObj, ...attendanceArray];
 
       const response = await request.POST(
-        "http://localhost:8000//attendence/students/bulk-create/",
+        "http://localhost:8000/attendence/students/bulk-create/",
         payload
       );
 
